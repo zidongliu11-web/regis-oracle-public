@@ -6,7 +6,7 @@
     <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-18a999"></a>
     <img alt="Stage: research preview" src="https://img.shields.io/badge/stage-research_preview-334155">
     <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776ab">
-    <a href="https://github.com/zidongliu11-web/regis-oracle-public/actions/workflows/public-checks.yml"><img alt="Public checks" src="https://github.com/zidongliu11-web/regis-oracle-public/actions/workflows/public-checks.yml/badge.svg"></a>
+    <a href="https://github.com/zidongliu11-web/regis-oracle-public/actions/workflows/public-checks.yml"><img alt="Public checks" src="https://github.com/zidongliu11-web/regis-oracle-public/actions/workflows/public-checks.yml/badge.svg?branch=main"></a>
   </p>
   <p><a href="#快速开始">快速开始</a> · <a href="docs/ARCHITECTURE.md">技术架构</a> · <a href="docs/RESEARCH_STANDARD.md">研究标准</a> · <a href="docs/ROADMAP.md">路线图</a> · <a href="CONTRIBUTING.md">参与贡献</a></p>
 </div>
