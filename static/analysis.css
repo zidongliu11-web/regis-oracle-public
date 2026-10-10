@@ -1,0 +1,257 @@
+.analysis-main { max-width: 1640px; padding-top: 24px; }
+.analysis-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+.analysis-hero h1 { margin-bottom: 7px; }
+.analysis-hero p:last-child { max-width: 820px; margin: 0; }
+.analysis-search {
+  width: min(430px, 100%);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 8px;
+}
+.analysis-toolbar {
+  min-height: 48px;
+  padding: 7px 9px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  background: #0e151f;
+}
+.analysis-toolbar #liveStreamBadge { margin-left: auto; }
+.analysis-toolbar #liveStreamBadge.live {
+  background: var(--green-soft);
+  color: #86e1b8;
+  box-shadow: 0 0 0 1px rgba(53,181,125,.26);
+}
+.analysis-watchlist { display: flex; gap: 7px; overflow-x: auto; }
+.analysis-watchlist button {
+  min-height: 31px;
+  padding: 0 10px;
+  background: #172131;
+  border-color: #293a50;
+  color: #c8d4e2;
+  white-space: nowrap;
+}
+.analysis-watchlist button.active {
+  background: #3f2026;
+  border-color: #713239;
+  color: #ffafb4;
+}
+.analysis-cockpit {
+  display: grid;
+  grid-template-columns: minmax(680px, 1.7fr) minmax(350px, .72fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+.analysis-chart-panel { padding: 14px; }
+.analysis-symbol-head,
+.analysis-symbol-line {
+  display: flex;
+  align-items: center;
+}
+.analysis-symbol-head { justify-content: space-between; gap: 18px; margin-bottom: 10px; }
+.analysis-symbol-line { gap: 10px; }
+.analysis-symbol-line h2 { font-size: 20px; }
+.analysis-quote { text-align: right; }
+.analysis-quote strong { font-size: 28px; font-variant-numeric: tabular-nums; }
+.analysis-quote span { margin-left: 9px; font-weight: 700; }
+.analysis-quote small { display: block; color: var(--muted); }
+.analysis-chart {
+  min-height: 535px;
+  border: 1px solid var(--line-soft);
+  background: #07101a;
+}
+.analysis-chart .chart-empty { min-height: 535px; }
+.analysis-chart-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.analysis-chart-meta #liveUpdateMeta { color: #9facc0; }
+.analysis-side { display: grid; gap: 12px; align-content: start; }
+.decision-card { padding: 16px; }
+.decision-card.locked { border-color: #54292e; }
+.decision-card.locked .scenario-block.buy {
+  border-left-color: #6f7d90;
+  background: #0d141d;
+}
+.decision-card.locked .scenario-block.buy strong { color: #b9c4d1; }
+.decision-action,
+.scenario-block {
+  padding: 13px;
+  border: 1px solid var(--line-soft);
+  background: #101720;
+}
+.decision-action span,
+.decision-action strong,
+.decision-action small,
+.scenario-block span,
+.scenario-block strong,
+.scenario-block small { display: block; }
+.decision-action span,
+.scenario-block span,
+.decision-action small,
+.scenario-block small { color: var(--muted); font-size: 11px; }
+.decision-action strong { margin: 4px 0; font-size: 22px; color: #ff858c; }
+.scenario-block { margin-top: 9px; }
+.scenario-block.buy { border-left: 3px solid var(--red); }
+.scenario-block.sell { border-left: 3px solid var(--green); }
+.scenario-block strong { margin: 4px 0; font-size: 18px; font-variant-numeric: tabular-nums; }
+.scenario-block ul { margin: 7px 0 0; padding-left: 18px; color: #c3ceda; font-size: 12px; }
+.scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 9px; }
+.scenario-grid div { padding: 11px; border: 1px solid var(--line-soft); background: #101720; }
+.scenario-grid span, .scenario-grid strong { display: block; }
+.scenario-grid span { color: var(--muted); font-size: 11px; }
+.scenario-grid strong { margin-top: 4px; font-size: 17px; font-variant-numeric: tabular-nums; }
+.analysis-boundary { margin: 11px 0 0; color: #e6c876; font-size: 11px; }
+.market-context-card > strong { font-size: 19px; }
+.market-context-card p { margin-bottom: 0; }
+.analysis-lower {
+  display: grid;
+  grid-template-columns: 1.25fr .75fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+.evidence-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.evidence-columns > div { padding: 13px; border: 1px solid var(--line-soft); background: #101720; }
+.evidence-columns h3 { margin: 0 0 8px; font-size: 13px; }
+.evidence-columns ul { margin: 0; padding-left: 18px; color: #b7c3d1; font-size: 12px; }
+.analysis-lenses {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 7px;
+  margin-top: 10px;
+}
+.analysis-lenses div { padding: 10px; border: 1px solid var(--line-soft); background: #101720; }
+.analysis-lenses span,
+.analysis-lenses strong,
+.analysis-lenses small { display: block; }
+.analysis-lenses span,
+.analysis-lenses small { color: var(--muted); font-size: 10px; }
+.analysis-lenses strong { margin: 3px 0; font-size: 13px; }
+.ai-stock-panel button { width: 100%; }
+.ai-stock-output { margin-top: 12px; }
+.ai-stock-summary { padding: 12px; border: 1px solid #3a4658; background: #101720; }
+.ai-stock-summary h3 { margin: 0 0 6px; font-size: 15px; }
+.ai-stock-summary p { margin: 5px 0; font-size: 12px; }
+.tradingagents-decision {
+  max-height: 360px;
+  overflow: auto;
+  margin: 10px 0 0;
+  padding: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--line-soft);
+  background: #0b1018;
+  color: #c4cfdb;
+  font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.ai-stock-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
+.ai-stock-columns div { padding: 9px; border: 1px solid var(--line-soft); }
+.ai-stock-columns ul { margin: 4px 0 0; padding-left: 17px; font-size: 11px; color: #b9c4d1; }
+.analysis-safety {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #544421;
+  background: #211c11;
+  color: #e5ca82;
+  font-size: 11px;
+}
+
+@media (max-width: 1180px) {
+  .analysis-cockpit { grid-template-columns: 1fr; }
+  .analysis-chart { min-height: 460px; }
+  .analysis-chart .chart-empty { min-height: 460px; }
+  .analysis-side { grid-template-columns: 1fr 1fr; }
+  .analysis-lenses { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 820px) {
+  .analysis-hero { align-items: stretch; flex-direction: column; }
+  .analysis-search { width: 100%; }
+  .analysis-toolbar { align-items: stretch; flex-direction: column; }
+  .analysis-side, .analysis-lower, .evidence-columns { grid-template-columns: 1fr; }
+  .analysis-chart { min-height: 390px; }
+  .analysis-chart .chart-empty { min-height: 390px; }
+  .analysis-symbol-head { align-items: flex-start; flex-direction: column; }
+  .analysis-quote { text-align: left; }
+  .analysis-lenses { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* —— 量化策略信号面板 —— */
+.quant-strategy-body { display: flex; flex-direction: column; gap: 14px; }
+.quant-metrics-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+.quant-metrics-grid.compact { margin-top: 4px; }
+.quant-metrics-grid .quant-metric {
+  background: rgba(127, 127, 127, 0.07); border: 1px solid rgba(127, 127, 127, 0.18);
+  border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px;
+}
+.quant-metrics-grid .quant-metric span {
+  font-size: 11px; color: var(--muted, #8b8f98); letter-spacing: .04em;
+}
+.quant-metrics-grid .quant-metric strong {
+  font-size: 15px; font-variant-numeric: tabular-nums; color: var(--ink, #e8eaed);
+}
+.quant-block-title {
+  margin: 2px 0 0; font-size: 12px; color: var(--muted, #8b8f98);
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.quant-factor-list { display: flex; flex-direction: column; gap: 6px; }
+
+/* —— Kronos 预测块（并列于量化策略信号） —— */
+.kronos-strategy-block {
+  margin-top: 4px; padding-top: 12px;
+  border-top: 1px solid rgba(127, 127, 127, 0.18);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.kronos-strategy-head {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.kronos-strategy-head b { font-size: 12px; color: var(--ink, #e8eaed); letter-spacing: .03em; }
+.kronos-strategy-head small { color: var(--muted, #8b8f98); font-size: 11px; }
+.kronos-strategy-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+.kronos-strategy-grid .quant-metric strong { font-variant-numeric: tabular-nums; }
+.kronos-dir-pos { color: #2ecc71 !important; }
+.kronos-dir-neg { color: #e74c3c !important; }
+.kronos-dir-neu { color: var(--yellow, #f0b94a) !important; }
+.kronos-signal-row {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink, #e8eaed);
+}
+.kronos-signal-badge { padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+.kronos-signal-badge.bull { background: rgba(46, 204, 113, .15); color: #2ecc71; }
+.kronos-signal-badge.bear { background: rgba(231, 76, 60, .15); color: #e74c3c; }
+.kronos-signal-badge.neu { background: rgba(240, 185, 74, .15); color: #f0b94a; }
+.kronos-pred-track { height: 6px; border-radius: 3px; background: rgba(127,127,127,.15); overflow: hidden; }
+.kronos-pred-track > i { display: block; height: 6px; border-radius: 3px; }
+.quant-factor-row {
+  display: grid; grid-template-columns: 150px 1fr 56px; gap: 8px; align-items: center;
+}
+.quant-factor-name { font-size: 12px; color: var(--ink, #e8eaed); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.quant-factor-name small { color: var(--muted, #8b8f98); }
+.quant-factor-bar {
+  height: 8px; border-radius: 4px; overflow: hidden; background: rgba(127, 127, 127, 0.15);
+}
+.quant-factor-fill { height: 100%; border-radius: 4px; }
+.quant-factor-fill.red { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+.quant-factor-fill.green { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+.quant-factor-z { font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.quant-factor-z.red { color: #e74c3c; }
+.quant-factor-z.green { color: #2ecc71; }
+@media (max-width: 820px) {
+  .quant-factor-row { grid-template-columns: 120px 1fr 48px; }
+  .quant-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+}

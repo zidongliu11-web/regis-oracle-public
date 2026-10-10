@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070b16">
+  <title>A股事件雷达 · 妈妈专属</title>
+  <link rel="stylesheet" href="/static/mom.css">
+</head>
+<body>
+  <a class="skip-link" href="#radarMain">跳到主要内容</a>
+  <main class="radar-shell" id="radarMain">
+    <header class="topbar">
+      <a class="brand" href="/mom" aria-label="A股事件雷达首页">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span><b>A 股事件雷达</b><small>MOM / MANUAL MODE</small></span>
+      </a>
+      <div class="live-status"><i></i><span id="liveText">正在连接公开数据源</span></div>
+      <button class="refresh-button" id="refreshButton" type="button">刷新雷达</button>
+    </header>
+
+    <section class="hero-grid" aria-labelledby="marketTitle">
+      <div class="hero-copy">
+        <p class="eyebrow">A-SHARE INTELLIGENCE / READ-ONLY</p>
+        <h1 id="marketTitle">今天的市场，<br><em id="marketState">正在校准</em></h1>
+        <p class="hero-note" id="marketAction">仅汇总公开新闻和实时行情；系统不会自动交易。</p>
+        <div class="hero-meta">
+          <span>更新时间 <b id="radarTime">--</b></span>
+          <span>热点线索 <b id="leaderSector">--</b></span>
+        </div>
+      </div>
+      <div class="command-card">
+        <p class="card-kicker">给妈妈的今天行动</p>
+        <p class="command-title" id="momAction">先等待数据完成校准</p>
+        <div class="command-rule"><span>交易方式</span><b>人工确认</b></div>
+        <div class="command-rule"><span>默认时段</span><b>上午核对 · 午后不新开仓</b></div>
+        <p class="command-foot">除重大风险事件外，14:00 后只做持仓复盘，不产生新增买入提示。</p>
+      </div>
+    </section>
+
+    <section class="index-strip" aria-label="主要指数实时行情" id="indexStrip">
+      <div class="metric-skeleton"></div><div class="metric-skeleton"></div><div class="metric-skeleton"></div>
+    </section>
+
+    <section class="dashboard-grid">
+      <section class="panel event-panel" aria-labelledby="eventTitle">
+        <div class="panel-heading">
+          <div><p class="eyebrow">LIVE EVENT STREAM</p><h2 id="eventTitle">A 股相关事件流</h2></div>
+          <div class="filter-group" aria-label="事件筛选">
+            <button class="filter is-active" data-filter="全部" type="button">全部</button>
+            <button class="filter" data-filter="高" type="button">高影响</button>
+            <button class="filter" data-filter="偏多" type="button">偏多</button>
+            <button class="filter" data-filter="偏空" type="button">偏空</button>
+          </div>
+        </div>
+        <p class="panel-description">只展示公开来源标题。影响方向是规则初筛，点击原始来源后再决定是否需要关注。</p>
+        <div class="event-list" id="eventList" aria-live="polite"></div>
+        <div class="empty-state" id="eventEmpty" hidden>暂未获得可验证的 A 股相关标题。来源恢复后会自动显示。</div>
+      </section>
+
+      <aside class="side-stack">
+        <section class="panel sector-panel" aria-labelledby="sectorTitle">
+          <div class="panel-heading compact"><div><p class="eyebrow">SECTOR HEAT</p><h2 id="sectorTitle">实时板块热度</h2></div><span class="source-tag" id="sectorSource">正在读取</span></div>
+          <div class="sector-list" id="sectorList" aria-live="polite"></div>
+        </section>
+        <section class="panel source-panel" aria-labelledby="sourceTitle">
+          <div class="panel-heading compact"><div><p class="eyebrow">SOURCE HEALTH</p><h2 id="sourceTitle">来源与边界</h2></div></div>
+          <div class="source-list" id="sourceList"></div>
+          <p class="source-note" id="radarDisclaimer"></p>
+        </section>
+      </aside>
+    </section>
+
+    <section class="watch-panel panel" aria-labelledby="watchTitle">
+      <div class="panel-heading"><div><p class="eyebrow">HISTORICAL RESEARCH LIST</p><h2 id="watchTitle">历史研究观察清单</h2></div><p class="stale-note" id="snapshotNote">正在核对快照时间…</p></div>
+      <p class="panel-description">这不是今日推荐。若快照不是当日交易数据，只保留为观察名单，不能据此买入。</p>
+      <div class="watch-list" id="stockList" aria-live="polite"></div>
+    </section>
+  </main>
+  <template id="eventTemplate">
+    <article class="event-card">
+      <div class="event-rail"></div>
+      <div class="event-body">
+        <div class="event-meta"><span class="event-source"></span><span class="event-time"></span><span class="event-priority"></span></div>
+        <a class="event-title" target="_blank" rel="noopener noreferrer"></a>
+        <div class="event-bottom"><span class="event-impact"></span><span class="event-sectors"></span><span class="event-reason"></span></div>
+      </div>
+    </article>
+  </template>
+  <script src="/static/mom.js"></script>
+</body>
+</html>

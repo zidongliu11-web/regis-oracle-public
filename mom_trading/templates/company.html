@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block title %}Regis Oracle · 公司全景档案{% endblock %}
+{% block nav_stock %}active{% endblock %}
+
+{% block head %}
+<style>
+.company-page{display:flex;flex-direction:column;gap:16px;width:100%;max-width:1200px;margin:0 auto}
+.cp-head{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.cp-name{font-size:24px;font-weight:700;color:var(--color-text)}
+.cp-code{font-size:14px;color:var(--color-text-dim)}
+.cp-price{font-size:22px;font-weight:700;margin-left:auto}
+.cp-change{font-size:14px;margin-left:6px}
+/* 结论卡 */
+.cp-verdict{background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.25);border-radius:14px;padding:16px 20px}
+.cp-verdict-line{display:flex;gap:10px;align-items:center;font-size:15px;padding:5px 0;flex-wrap:wrap}
+.cp-verdict-line .k{color:var(--color-text-dim);min-width:110px;font-size:14px}
+.cp-verdict-line .v{font-weight:700;font-size:15px}
+.cp-verdict-big{font-size:18px;font-weight:700;padding:6px 0}
+/* 闸门网格 */
+.cp-gates{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+@media(max-width:700px){.cp-gates{grid-template-columns:1fr}}
+.cp-gate{background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.cp-gate-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700}
+.cp-gate-desc{font-size:12px;color:var(--color-text-dim)}
+.cp-gate-reason{font-size:13px;line-height:1.6;color:var(--color-text)}
+.cp-gate-reason::before{content:'·';margin-right:6px;color:var(--color-text-dim)}
+.cp-gate-metrics{font-size:12px;color:var(--color-text-dim);border-top:1px solid var(--color-border);padding-top:6px;margin-top:auto;line-height:1.7}
+/* 灯号徽章：颜色+图标+文字 三重表达 */
+.light-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid}
+.light-badge .dot{width:8px;height:8px;border-radius:50%}
+/* 证据列表 */
+.cp-ev{display:flex;flex-direction:column;gap:6px}
+.cp-ev-row{display:flex;gap:10px;align-items:flex-start;font-size:13px;padding:7px 10px;border-radius:8px;background:rgba(100,116,139,0.05)}
+.cp-ev-row a{color:var(--color-accent);text-decoration:none}
+.level-badge{padding:1px 8px;border-radius:6px;font-size:12px;font-weight:700;white-space:nowrap}
+/* 数据源 */
+.cp-src{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.cp-src-item{font-size:12px;color:var(--color-text-dim);display:flex;justify-content:space-between;padding:6px 10px;background:rgba(100,116,139,0.05);border-radius:8px}
+/* 加载 */
+.cp-loading{display:flex;flex-direction:column;gap:12px;align-items:center;padding:48px 0;text-align:center}
+.cp-spinner{width:34px;height:34px;border:3px solid rgba(99,102,241,0.2);border-top-color:var(--color-accent);border-radius:50%;animation:cpspin 0.9s linear infinite}
+@keyframes cpspin{to{transform:rotate(360deg)}}
+.sec-title{font-size:16px;font-weight:700;margin:6px 0 10px;display:flex;align-items:center;gap:8px}
+.sec-title::before{content:'';width:4px;height:16px;background:var(--color-accent);border-radius:2px}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="company-page">
+  <div class="cp-head">
+    <div class="search-bar" style="max-width:380px">
+      <input type="text" class="search-input" id="stockSearch" aria-label="股票代码" inputmode="numeric" autocomplete="off" placeholder="输入6位代码" value="{{ code }}" maxlength="6">
+      <button type="button" class="search-btn" id="searchBtn">查看档案</button>
+    </div>
+    <span class="cp-name" id="cpName">—</span>
+    <span class="cp-code" id="cpCode">—</span>
+    <span class="cp-price" id="cpPrice">—</span>
+    <span class="cp-change" id="cpChange"></span>
+  </div>
+
+  <div id="cpBody" aria-live="polite" aria-busy="true">
+    <div class="cp-loading" role="status">
+      <div class="cp-spinner" aria-hidden="true"></div>
+      <div style="font-size:15px;color:var(--color-text)">正在生成本公司全景档案…</div>
+      <div style="font-size:12px;color:var(--color-text-dim)">正在读取财务、主营、质押与公告数据；以服务器返回状态为准</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce }}">
+const CP_PARAMS = new URLSearchParams(location.search);
+const CP_CODE = CP_PARAMS.get('code') || document.getElementById('stockSearch').value || '';
+let cpController = null;
+let cpSequence = 0;
+
+const CP_GATES = {
+  fundamentals: { name: '基本面质量', desc: '利润持续性 · 现金流 · 盈利质量 · 偿债' },
+  governance:   { name: '治理风险',   desc: '股权质押 · ST · 信息完整度' },
+  industry:     { name: '产业验证',   desc: '主营结构 · 行业 · 资金流' },
+  events:       { name: '事件证据',   desc: '公告 A/B 级 · 媒体 D 级' },
+  tradeable:    { name: '交易可行性', desc: '现价 · 流动性 · 涨跌停' },
+};
+const CP_LIGHT = {
+  green:  { label: '绿灯', color: '#22c55e', icon: '✓' },
+  yellow: { label: '黄灯', color: '#f59e0b', icon: '' },
+  red:    { label: '红灯', color: '#ef4444', icon: '✕' },
+  null:   { label: '未知', color: '#a4a8b3', icon: '?' },
+};
+const CP_LEVEL = {
+  A: { label: 'A 正式公告', color: '#22c55e' }, B: { label: 'B 量产/中标', color: '#84cc16' },
+  C: { label: 'C 试点/样品', color: '#f59e0b' }, D: { label: 'D 媒体传闻', color: '#f97316' },
+  E: { label: 'E 无来源', color: '#8b8b98' },
+};
+function cpLightBadge(key) {
+  const meta = CP_LIGHT[key] || CP_LIGHT.null;
+  const bg = key === 'green' ? 'rgba(34,197,94,0.12)' : key === 'yellow' ? 'rgba(245,158,11,0.12)'
+    : key === 'red' ? 'rgba(239,68,68,0.12)' : 'rgba(139,139,152,0.12)';
+  return `<span class="light-badge" style="background:${bg};color:${meta.color};border-color:${meta.color}33">
+    <span class="dot" style="background:${meta.color}"></span>${meta.icon} ${meta.label}</span>`;
+}
+
+function cpResearchBand(composite) {
+  if (composite && composite.research_band) return composite.research_band;
+  const score = composite == null ? NaN : Number(composite.composite);
+  if (!Number.isFinite(score)) return '研究分档未知';
+  return score >= 80 ? '高分研究候选' : score >= 65 ? '较高分研究候选'
+    : score >= 50 ? '中性研究候选' : score >= 35 ? '低分研究候选' : '排除级研究候选';
+}
+
+function cpEsc(value) {
+  return String(value ?? '').replace(/[<>&"']/g, character => ({
+    '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;',
+  }[character]));
+}
+
+function cpSafeExternalUrl(value) {
+  if (!value) return '';
+  try {
+    const url = new URL(String(value));
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : '';
+  } catch (error) {
+    console.error('[company:external-url]', error);
+    return '';
+  }
+}
+
+function cpLoading() {
+  return `<div class="cp-loading" role="status">
+    <div class="cp-spinner" aria-hidden="true"></div>
+    <div style="font-size:15px;color:var(--color-text)">正在生成本公司全景档案…</div>
+    <div style="font-size:12px;color:var(--color-text-dim)">正在读取服务器数据；以返回状态为准</div></div>`;
+}
+
+async function cpLoad() {
+  const body = document.getElementById('cpBody');
+  const code = (CP_CODE || document.getElementById('stockSearch').value || '').trim();
+  if (!/^[036]\d{5}$/.test(code)) {
+    body.setAttribute('aria-busy', 'false');
+    body.innerHTML = '<div class="cp-loading" role="alert">请输入有效的 6 位沪深 A 股代码</div>';
+    return;
+  }
+  if (cpController) cpController.abort();
+  cpController = new AbortController();
+  const controller = cpController;
+  const sequence = ++cpSequence;
+  const timeout = setTimeout(() => controller.abort('timeout'), 15000);
+  body.setAttribute('aria-busy', 'true');
+  body.innerHTML = cpLoading();
+  try {
+    const r = await fetch(`/api/company-profile/${encodeURIComponent(code)}`, { signal: controller.signal });
+    const text = await r.text();
+    let d = {};
+    try { d = text ? JSON.parse(text) : {}; }
+    catch (error) { throw new Error(`服务器返回了无法解析的数据（HTTP ${r.status}）`, { cause: error }); }
+    if (!r.ok) throw new Error(d.error || d.message || `请求失败（HTTP ${r.status}）`);
+    if (controller !== cpController || sequence !== cpSequence) return;
+    cpRender(d);
+  } catch (e) {
+    if (e.name === 'AbortError' && controller.signal.reason !== 'timeout') return;
+    console.error('[company:load]', e);
+    const message = controller.signal.reason === 'timeout' ? '请求超时，请重试' : (e.message || '未知错误');
+    body.innerHTML = `<div class="cp-loading" role="alert" style="padding:32px 0">
+      <div style="font-size:15px;color:#ef4444;font-weight:600">档案生成失败</div>
+      <div style="font-size:13px;color:var(--color-text-dim)">${cpEsc(message)}</div>
+      <button type="button" class="search-btn" data-action="retry-company">重试</button></div>`;
+  } finally {
+    clearTimeout(timeout);
+    if (controller === cpController) {
+      cpController = null;
+      body.setAttribute('aria-busy', 'false');
+    }
+  }
+}
+
+function cpRender(d) {
+  const gates = d.gates || {};
+  const tr = gates.tradeable || {};
+  const tq = tr.metrics || {};
+  const escV = cpEsc;
+  const decisionReady = d.decision_ready === true || d.ready === true;
+
+  // 头部
+  document.getElementById('cpName').textContent = d.name || '—';
+  document.getElementById('cpCode').textContent = d.code || '';
+  const price = tq.price;
+  document.getElementById('cpPrice').textContent = price != null ? '¥' + price : '—';
+  const chg = tq.change_pct;
+  const chgEl = document.getElementById('cpChange');
+  if (chg != null) {
+    chgEl.textContent = (chg >= 0 ? '+' : '') + chg + '%';
+    chgEl.style.color = chg >= 0 ? '#ef4444' : '#22c55e';
+  } else {
+    chgEl.textContent = '行情未返回';
+    chgEl.style.color = 'var(--color-text-dim)';
+  }
+
+  // 只有后端明确 decision_ready/ready=true 时才展示可用于决策的综合结论。
+  const tech = d.technical_level || d.technical_status || '未提供 / 未验证';
+  const vetoRows = (d.vetoed_gates || []).map(k => (CP_GATES[k] || {}).name || k).join('、');
+  const verdict = !decisionReady
+    ? '<span style="color:#a4a8b3">未知 — 数据不足，不能判定风险否决</span>'
+    : d.veto
+      ? `<span style="color:#ef4444">是 — ${escV(vetoRows)} 红灯，禁止生成交易草稿</span>`
+      : '<span style="color:#22c55e">无 — 当前返回数据未触发红灯闸门</span>';
+  // 综合分与个股页同源；决策闸门未完成时仍可展示分数证据，但不得据此给出动作。
+  const cmp = d.composite || null;
+  const tierMeta = {
+    green: { t: '统一综合评分较高', c: '#22c55e' },
+    yellow: { t: '统一综合评分待观察', c: '#f59e0b' },
+    red: { t: '统一综合评分不满足', c: '#ef4444' },
+  };
+  const tm = cmp ? (tierMeta[cmp.tier_key] || tierMeta.red) : { t: '未形成决策结论', c: '#a4a8b3' };
+  const scoreBlock = cmp
+    ? `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:10px 0 14px;border-bottom:1px solid rgba(99,102,241,0.15)">
+        <div style="font-size:46px;font-weight:800;font-family:var(--font-mono);line-height:1;color:${tm.c}">
+          ${cmp.composite}<span style="font-size:16px;color:var(--color-text-dim);font-weight:600">/100</span>
+        </div>
+        <div>
+          <div class="light-badge" style="font-size:13px;padding:4px 14px;background:${tm.c}22;color:${tm.c};border-color:${tm.c}55">${tm.t}</div>
+          <div style="font-size:12px;color:var(--color-text-dim);margin-top:6px">
+            统一综合评分门槛 ${escV(cmp.bar)} 分 · ${cmp.pass_ ? '达到当前分层（不等于交易建议）' : '未达到当前分层'}` + (cmp.veto ? ` · <span style="color:#ef4444">红灯否决生效</span>` : '') + `
+          </div>
+        </div>
+        <div style="margin-left:auto;font-size:12px;color:var(--color-text-dim);line-height:1.9">
+          <div>有效权重 <b style="font-family:var(--font-mono);color:var(--color-text)">${cmp.coverage_pct ?? Math.round((cmp.weight_used || 0) * 100)}%</b> · 缺失维度按可见权重归一化</div>
+          <div>研究分档 <b style="color:${tm.c}">${escV(cpResearchBand(cmp))}</b> · 仅作研究排序，不是买卖建议</div>
+          <div>盘中条件仅控制入场时机，不产生第二个总分</div>
+        </div>
+      </div>`
+    : '<div style="padding:10px 0 14px;border-bottom:1px solid rgba(99,102,241,0.15);color:#a4a8b3">数据不足或状态未就绪，综合评分不作为决策依据。</div>';
+  const verdictCard = `
+    <div class="cp-verdict">
+      <div class="cp-verdict-big">${escV(d.name)} · 公司全景档案结论</div>
+      ${scoreBlock}
+      <div class="cp-verdict-line"><span class="k">技术面候选</span><span class="v">${escV(tech)}</span></div>
+      ${Object.entries(CP_GATES).map(([k, g]) => {
+        const light = (gates[k] || {}).light;
+        return `<div class="cp-verdict-line"><span class="k">${g.name}</span><span class="v">${cpLightBadge(light)}</span></div>`;
+      }).join('')}
+      <div class="cp-verdict-line"><span class="k">事件证据</span><span class="v">证据等级 ${escV((gates.events || {}).evidence_level || '未提供')}</span></div>
+      <div class="cp-verdict-line"><span class="k">风险否决</span><span class="v">${verdict}</span></div>
+      <div class="cp-verdict-line"><span class="k">结论</span><span class="v">综合 ${cmp ? escV(cmp.composite) + '/100' : '—'} · ${tm.t}${cmp && cmp.veto ? '（否决强制）' : ''}</span></div>
+    </div>`;
+
+  // 五闸门卡片
+  const gateCards = Object.entries(CP_GATES).map(([k, g]) => {
+    const gate = gates[k] || {};
+    const reasons = (gate.reasons || []).map(r => `<div class="cp-gate-reason">${escV(r)}</div>`).join('');
+    const m = gate.metrics || {};
+    const metricLine = Object.entries(m)
+      .filter(([, v]) => v != null && v !== '' && !Array.isArray(v) && typeof v !== 'object')
+      .slice(0, 6)
+      .map(([kk, v]) => `${kk}: ${typeof v === 'number' ? (Math.abs(v) > 100 ? v.toFixed(0) : v) : escV(v)}`)
+      .join(' · ');
+    return `<div class="cp-gate">
+      <div class="cp-gate-title">${cpLightBadge(gate.light)}<span>${g.name}</span></div>
+      <div class="cp-gate-desc">${g.desc}</div>
+      ${reasons}
+      ${metricLine ? `<div class="cp-gate-metrics">${metricLine}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // 事件证据
+  const ev = gates.events || {};
+  const evRows = (ev.evidence || []).map(e => {
+    const lv = CP_LEVEL[e.level] || CP_LEVEL.E;
+    const sent = e.sentiment === '利好' ? '#ef4444' : e.sentiment === '利空' ? '#22c55e' : 'var(--color-text-dim)';
+    const tags = (e.tags || []).slice(0, 3).map(t => `#${escV(t)}`).join(' ');
+    const safeUrl = cpSafeExternalUrl(e.url);
+    return `<div class="cp-ev-row">
+      <span class="level-badge" style="background:${lv.color}22;color:${lv.color}">${lv.label}</span>
+      <div style="flex:1;line-height:1.6">
+        <div>${safeUrl ? `<a href="${escV(safeUrl)}" target="_blank" rel="noopener noreferrer">${escV(e.title)}</a>` : escV(e.title)}
+          <span style="color:${sent};font-size:12px">（${escV(e.sentiment)}）</span></div>
+        <div style="font-size:12px;color:var(--color-text-dim)">${escV(e.date)} · ${escV(e.source)} ${tags}</div>
+      </div></div>`;
+  }).join('');
+
+  // 数据源状态
+  const srcRows = Object.entries(d.data_sources || {}).map(([k, s]) => {
+    s = s || {};
+    const status = String(s.status || 'unknown').toLowerCase();
+    const statusMeta = status === 'available'
+      ? { color: '#22c55e', label: '✓ 可用' }
+      : status === 'stale'
+        ? { color: '#f59e0b', label: '过期 / 待刷新' }
+        : status === 'unavailable'
+          ? { color: '#ef4444', label: '不可用' }
+          : { color: '#a4a8b3', label: '状态未知' };
+    return `<div class="cp-src-item"><span>${escV(s.source || k)}</span>
+      <span style="color:${statusMeta.color}">${statusMeta.label}</span></div>`;
+  }).join('');
+  const asOf = d.data_as_of || d.fetched_at || d.served_at || '';
+
+  document.getElementById('cpBody').innerHTML = `
+    ${verdictCard}
+    <div class="sec-title">五道闸门判定</div>
+    <div class="cp-gates">${gateCards}</div>
+    <div class="sec-title">事件证据分级（A/B/C/D/E）</div>
+    ${ev.evidence && ev.evidence.length
+      ? `<div class="cp-ev">${evRows}</div>
+         <div style="font-size:12px;color:var(--color-text-dim);margin-top:8px">A=正式公告/监管批文 · B=量产/中标 · C=试点/样品 · D=媒体传闻 · E=无来源。仅后端明确核验的证据可提升研究优先级；D/E 仅供观察。</div>`
+      : `<div class="empty-state">近 60 日无已核验事件</div>`}
+    <div class="sec-title">数据来源与健康状态</div>
+    <div class="cp-src">${srcRows}</div>
+    <div style="font-size:12px;color:var(--color-text-dim);margin-top:10px;line-height:1.7">
+      ${asOf ? `页面数据时点：${escV(asOf)}。` : '服务器未提供统一数据时点；请逐项查看来源状态。'}
+      数据源不可用或过期时，对应闸门应保持未知/降级，不将缺失解释为通过。不构成投资建议。</div>`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  cpLoad();
+  document.getElementById('cpBody').addEventListener('click', event => {
+    if (event.target.closest('[data-action="retry-company"]')) cpLoad();
+  });
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    const c = document.getElementById('stockSearch').value.trim();
+    if (/^[036]\d{5}$/.test(c)) location.href = `/company/${c}`;
+  });
+  document.getElementById('stockSearch').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('searchBtn').click();
+  });
+  window.addEventListener('pagehide', () => {
+    if (cpController) cpController.abort();
+  }, { once: true });
+});
+</script>
+{% endblock %}

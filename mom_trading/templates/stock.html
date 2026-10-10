@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Regis Oracle · 个股智能投研工作台{% endblock %}
+{% block nav_stock %}active{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="/static/stock_terminal.css?v=33">
+{% endblock %}
+{% block content %}
+<a class="itc-skip" href="#terminalMain">跳到个股工作台</a>
+<section class="itc-shell" id="institutionalConsole" data-default-code="{{ code or '000001' }}" aria-label="机构级个股智能投研工作台">
+  <header class="itc-topbar">
+    <div class="itc-brand"><div class="itc-kicker">Regis Oracle · Equity Intelligence</div><div class="itc-title">个股看盘与买卖点研究 <span>电脑版 · 研究辅助 · 不自动下单</span></div></div>
+    <form class="itc-search" id="terminalSearch"><label for="terminalCode">证券代码</label><input id="terminalCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" aria-label="输入六位A股代码" value="{{ code }}" placeholder="000001"><button class="itc-btn primary" type="submit">载入个股</button><a class="itc-btn" id="terminalAccountEntry" href="/?account=record&amp;code={{ code or '000001' }}">录入/更新持仓与现金</a></form>
+    <div class="itc-status" id="terminalHealth" aria-live="polite">数据健康：<b>等待载入</b></div>
+  </header>
+  <div class="itc-quote" id="terminalQuote" aria-label="行情摘要"></div>
+  <div class="itc-grid" id="terminalMain">
+    <aside class="itc-side" aria-label="个股工作区左侧栏">
+      <section class="itc-panel"><div class="itc-panel-h">自选与快速切换 <small>本机工作区</small></div><div class="itc-panel-b"><button class="itc-btn primary itc-watch-toggle" id="terminalWatchToggle" type="button" aria-pressed="false">＋ 加入自选</button><div class="itc-watchlist" id="terminalWatchlist"></div><p class="itc-note">加入后点击任一自选股，即载入完整行情、K线、盘口和投研详情。清单仅保存在当前浏览器；账号与云端同步尚未接入。</p></div></section>
+      <section class="itc-panel"><div class="itc-panel-h">关键价格 <small>当前周期 · 精简展示</small></div><div class="itc-panel-b" id="terminalLevels"><div class="itc-empty">载入K线后计算。</div></div></section>
+      <details class="itc-panel itc-toolbox"><summary class="itc-panel-h">辅助标注 <small>按需展开，不占用看盘主位</small></summary><div class="itc-panel-b">
+        <div class="itc-line-tools">
+          <button class="itc-btn" id="terminalUndoDrawing" type="button" disabled>撤销</button>
+          <button class="itc-btn" id="terminalRedoDrawing" type="button" disabled>重做</button>
+          <button class="itc-btn" data-draw-tool="support" type="button">标记止跌价</button>
+          <button class="itc-btn" data-draw-tool="resistance" type="button">标记遇阻价</button>
+          <button class="itc-btn" data-draw-tool="horizontal" type="button">水平线</button>
+          <button class="itc-btn" data-draw-tool="trend" type="button">趋势线</button>
+          <button class="itc-btn" data-draw-tool="ray" type="button">射线</button>
+          <button class="itc-btn" data-draw-tool="fib" type="button">斐波那契</button>
+          <button class="itc-btn" data-draw-tool="channel" type="button">通道</button>
+          <button class="itc-btn" data-draw-tool="parallel" type="button">平行通道</button>
+          <button class="itc-btn" data-draw-tool="rectangle" type="button">价格区间</button>
+          <button class="itc-btn" data-draw-tool="vertical" type="button">垂直线</button>
+          <button class="itc-btn" data-draw-tool="fibExtension" type="button">斐波扩展</button>
+          <button class="itc-btn" data-draw-tool="measure" type="button">测量涨跌/周期</button>
+          <button class="itc-btn" data-draw-tool="longPosition" type="button">多头风险收益</button>
+          <button class="itc-btn" data-draw-tool="shortPosition" type="button">空头风险收益</button>
+          <button class="itc-btn" data-draw-tool="anchoredVwap" type="button">锚定 VWAP</button>
+          <button class="itc-btn" data-draw-tool="text" type="button">文字标注</button>
+          <button class="itc-btn wide danger" id="terminalClearLines" type="button">清除当前股票与周期标记</button>
+        </div>
+        <label class="itc-toggle itc-magnet"><input id="terminalMagnet" type="checkbox" checked> 磁吸到最近 OHLC</label>
+        <p class="itc-note" id="terminalLineHint">例如：标记“可能止跌价”或“可能遇阻价”，方便之后复盘。水平/趋势/斐波那契/通道为多点击画线。</p>
+        <div class="itc-kicker" style="margin-top:8px">价格标记</div>
+        <div class="itc-line-list" id="terminalLineList"></div>
+        <div class="itc-kicker" style="margin-top:8px">K线画线管理器</div>
+        <p class="itc-note">可改名称、显示/隐藏、添加复盘备注或删除。按股票代码与K线周期存于本机浏览器。</p>
+        <div class="itc-line-list" id="terminalDrawingList"></div>
+      </div></details>
+      <section class="itc-panel"><div class="itc-panel-h">数据边界</div><div class="itc-panel-b itc-note" id="terminalSourceBoundary">只使用当前本地服务已接入的行情、K线和研究快照；未连接的数据维度不会纳入评分或预测。</div></section>
+    </aside>
+    <div class="itc-main" aria-label="K线和研究分析主区">
+      <section class="itc-controls" aria-label="图表控制栏">
+        <div class="itc-tabs" id="terminalTimeframes" role="tablist" aria-label="K线周期">
+          <button class="itc-tab" type="button" data-timeframe="1m" role="tab" aria-selected="false" tabindex="-1">1分</button><button class="itc-tab" type="button" data-timeframe="5m" role="tab" aria-selected="false" tabindex="-1">5分</button><button class="itc-tab" type="button" data-timeframe="15m" role="tab" aria-selected="false" tabindex="-1">15分</button><button class="itc-tab" type="button" data-timeframe="30m" role="tab" aria-selected="false" tabindex="-1">30分</button><button class="itc-tab" type="button" data-timeframe="60m" role="tab" aria-selected="false" tabindex="-1">60分</button><button class="itc-tab active" type="button" data-timeframe="1d" role="tab" aria-selected="true" tabindex="0">日</button><button class="itc-tab" type="button" data-timeframe="1w" role="tab" aria-selected="false" tabindex="-1">周</button><button class="itc-tab" type="button" data-timeframe="1mo" role="tab" aria-selected="false" tabindex="-1">月</button><button class="itc-tab" type="button" data-timeframe="1q" role="tab" aria-selected="false" tabindex="-1">季</button><button class="itc-tab" type="button" data-timeframe="1y" role="tab" aria-selected="false" tabindex="-1">年</button>
+        </div>
+        <div class="itc-control-spacer"></div>
+        <span class="itc-live-badge" id="terminalLiveStatus">行情刷新：等待数据</span>
+        <details class="itc-view-options">
+          <summary class="itc-btn">显示选项</summary>
+          <div class="itc-view-options-menu">
+            <label class="itc-option-field">图形<select class="itc-select" id="terminalChartType" aria-label="图表类型"><option value="candle">K线图</option><option value="intraday">分时图</option></select></label>
+            <label class="itc-option-field">价格口径<select class="itc-select" id="terminalAdjust" aria-label="复权方式" disabled><option>不复权（已审计日K）</option></select></label>
+            <div class="itc-quick-indicators" role="group" aria-label="副图快捷切换"><button class="itc-quick-indicator" type="button" data-quick-indicator="volume" aria-pressed="false">VOL</button><button class="itc-quick-indicator" type="button" data-quick-indicator="macd" aria-pressed="true">MACD</button><button class="itc-quick-indicator" type="button" data-quick-indicator="kdj" aria-pressed="false">KDJ</button><button class="itc-quick-indicator" type="button" data-quick-indicator="rsi" aria-pressed="false">RSI</button></div>
+            <button class="itc-btn" id="terminalIndicatorToggle" type="button" aria-expanded="false" aria-controls="terminalIndicatorMenu">指标参数</button>
+            <fieldset class="itc-layer-options"><legend>研究图层</legend><label class="itc-toggle"><input type="checkbox" data-overlay="scenario" checked> 当前场景</label><label class="itc-toggle"><input type="checkbox" data-overlay="primaryTrend"> 有效主趋势</label><fieldset class="itc-volatility-options"><legend>波动背景</legend><label class="itc-toggle"><input type="radio" name="terminal-volatility-layer" value="none" data-volatility-layer="none" checked> 关闭</label><label class="itc-toggle"><input type="radio" name="terminal-volatility-layer" value="boll" data-volatility-layer="boll"> BOLL</label><label class="itc-toggle"><input type="radio" name="terminal-volatility-layer" value="atr" data-volatility-layer="atr"> ATR</label></fieldset><label class="itc-toggle"><input type="checkbox" data-overlay="autoDrawings" checked> AI 当前结构</label><label class="itc-toggle"><input type="checkbox" data-overlay="signals"> 历史信号</label><label class="itc-toggle itc-legacy-layer"><input type="checkbox" data-overlay="tradePlan"> 旧交易计划</label></fieldset>
+            <button class="itc-btn" id="terminalNoviceToggle" type="button" aria-pressed="false">新手说明：关</button>
+            <div class="itc-indicator-menu" id="terminalIndicatorMenu" hidden aria-label="指标设置">
+              <div class="itc-indicator-group"><b>主图叠加</b>
+                <span class="itc-iparam-wrap"><label><input type="checkbox" data-overlay="ma5"> MA5</label><input class="itc-iparam" type="number" data-iparam="ma0" value="5" min="1" max="250" aria-label="MA5 周期"></span>
+                <span class="itc-iparam-wrap"><label><input type="checkbox" data-overlay="ma10"> MA10</label><input class="itc-iparam" type="number" data-iparam="ma1" value="10" min="1" max="250" aria-label="MA10 周期"></span>
+                <span class="itc-iparam-wrap"><label><input type="checkbox" data-overlay="ma20"> MA20</label><input class="itc-iparam" type="number" data-iparam="ma2" value="20" min="1" max="250" aria-label="MA20 周期"></span>
+                <span class="itc-iparam-wrap"><label><input type="checkbox" data-overlay="ma60"> MA60</label><input class="itc-iparam" type="number" data-iparam="ma3" value="60" min="1" max="250" aria-label="MA60 周期"></span>
+                <label><input type="checkbox" data-overlay="ema20"> EMA20</label><label><input type="checkbox" data-overlay="ema60"> EMA60</label>
+                <span class="itc-iparam-wrap"><label><input type="checkbox" data-overlay="boll"> BOLL</label><span>(</span><input class="itc-iparam" type="number" data-iparam="bollPeriod" value="20" min="2" max="250" aria-label="BOLL 周期"><span>,</span><input class="itc-iparam" type="number" data-iparam="bollMult" value="2" min="1" max="5" aria-label="BOLL 标准差倍数"><span>)</span></span>
+              </div>
+              <fieldset class="itc-indicator-group"><legend>副图参数（改后即时重算）</legend>
+                <span class="itc-iparam-wrap"><span>MACD</span><input class="itc-iparam" type="number" data-iparam="macdFast" value="12" min="1" max="100" aria-label="MACD 快线周期"><span>,</span><input class="itc-iparam" type="number" data-iparam="macdSlow" value="26" min="1" max="200" aria-label="MACD 慢线周期"><span>,</span><input class="itc-iparam" type="number" data-iparam="macdSignal" value="9" min="1" max="100" aria-label="MACD 信号周期"></span>
+                <span class="itc-iparam-wrap"><span>KDJ</span><input class="itc-iparam" type="number" data-iparam="kdjN" value="9" min="2" max="120" aria-label="KDJ 周期"><span>,</span><input class="itc-iparam" type="number" data-iparam="kdjK" value="3" min="1" max="30" aria-label="KDJ K 平滑"><span>,</span><input class="itc-iparam" type="number" data-iparam="kdjD" value="3" min="1" max="30" aria-label="KDJ D 平滑"></span>
+                <span class="itc-iparam-wrap"><span>RSI</span><input class="itc-iparam" type="number" data-iparam="rsiPeriod" value="14" min="2" max="100" aria-label="RSI 周期"></span>
+              </fieldset>
+              <fieldset class="itc-indicator-group"><legend>副图</legend><label><input type="radio" name="terminal-indicator" value="volume"> 成交量</label><label><input type="radio" name="terminal-indicator" value="macd" checked> MACD</label><label><input type="radio" name="terminal-indicator" value="kdj"> KDJ</label><label><input type="radio" name="terminal-indicator" value="rsi"> RSI</label></fieldset>
+              <p>所有指标由当前真实K线在浏览器本地计算；修改参数后立即重算，样本不足时如实不显示。</p>
+            </div>
+          </div>
+        </details>
+        <button class="itc-btn" id="terminalFocusToggle" type="button" aria-pressed="false">大图看盘</button>
+      </section>
+      <section class="itc-battle-bar" id="terminalBattleBar" aria-labelledby="terminalBattleTitle" aria-busy="true">
+        <div class="itc-battle-context" id="terminalBattleContext">
+          <span class="itc-kicker">CHART BOUNDARIES</span>
+          <h2 id="terminalBattleTitle">当前执行边界</h2>
+          <strong id="terminalBattleState" role="status" aria-live="polite">等待当前周期量化结构</strong>
+          <small id="terminalBattleScope">载入真实K线后生成 · 不自动下单</small>
+        </div>
+        <button class="itc-battle-cell entry" id="terminalBattleEntry" type="button" data-focus-scenario="entry" aria-describedby="terminalBattleEntryMeta" disabled><span>候选入场区</span><strong id="terminalBattleEntryPrice">等待确认</strong><small id="terminalBattleEntryMeta">无可靠支撑时不强行生成</small></button>
+        <button class="itc-battle-cell target" id="terminalBattleTarget" type="button" data-focus-scenario="target" aria-describedby="terminalBattleTargetMeta" disabled><span>持仓止盈观察</span><strong id="terminalBattleTargetPrice">等待确认</strong><small id="terminalBattleTargetMeta">只显示最近有效目标</small></button>
+        <button class="itc-battle-cell invalid" id="terminalBattleRisk" type="button" data-focus-scenario="risk" aria-describedby="terminalBattleRiskMeta" disabled><span>计划失效边界</span><strong id="terminalBattleRiskPrice">等待确认</strong><small id="terminalBattleRiskMeta">以完成K线收盘核验</small></button>
+      </section>
+      <section class="itc-chart-wrap"><div class="itc-draw-hint" id="terminalDrawHint" role="status" aria-live="polite" hidden></div><div class="itc-crosshair-hud" id="terminalCrosshair">等待图表数据</div><div class="itc-chart" id="terminalChart" role="img" aria-label="个股K线图" aria-describedby="terminalChartAccessible"></div><div class="itc-chart-note" id="terminalChartNote"></div><div class="itc-indicator-head"><span>技术指标</span><button type="button" class="itc-indicator-collapse" id="terminalIndicatorCollapse" title="收起/展开副图" aria-expanded="true">收起副图 ▾</button></div><div class="itc-indicator-label" id="terminalIndicatorLabel">副图：成交量</div><div class="itc-indicator-chart" id="terminalIndicatorChart" aria-label="技术指标副图"></div><div class="itc-chart-accessible" id="terminalChartAccessible" aria-live="polite"></div></section>
+      {% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %}{% include 'local_research_history.html' %}{% endif %}
+      <section class="itc-trade-plan itc-post-chart-plan" id="terminalTradePlan" aria-live="polite" aria-label="下一交易时段完整买卖计划">
+        <div class="itc-plan-loading"><b>正在生成下一交易时段计划</b><span>只使用已完成K线，不回填事后最低点或最高点。</span></div>
+      </section>
+      <details class="itc-ai-brief itc-ai-panel itc-post-chart" aria-labelledby="terminalAiTitle" open>
+        <summary class="itc-ai-collapsed-summary"><span>辅助线依据与结构场景 · 与当前买卖计划联动</span><small>已完成K线 + 上级周期一致性；低置信度不强行画</small></summary>
+        <div class="itc-ai-detail-body">
+        <header class="itc-ai-brief-head">
+          <div class="itc-ai-heading">
+            <span class="itc-kicker">REGIS STRUCTURE ENGINE · 本地自主</span>
+            <div><h2 id="terminalAiTitle">AI 辅助划线·极简结构台</h2><span id="terminalAiStatus" role="status" aria-live="polite">等待K线</span></div>
+            <strong id="terminalAiHeadline">一条关键线 + 三点趋势 + 123 触发，主图只保留当前最相关对象</strong>
+            <small id="terminalAiScope">确定性引擎计算价格与状态，AI 只负责选择、排序和解释；不自动下单</small>
+          </div>
+          <div class="itc-ai-controls">
+            <label for="terminalAiMode">作战周期</label>
+            <select class="itc-select" id="terminalAiMode" aria-label="AI结构观察周期"><option value="sensitive">短线</option><option value="balanced" selected>波段</option><option value="conservative">中线</option></select>
+            <button class="itc-btn primary" id="terminalAiRun" type="button">重算辅助线</button>
+          </div>
+        </header>
+        <dl class="itc-battle-metrics" id="terminalBattleMetrics" aria-label="量化作战指标">
+          <div><dt>图表基准收盘</dt><dd>—</dd></div><div><dt>ATR 波动</dt><dd>—</dd></div><div><dt>主趋势</dt><dd>—</dd></div><div><dt>收益风险比</dt><dd>—</dd></div>
+        </dl>
+        <ol class="itc-structure-protocol" id="terminalStructureProtocol" aria-label="趋势位置力量确认四步结构">
+          <li class="waiting"><span>1</span><div><b>等待</b><strong>载入完成K线后计算</strong><small>不使用形成中K线</small></div></li>
+        </ol>
+        <section class="itc-ai-analysis" aria-labelledby="terminalAiAnalysisTitle">
+          <div><span class="itc-kicker">DECISION EVIDENCE</span><h3 id="terminalAiAnalysisTitle">当前判断与依据</h3></div>
+          <p id="terminalAiAnalysis">等待真实K线与场景边界。缺失指标显示原因，不以 0 代替。</p>
+          <div class="itc-ai-analysis-flags" id="terminalAiAnalysisFlags" role="list" aria-label="量化分析要点"></div>
+        </section>
+        <div class="itc-auto-list" id="terminalAutoDrawingList"></div>
+        <details class="itc-structure-evidence" id="terminalStructureEvidence">
+          <summary>更多候选与历史依据 <small id="terminalStructureEvidenceStatus">等待分析</small></summary>
+          <div class="itc-structure-evidence-body" id="terminalStructureEvidenceBody"><p>远端、失效和被替代的结构收纳在这里，默认不进入主图。</p></div>
+        </details>
+        <details class="itc-ai-method">
+          <summary>查看计算口径与诊断</summary>
+          <div class="itc-ai-diagnostics" id="terminalAiDiagnostics" aria-live="polite">载入K线后给出样本、ATR/BOLL 波动、时效与失效检查。</div>
+          <p>只读取当前页面的真实 OHLCV；关键位默认画成一条粗线并标出反应点，不再用上下沿占满主图。决策仍按趋势 → 位置 → 力量 → 确认核验；趋势线两点成候选、第三触才确认；123 必须具备极值点、反向摆动、失败回测，且完成K线越过点2才触发。斐波只用于至少 3 ATR 的完整摆动段。结构证据分不是胜率。</p>
+        </details>
+        </div>
+      </details>
+      <div class="itc-subgrid">
+        <section class="itc-panel"><div class="itc-panel-h">普通人看图助手 <small>看图辅助解释 · 近期涨跌、价格位置与成交活跃度</small></div><div class="itc-panel-b"><div class="itc-bars" id="terminalTechnicals"></div></div></section>
+        <section class="itc-panel"><div class="itc-panel-h">系统观察记录 <small>未验证不生成订单</small></div><div class="itc-panel-b" id="terminalSignals"></div></section>
+      </div>
+      <section class="itc-panel" style="margin-top:8px"><div class="itc-panel-h">七维基本面画像 <small>公司信息七维 · 与评分七维不同</small></div><div class="itc-panel-b">
+        <div class="itc-profile-tabs" id="terminalProfileTabs" role="tablist" aria-label="七维画像"></div>
+        <div id="terminalProfilePanes"></div>
+        <div class="itc-honesty" id="terminalProfileHonesty"></div>
+      </div></section>
+    </div>
+    <aside class="itc-side" aria-label="实时盘口和决策右侧栏">
+      <section class="itc-panel"><div class="itc-panel-h">时机确认 <small>全站同源 · 不替代主图计划</small></div><div class="itc-panel-b itc-timing" id="terminalTiming"><div class="itc-empty">载入投研聚合后计算。</div></div></section>
+      <section class="itc-panel"><div class="itc-panel-h">盘口与流动性 <small id="terminalBookLevel">级别待核验</small></div><div class="itc-panel-b"><div class="itc-book" id="terminalBook"></div></div></section>
+      <section class="itc-panel"><div class="itc-panel-h">资金筹码 <small>当日快照</small></div><div class="itc-panel-b itc-evidence" id="terminalFunds"></div></section>
+      <section class="itc-panel"><div class="itc-panel-h">量化预测 <small id="terminalPredictionStatus">等待模型快照</small></div><div class="itc-panel-b" id="terminalPrediction"></div></section>
+      <section class="itc-panel"><div class="itc-panel-h">统一综合评分 <small id="terminalScoreCoverage">等待有效维度</small></div><div class="itc-panel-b">
+        <div class="itc-score-head" id="terminalScoreHead"></div>
+        <div class="itc-radar-wrap" id="terminalRadar"></div>
+        <div class="itc-dim-cards" id="terminalDimCards"></div>
+        <div class="itc-veto" id="terminalVeto" hidden></div>
+        <p class="itc-score-disclosure" id="terminalScoreNote">评分只用于研究排序和证据展示，不构成投资建议；缺数据时不会猜测或补分。</p>
+      </div></section>
+      <section class="itc-panel"><div class="itc-panel-h">AI 智能总结 <small>本地规则化生成 · 无外部 AI</small></div><div class="itc-panel-b itc-summary" id="terminalSummary"></div><div class="itc-panel-b"><div class="itc-honesty" id="terminalSummaryHonesty"></div></div></section>
+    </aside>
+  </div>
+  <div class="itc-bottom">
+    <section class="itc-panel"><div class="itc-panel-h">公司基本情况 <small id="terminalFundamentalStatus">等待数据状态</small></div><div class="itc-panel-b"><div class="itc-dim-grid" id="terminalFundamentals"></div></div></section>
+    <section class="itc-panel"><div class="itc-panel-h">数据来源与时点 <small>可审计</small></div><div class="itc-panel-b itc-evidence" id="terminalEvidence"></div></section>
+    <section class="itc-panel"><div class="itc-panel-h">预测与决策留痕 <small id="terminalLedgerStatus">当前浏览器本地账本</small></div><div class="itc-panel-b itc-evidence" id="terminalLedger"></div></section>
+  </div>
+  <footer class="itc-footer"><b>披露：</b>本工作台不接券商、不自动下单。研究标记、技术指标和模型输出存在不确定性；数据异常、缺失或未验证时将降级展示，不参与买卖决策。AI 智能总结为本地规则化生成（无外部 AI 调用），字段全部来自真实数据源。</footer>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/lightweight-charts/lightweight-charts.standalone.production.js"></script>
+<script src="/static/vendor_echarts.min.js"></script>
+<script src="/static/stock_execution_plan.js?v=9"></script>
+<script src="/static/regis_ai_drawings.js?v=10"></script>
+<script src="/static/stock_terminal.js?v=58"></script>
+{% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %}<script src="/static/local_research_history.js?v=2"></script>{% endif %}
+{% endblock %}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>历史行情查询 · Regis Oracle</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/stock_terminal.css?v=1">
+  <link rel="stylesheet" href="/static/stock_research.css?v=1">
+</head>
+<body>
+  <a class="itc-skip" href="#historyMain">跳到历史行情</a>
+  <header class="history-header">
+    <a class="history-brand" href="/">Regis Oracle <span>A 股研究</span></a>
+    <nav aria-label="主要页面"><a href="/decision-v2">研究工作台</a><a href="/market-panorama">市场中心</a><a href="/stock" aria-current="page">历史行情</a><a href="/factor-system">因子研究</a><a href="/strategy-lab">策略与战法</a><a href="/data-center">数据中心</a></nav>
+  </header>
+  <main id="historyMain" class="history-workspace">
+    <div class="history-heading"><div><p class="itc-kicker">SAVED MARKET DATA</p><h1>历史行情查询</h1><p>输入沪深 A 股代码，按日期查看已保存的日线；也可切换至 510300 ETF。</p></div><span class="history-badge">本机历史快照</span></div>
+    {% set primary_history = true %}
+    {% include 'local_research_history.html' %}
+    <p class="history-limits">本页是历史研究视图。实时行情、行业与概念板块数据仍待接入；这些历史记录不会生成今日买卖提示。</p>
+    <p id="historyFactorNote" class="history-limits">查询股票历史后，可查看同一证券和日期范围的因子预览；因子最多显示最近 250 条。</p>
+    <div class="history-next"><a id="historyFactorLink" hidden>查看这段日线的因子（最多 250 条） →</a><a href="/strategy-lab#localBaselineReference">查看 15 万元基准研究 →</a><a id="historyTerminalLink" href="/stock?code={{ code|urlencode }}&amp;view=terminal">旧个股终端（当前数据待核） →</a></div>
+    <noscript><p>需启用 JavaScript 才能读取和绘制本机日线；当前未展示行情。</p></noscript>
+  </main>
+  <script src="/static/vendor/lightweight-charts/lightweight-charts.standalone.production.js"></script>
+  <script src="/static/local_research_history.js?v=3"></script>
+</body>
+</html>

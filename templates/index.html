@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="面向 A 股 1–10 日交易周期的人工确认盯盘助手">
+  <title>A股交易助手 · 试运营</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">A</span>
+      <div><strong>A股交易驾驶舱</strong><small>个人试运营 · 人工确认 · 不自动下单</small></div>
+    </div>
+    <nav class="terminal-nav" aria-label="页面导航">
+      <a class="active" href="#tradeDesk">交易驾驶舱</a>
+      <a href="{{ url_for('analysis_page') }}">个股分析</a>
+      <a href="#positionsDesk">持仓风控</a>
+      <a href="{{ url_for('research_page') }}">研究工厂</a>
+      <a href="{{ url_for('quant_page') }}">量化研究</a>
+      <a href="{{ url_for('kronos_page') }}">Kronos 预测</a>
+    </nav>
+    <div class="top-status">
+      <span id="connectionDot" class="status-dot"></span>
+      <span id="connection">正在检查行情…</span>
+      <time id="clock"></time>
+    </div>
+  </header>
+
+  <main>
+    <section id="tradeDesk" class="hero">
+      <div>
+        <p class="eyebrow">LIVE A-SHARE DESK</p>
+        <h1>先看机会，再决定是否行动</h1>
+        <p id="researchNotice" class="research-notice">正在读取研究门禁…</p>
+      </div>
+      <div class="capital-card">
+        <span>试运营资金</span>
+        <strong>¥{{ '%.0f'|format(risk.initial_capital) }}</strong>
+        <small>单只 ≤ {{ (risk.initial_position_limit * 100)|int }}% · 最多 {{ risk.max_positions }} 只 · 止损 {{ (risk.stop_loss * 100)|int }}%</small>
+      </div>
+    </section>
+
+    <section class="status-grid" aria-label="系统关键状态">
+      <article class="metric">
+        <span>市场状态</span>
+        <strong id="marketLabel">等待数据</strong>
+        <small id="marketReason">正在读取上证与创业板指数</small>
+      </article>
+      <article class="metric">
+        <span>行情有效性</span>
+        <strong id="freshnessLabel">检查中</strong>
+        <small id="freshnessTime">每 60 秒刷新</small>
+      </article>
+      <article class="metric">
+        <span>持仓暴露</span>
+        <strong id="exposureValue">0.00%</strong>
+        <small id="portfolioPnl">当前无持仓</small>
+      </article>
+      <article class="metric">
+        <span>企业微信提醒</span>
+        <strong id="wecomMetric">未配置</strong>
+        <small id="monitorStatus">仅监控已录入持仓</small>
+      </article>
+    </section>
+
+    <section id="v21DashboardPilot" class="panel dashboard-pilot locked" aria-labelledby="v21DashboardTitle">
+      <div>
+        <p class="section-kicker">V22 RISK MANAGED · EVENT DRIVEN</p>
+        <h2 id="v21DashboardTitle">增持事件 · 历史证据观察</h2>
+        <p id="v21DashboardMessage">正在读取股东实际增持公告策略裁决…</p>
+      </div>
+      <div id="v21DashboardCandidate" class="dashboard-pilot-candidate">等待当天新公告</div>
+      <div class="dashboard-pilot-rule">
+        <span>研究入场规则</span><strong id="v21DashboardEntry">公告后首个交易日开盘</strong>
+        <span>研究退出规则</span><strong id="v21DashboardExit">第10个交易日收盘</strong>
+        <span>历史仓位上限</span><strong id="v21DashboardPosition">账户权益最多20%</strong>
+        <span>证据</span><strong id="v21DashboardEvidence">复核中</strong>
+      </div>
+      <a href="{{ url_for('research_page') }}#v21PilotPanel">查看完整成本证据</a>
+      <b id="v21DashboardStatus" class="tag gray">读取中</b>
+    </section>
+
+    <section class="main-grid cockpit-grid">
+      <article class="panel opportunities opportunity-rail">
+        <div class="panel-heading">
+          <div><p class="section-kicker">ACTION QUEUE</p><h2>今日机会</h2></div>
+          <span id="opportunityGate" class="tag gray">读取真钱权限</span>
+        </div>
+        <div class="opportunity-label"><span>真实策略今日机会</span><small>0–3只；空仓也是策略输出，买入必须人工确认</small></div>
+        <div id="strongSignals" class="empty-state">
+          <b>正在读取V23今日策略裁决</b>
+          <span>不会用未验证的技术指标填充买入推荐。</span>
+        </div>
+        <div class="opportunity-label waiting-label"><span>实时技术观察</span><small>每 8 秒更新自选股5分钟K线；不替代今日机会</small></div>
+        <div id="manualCandidates" class="empty-state compact">添加重点监视股票后，显示可复核的条件链。</div>
+        <div class="opportunity-label waiting-label"><span>研究观察</span><small>功能已开放 · 自选股均可分析，不等于买入推荐</small></div>
+        <div id="observations" class="empty-state compact">添加重点监视股票后即可开始研究观察。</div>
+      </article>
+
+      <article class="panel focus-panel">
+        <div class="focus-heading">
+          <div>
+            <p class="section-kicker">STRONGEST FOCUS</p>
+            <div class="focus-symbol-line">
+              <h2 id="focusSymbol">等待选择股票</h2>
+              <span id="focusSignalState" class="tag gray">无可执行信号</span>
+            </div>
+            <div class="focus-quote-line">
+              <strong id="focusPrice">--</strong>
+              <span id="focusChange" class="flat">--</span>
+              <small id="focusQuoteTime">等待真实行情</small>
+            </div>
+          </div>
+          <div class="timeframe-switcher" role="group" aria-label="K线周期">
+            <button type="button" aria-pressed="false" data-interval="1m">1分</button>
+            <button type="button" class="active" aria-pressed="true" data-interval="5m">5分</button>
+            <button type="button" aria-pressed="false" data-interval="15m">15分</button>
+            <button type="button" aria-pressed="false" data-interval="30m">30分</button>
+            <button type="button" aria-pressed="false" data-interval="1d">日K</button>
+          </div>
+        </div>
+        <div id="focusChart" class="focus-chart" aria-label="重点股票K线">
+          <div id="focusChartEmpty" class="chart-empty">
+            <strong>当前没有通过门禁的最强机会</strong>
+            <span>添加重点监视股票后，可在右侧点击股票打开主K线；门禁通过后将自动优先展示最强机会。</span>
+          </div>
+        </div>
+        <div class="focus-chart-footer">
+          <span id="focusChartMessage">K线数据尚未加载</span>
+          <span>Charts by TradingView Lightweight Charts™</span>
+        </div>
+        <div id="focusDecision" class="decision-strip">
+          <div><span>当前动作</span><strong>禁止买入</strong></div>
+          <div><span>触发条件</span><strong>等待策略门禁</strong></div>
+          <div><span>价格区间 / 成本</span><strong>未生成</strong></div>
+          <div><span>失效 / 止损线</span><strong>未生成</strong></div>
+        </div>
+      </article>
+
+      <article class="panel market-rail">
+        <div class="panel-heading">
+          <div><p class="section-kicker">MARKET PULSE</p><h2>大盘与自选</h2></div>
+          <button id="refreshBtn" class="ghost-button compact-button" type="button">刷新</button>
+        </div>
+        <div id="indexQuotes" class="index-grid"></div>
+        <div class="market-divider"><span>重点监视</span><small>点击股票切换主K线</small></div>
+        <form id="watchlistForm" class="quick-watch-form">
+          <input name="code" inputmode="numeric" maxlength="6" aria-label="股票代码" placeholder="输入6位股票代码" required>
+          <input name="name" aria-label="股票名称" placeholder="名称可选">
+          <button type="submit">添加</button>
+        </form>
+        <div id="watchlist" class="empty-state compact">还没有重点监视股票。</div>
+        <p id="universeDisclaimer" class="notice compact-notice"></p>
+      </article>
+    </section>
+
+    <section id="positionsDesk" class="lower-grid">
+      <article class="panel positions-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">同花顺成交后录入</p><h2>持仓与卖出风控</h2></div>
+          <span class="tag green">止损 / 止盈提醒</span>
+        </div>
+        <form id="positionForm" class="position-form">
+          <label><span>股票代码</span><input name="code" maxlength="6" inputmode="numeric" placeholder="000001" required></label>
+          <label><span>股票名称</span><input name="name" placeholder="可选"></label>
+          <label><span>数量</span><input name="quantity" type="number" min="100" step="100" placeholder="100" required></label>
+          <label><span>成交成本</span><input name="cost_price" type="number" min="0.01" step="0.01" placeholder="10.50" required></label>
+          <button type="submit">记录持仓</button>
+        </form>
+        <div id="positions" class="empty-state">暂无持仓。录入后系统才会追踪卖出条件。</div>
+      </article>
+
+      <div class="side-stack">
+        <article class="panel">
+          <div class="panel-heading"><div><p class="section-kicker">每日闭环</p><h2>收盘复盘</h2></div><button id="reviewBtn" class="ghost-button" type="button">生成复盘</button></div>
+          <div id="review" class="empty-state compact">收盘后汇总持仓、已实现盈亏与次日关注。</div>
+        </article>
+        <article class="panel">
+          <div class="panel-heading"><div><p class="section-kicker">消息通道</p><h2>企业微信</h2></div><span id="wecomStatus" class="tag gray">未配置</span></div>
+          <p class="notice">Webhook 只进入当前本机进程，网页和磁盘均不保存。连接后，止损与止盈风险会推送至企业微信。</p>
+          <button id="wecomTest" class="ghost-button full" type="button">发送测试通知</button>
+          <p id="wecomResult" class="form-result" aria-live="polite"></p>
+        </article>
+      </div>
+    </section>
+
+    <details id="researchCenter" class="research-center">
+      <summary>
+        <span><b>研究中心</b><small>数据门禁、回测、开源组件、模拟盘与本地研究</small></span>
+        <span>展开简报 · 完整研究请进入顶部“研究工厂”</span>
+      </summary>
+    <section class="research-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">真实数据门禁</p><h2>策略验证</h2></div>
+          <span id="researchGate" class="tag gray">正在读取</span>
+        </div>
+        <div id="researchMetrics" class="research-metrics"></div>
+        <div id="dataGateSummary" class="data-gate-summary"></div>
+        <div id="v3Strategies" class="v3-strategies"></div>
+        <p id="researchLimitations" class="notice"></p>
+      </article>
+      <article class="panel factor-mining-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">自动研究 · 每10轮复跑</p><h2>因子挖掘与含成本回测</h2></div>
+          <span id="factorMiningStatus" class="tag gray">尚未运行</span>
+        </div>
+        <div class="worker-grid factor-mining-metrics">
+          <div><span>候选因子</span><strong id="factorCandidateCount">0</strong></div>
+          <div><span>独立测试确认</span><strong id="factorConfirmedCount">0</strong></div>
+          <div><span>策略门禁通过</span><strong id="factorStrategyPassCount">0</strong></div>
+          <div><span>最近运行</span><strong id="factorMiningTime">--</strong></div>
+        </div>
+        <div id="factorMiningResults" class="factor-mining-results empty-state compact">等待本地程序生成候选、独立测试并回测。</div>
+        <p id="factorMiningWarning" class="notice">因子只有完成真实数据、样本外验证与含成本回测后才可能进入策略池。</p>
+      </article>
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">许可证隔离</p><h2>开源组件状态</h2></div>
+          <span class="tag gray">不混装引擎</span>
+        </div>
+        <div id="integrationList" class="integration-list"></div>
+      </article>
+    </section>
+
+    <section class="validation-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">前向验证账户</p><h2>¥10,000 模拟盘</h2></div>
+          <span id="paperStatus" class="tag gray">正在读取</span>
+        </div>
+        <div class="paper-metrics">
+          <div><span>模拟现金</span><strong id="paperCash">¥10,000.00</strong></div>
+          <div><span>冻结前向信号</span><strong id="paperSignals">0 条</strong></div>
+          <div><span>含成本完成样本</span><strong id="paperTrades">0 / 30 笔</strong></div>
+        </div>
+        <p id="paperMessage" class="notice"></p>
+        <p class="validation-rule">研究前向目标：首个冻结信号后至少 6 周且完成 30 个含成本信号结果。系统自动处理 T+1 纸面入场与退出，账本只追加、不可回填；真钱和券商订单始终锁定。</p>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">回测成本依据</p><h2>交易费用档案</h2></div>
+          <span id="feeStatus" class="tag yellow">待核对</span>
+        </div>
+        <form id="feeProfileForm" class="fee-form">
+          <label><span>佣金（万分之）</span><input name="commission_wan" type="number" min="0" max="30" step="0.1" required></label>
+          <label><span>单笔最低佣金（元）</span><input name="minimum_commission" type="number" min="0" max="20" step="0.1" required></label>
+          <button type="submit">保存费用档案</button>
+        </form>
+        <p id="feeMessage" class="notice"></p>
+        <p class="validation-rule">同花顺是交易软件，实际佣金由你的开户券商和账户决定。请以后从券商交割单核对；未确认前采用佣金万3、单笔最低 ¥5 的保守默认值。</p>
+      </article>
+
+      <article class="panel research-worker-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">电脑开机即可持续</p><h2>24 小时研究流水线</h2></div>
+          <span id="researchWorkerStatus" class="tag gray">未启动</span>
+        </div>
+        <div class="worker-progress">
+          <div class="worker-progress-head">
+            <span>V4 全量真实日线</span>
+            <strong id="workerProgressText">读取中</strong>
+          </div>
+          <div class="worker-progress-track"><i id="workerProgressBar"></i></div>
+        </div>
+        <div class="worker-grid">
+          <div><span>当前步骤</span><strong id="workerStep">等待启动</strong></div>
+          <div><span>运行轮次</span><strong id="workerCycle">0</strong></div>
+          <div><span>质量审计</span><strong id="workerAudit">--</strong></div>
+          <div><span>因子管线</span><strong id="workerFactors">--</strong></div>
+          <div><span>自动挖因子</span><strong id="workerMinedFactors">--</strong></div>
+          <div><span>因子策略门禁</span><strong id="workerFactorGates">--</strong></div>
+          <div><span>外部付费 API</span><strong id="workerDeepSeek">已禁用</strong></div>
+          <div><span>最近心跳</span><strong id="workerHeartbeat">--</strong></div>
+        </div>
+        <p id="workerMessage" class="notice">正在读取后台研究状态。</p>
+        <div class="worker-actions">
+          <button id="workerStart" type="button">启动连续研究</button>
+          <button id="workerStop" class="danger-button" type="button">安全停止</button>
+        </div>
+        <p class="validation-rule">固定边界：仅由本地确定性程序下载公开数据、审计和回测；外部付费 API 已禁用，不影响本地研究持续运行。</p>
+      </article>
+
+      <article class="panel ai-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">LOCAL-ONLY POLICY</p><h2>外部付费 API</h2></div>
+          <span id="deepseekStatus" class="tag gray">已禁用</span>
+        </div>
+        <p class="notice">外部付费 API 已禁用，本地确定性研究继续。页面不接收密钥，也不会提供连接、测试或模型分析入口。</p>
+        <p id="deepseekMessage" class="form-result" aria-live="polite">仅保留本地数据、审计、因子挖掘与含成本回测。</p>
+      </article>
+    </section>
+    </details>
+  </main>
+
+  <dialog id="detailDialog">
+    <button id="closeDetailDialog" class="dialog-close" type="button" aria-label="关闭">×</button>
+    <div id="detailContent"></div>
+  </dialog>
+
+  <dialog id="closePositionDialog">
+    <button id="cancelClosePosition" class="dialog-close" type="button" aria-label="关闭">×</button>
+    <form id="closePositionForm" class="dialog-form">
+      <p class="section-kicker">记录同花顺实际卖出</p>
+      <h2 id="closePositionTitle">关闭持仓</h2>
+      <input name="position_id" type="hidden">
+      <label><span>实际卖出成交价</span><input name="close_price" type="number" min="0.01" step="0.01" required></label>
+      <label><span>卖出原因</span><select name="reason"><option value="manual_sell">手工卖出</option><option value="stop_loss">止损</option><option value="take_profit">止盈</option><option value="strategy_exit">策略退出</option></select></label>
+      <button type="submit">确认记录（不会下单）</button>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='vendor/lightweight-charts/lightweight-charts.standalone.production.js') }}"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

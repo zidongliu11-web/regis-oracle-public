@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A股实时个股本地量化状态">
+  <title>个股分析 · A股交易助手</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='analysis.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">A</span>
+      <div><strong>A股交易驾驶舱</strong><small>个股量化分析 · 人工确认</small></div>
+    </div>
+    <nav class="terminal-nav" aria-label="页面导航">
+      <a href="{{ url_for('index') }}">交易驾驶舱</a>
+      <a class="active" href="{{ url_for('analysis_page') }}">个股分析</a>
+      <a href="{{ url_for('research_page') }}">研究工厂</a>
+      <a href="{{ url_for('quant_page') }}">量化研究</a>
+      <a href="{{ url_for('kronos_page') }}">Kronos 预测</a>
+    </nav>
+    <div class="top-status">
+      <span id="analysisConnectionDot" class="status-dot"></span>
+      <span id="analysisConnection">正在读取真实行情…</span>
+      <time id="analysisClock"></time>
+    </div>
+  </header>
+
+  <main class="analysis-main">
+    <section class="analysis-hero">
+      <div>
+        <p class="eyebrow">LOCAL STOCK RESEARCH DESK</p>
+        <h1>把“现在能不能做”放在第一屏</h1>
+        <p>全部指标由本地确定性程序计算。所有价格都带时间、来源和失效条件；历史门禁关闭时不会伪装成可执行信号。</p>
+      </div>
+      <form id="stockAnalysisForm" class="analysis-search">
+        <label>
+          <span>股票代码</span>
+          <input id="analysisCode" name="code" maxlength="6" inputmode="numeric" placeholder="例如 000001" required>
+        </label>
+        <button type="submit">开始分析</button>
+      </form>
+    </section>
+
+    <section class="analysis-toolbar">
+      <div id="analysisWatchlist" class="analysis-watchlist"></div>
+      <span id="liveStreamBadge" class="tag gray">实时引擎待机</span>
+      <div class="timeframe-switcher" role="group" aria-label="分析周期">
+        <button type="button" aria-pressed="false" data-interval="1m">1分</button>
+        <button type="button" class="active" aria-pressed="true" data-interval="5m">5分</button>
+        <button type="button" aria-pressed="false" data-interval="15m">15分</button>
+        <button type="button" aria-pressed="false" data-interval="30m">30分</button>
+        <button type="button" aria-pressed="false" data-interval="1d">日K</button>
+      </div>
+    </section>
+
+    <section class="analysis-cockpit">
+      <article class="panel analysis-chart-panel">
+        <div class="analysis-symbol-head">
+          <div>
+            <p class="section-kicker">REAL-TIME INDIVIDUAL STOCK</p>
+            <div class="analysis-symbol-line">
+              <h2 id="analysisSymbol">等待股票</h2>
+              <span id="analysisState" class="tag gray">等待数据</span>
+            </div>
+          </div>
+          <div class="analysis-quote">
+            <strong id="analysisPrice">--</strong>
+            <span id="analysisChange" class="flat">--</span>
+            <small id="analysisQuoteTime">尚未读取</small>
+          </div>
+        </div>
+        <div id="analysisChart" class="analysis-chart" aria-label="个股K线与不可执行的研究参考线">
+          <div class="chart-empty"><strong>输入股票代码开始</strong><span>支持沪深主板和创业板，可切换分钟K线与日K。</span></div>
+        </div>
+        <div class="analysis-chart-meta">
+          <span id="analysisDataSource">等待数据来源</span>
+          <span id="liveUpdateMeta">开盘时将自动进入低延迟更新</span>
+          <span>Charts by TradingView Lightweight Charts™</span>
+        </div>
+      </article>
+
+      <aside class="analysis-side">
+        <article id="decisionCard" class="panel decision-card locked" aria-live="polite">
+          <div class="panel-heading">
+            <div><p class="section-kicker">DECISION MAP</p><h2>当前决策</h2></div>
+            <span id="gateBadge" class="tag red">门禁锁定</span>
+          </div>
+          <div class="decision-action">
+            <span>现在怎么做</span>
+            <strong id="decisionAction">禁止直接买入</strong>
+            <small id="decisionGateReason">正在检查研究门禁</small>
+          </div>
+          <div class="scenario-block buy">
+            <span id="buyZoneLabel">研究参考区间（不可执行）</span>
+            <strong id="buyZone">--</strong>
+            <small id="buyTrigger">所有价位均为不可执行的研究参考；等待真实K线</small>
+          </div>
+          <div class="scenario-grid">
+            <div><span id="protectiveStopLabel">研究失效参考</span><strong id="protectiveStop">--</strong></div>
+            <div><span id="firstTargetLabel">研究目标参考</span><strong id="firstTarget">--</strong></div>
+          </div>
+          <div class="scenario-block sell">
+            <span>卖出 / 风险条件</span>
+            <ul id="sellConditions"><li>等待分析</li></ul>
+          </div>
+          <p class="analysis-boundary">研究访问保持可用：这里只展示不可执行的“条件—失效”地图与研究参考区间。系统没有真钱授权能力，不自动下单，也不保证收益。</p>
+        </article>
+
+        <article class="panel market-context-card">
+          <div class="panel-heading"><div><p class="section-kicker">MARKET CONTEXT</p><h2>市场环境</h2></div></div>
+          <strong id="marketContextLabel">等待指数数据</strong>
+          <p id="marketContextText">市场环境不能代替个股门禁。</p>
+        </article>
+      </aside>
+    </section>
+
+    <section class="analysis-lower">
+      <article class="panel evidence-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">EXPLAINABLE EVIDENCE</p><h2>本地量化证据</h2></div>
+          <span id="localScore" class="tag gray">0 / 4</span>
+        </div>
+        <div class="evidence-columns">
+          <div>
+            <h3>支持证据</h3>
+            <ul id="bullEvidence"><li>等待数据</li></ul>
+          </div>
+          <div>
+            <h3>风险证据</h3>
+            <ul id="bearEvidence"><li>等待数据</li></ul>
+          </div>
+        </div>
+        <div id="technicalLenses" class="analysis-lenses"></div>
+      </article>
+
+      <article class="panel quant-strategy-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">QUANT STRATEGY</p><h2>量化策略信号</h2></div>
+          <span id="quantStrategyTag" class="tag gray">等待数据</span>
+        </div>
+        <p class="notice" id="quantStrategyNotice">正在读取量化研究快照（decay 因子加权，walk-forward 回测）。</p>
+        <div id="quantStrategyBody" class="quant-strategy-body">
+          <div class="empty-state compact">本股票不在当前量化研究宇宙内。</div>
+        </div>
+      </article>
+
+      <article class="panel ai-stock-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">LOCAL-ONLY POLICY</p><h2>外部模型审查</h2></div>
+          <span id="aiStockStatus" class="tag gray">已禁用</span>
+        </div>
+        <p class="notice">外部付费 API 已禁用，本地确定性研究继续。页面不会把行情或研究快照发送给外部模型。</p>
+        <div id="aiStockOutput" class="ai-stock-output">
+          <div class="empty-state compact">当前页面只运行本地行情、指标和门禁计算。</div>
+        </div>
+      </article>
+
+      <article class="panel ai-stock-panel tradingagents-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">LOCAL-ONLY POLICY</p><h2>TradingAgents</h2></div>
+          <span id="tradingAgentsStatus" class="tag gray">已禁用</span>
+        </div>
+        <p class="notice">TradingAgents 的外部模型与付费数据调用已禁用，不会发起状态检查或研究请求。</p>
+        <div id="tradingAgentsOutput" class="ai-stock-output">
+          <div class="empty-state compact">本地确定性研究继续运行。</div>
+        </div>
+      </article>
+    </section>
+
+    <p id="analysisSafety" class="analysis-safety">等待安全边界。</p>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='vendor/lightweight-charts/lightweight-charts.standalone.production.js') }}"></script>
+  <script src="{{ url_for('static', filename='analysis.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+body[data-decision-mode="research"] .workspace{max-width:1500px}
+.research-boundary{display:flex;justify-content:space-between;gap:24px;padding:18px 24px;margin:20px 0;border:1px solid #35434e;border-left:3px solid #d7ad69;border-radius:12px;background:#111f2b}
+.research-boundary h2{font-size:20px;margin:8px 0;color:#edf4f8}
+.research-boundary p,.research-readiness p{color:#acbbc9;line-height:1.7;margin:8px 0}
+.research-budget{min-width:220px;display:flex;flex-direction:column;justify-content:center;gap:8px;border-left:1px solid #35434e;padding-left:32px}
+.research-budget strong{font-size:30px;color:#edf4f8;font-variant-numeric:tabular-nums}
+.research-budget small,.research-budget span{color:#acbbc9}
+.research-readiness{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:24px}
+.research-readiness article{border:1px solid #283d4d;border-radius:10px;background:#0d1b28;padding:20px}
+.research-readiness article>span{color:#95b8cf;font-size:12px;letter-spacing:.08em}
+.research-readiness h3{font-size:18px;margin:12px 0}
+body[data-decision-mode="research"] a{color:#8fcee9}
+#decisionNativeSources .card{border:1px solid #2b4052;border-radius:12px;background:#0d1b28;margin:24px 0;padding:24px}
+#decisionNativeSources .card-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
+#decisionNativeSources .card-header h2,#decisionNativeSources .card-header h3{margin:0;font-size:21px}
+#decisionNativeSources .data-features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+#decisionNativeSources .data-feature{border:1px solid #2b4052;border-radius:8px;padding:18px;overflow-wrap:anywhere}
+#decisionNativeSources .data-feature[data-state="unavailable"]{border-color:#8d6454}
+#decisionNativeSources .data-feature h3{font-size:17px;margin:0 0 12px}
+#decisionNativeSources p,#decisionNativeSources li{color:#aebdca;font-size:14px;line-height:1.75}
+#decisionNativeSources .data-tag,#decisionNativeSources .card-badge{color:#d7bc8b;font-size:12px}
+#decisionNativeSources button,#decisionNativeSources select{background:#162c3d;color:#e4eef6;border:1px solid #456076;border-radius:6px;padding:9px 13px;font:inherit}
+#decisionNativeSources button{cursor:pointer}
+#decisionNativeSources :focus-visible{outline:2px solid #91d3f2;outline-offset:3px}
+#decisionNativeSources summary{cursor:pointer;color:#a6d3e9;padding:10px 0}
+#decisionNativeSources table{width:100%;border-collapse:collapse;font-size:13px}
+#decisionNativeSources th,#decisionNativeSources td{padding:10px 12px;text-align:right;border-bottom:1px solid #2b4052;white-space:nowrap}
+#decisionNativeSources th:first-child,#decisionNativeSources td:first-child{text-align:left}
+#decisionNativeSources .data-note{margin-top:16px}

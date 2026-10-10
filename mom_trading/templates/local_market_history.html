@@ -1,0 +1,23 @@
+<template id="localMarketHistoryTemplate">
+  <section class="card" id="localMarketHistory" aria-labelledby="localMarketHistoryTitle" style="margin-bottom:20px">
+    <div class="card-header"><h3 id="localMarketHistoryTitle" class="card-title">沪深历史样本 · 价格涨跌家数</h3><span class="card-badge">本机日线快照 · 截至 2026-09-30</span></div>
+    <div class="card-body">
+      <p>对比相邻交易日的未复权收盘价，单列无记录、零成交及无效记录。不是全 A 实时广度，也不代表可成交股票数量。</p>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <label>交易日 <select id="localMarketDate" aria-label="历史样本交易日" disabled></select></label>
+        <label>范围 <select id="localMarketBoard" aria-label="历史样本代码分组"><option value="total">沪深全部样本</option><option value="main">主板样本</option><option value="chinext">创业板样本</option><option value="star">科创板样本（仅研究）</option></select></label>
+        <button type="button" id="localMarketRetry" class="btn">重新读取历史统计</button>
+      </div>
+      <p id="localMarketStatus" role="status" aria-live="polite">正在读取本机已保存的历史统计…</p>
+      <div id="localMarketContent" hidden>
+        <div id="localMarketDistribution" style="display:flex;height:22px;border-radius:4px;overflow:hidden" role="img" aria-label="当前历史样本涨跌家数分布"></div>
+        <p id="localMarketCounts" style="font-variant-numeric:tabular-nums"></p>
+        <p id="localMarketExclusions" class="intel-meta"></p>
+        <details><summary>查看全部已保存交易日</summary><div class="table-wrap" style="max-height:320px;overflow:auto"><table class="data-table"><thead><tr><th>交易日</th><th>有效价格对</th><th>上涨</th><th>下跌</th><th>持平</th><th>当日无记录</th><th>零成交</th><th>前日无记录</th><th>无效记录</th></tr></thead><tbody id="localMarketRows"></tbody></table></div></details>
+        <p id="localMarketSource" class="intel-meta"></p>
+        <p><strong>使用限制：</strong>分红与拆并股可能影响原价方向；没有认证历史股票全集及当时可见性。此处没有行业或概念板块映射，不参与买卖提示。</p>
+        <details><summary>全部统计口径与限制</summary><ul id="localMarketLimits" class="intel-meta"></ul></details>
+      </div>
+    </div>
+  </section>
+</template>

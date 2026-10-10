@@ -1,0 +1,134 @@
+"""One bounded same-case transport study after a preserved 8s receive failure."""
+from pathlib import Path
+import argparse,json,re,socket,subprocess,sys
+ROOT=Path(__file__).resolve().parents[1]
+sys.dont_write_bytecode=True;sys.path.insert(0,str(ROOT))
+from research.capture_completed_daily_pair import read,write,sha,clock,first_response,claim_child_dispatch,completed_cutoff
+P=ROOT/'research/DATED_LIST_TRANSPORT_PROTOCOL_20261009.json'
+O=ROOT/'research/DATED_LIST_TRANSPORT_RESULT_20261009.json'
+FIELDS=['code','tradeStatus','code_name'];DAY='2026-10-08'
+
+from research.capture_current_dated_list import validate_list
+
+def exception_record(frame,event,arg,sdk_filename,phase):
+    # Never read frame locals, exception value or traceback: only exception type.
+    if (event!='exception' or frame.f_code.co_name!='send_msg'
+        or frame.f_code.co_filename.replace('\\','/').casefold()!=sdk_filename.replace('\\','/').casefold()):
+        return None
+    return {'SDK_file':'baostock/util/socketutil.py','function':'send_msg',
+            'line':frame.f_lineno,'exception_type':arg[0].__name__,
+            'phase':phase,'observed_at_utc':clock()}
+
+def gate(p):
+    from scripts.workflow_guard import contract_hash
+    t=read(ROOT/'WORKFLOW_TASK.json');idx={a['path']:a['sha256'] for a in t['artifacts']}
+    assert t['id']==p['parent_task'] and t['owner_session']==p['owner_session'] and t['status']=='in_progress'
+    assert t['contract_sha256']==contract_hash(t) and idx[P.relative_to(ROOT).as_posix()]==sha(P)
+    assert p['day']==DAY and p['API_call']=='query_all_stock(day=2026-10-08)'
+    assert p['bounds']['socket_seconds']==20 and p['same_case_source_attempt_number']==2
+    ref=p['prior_failure_result'];assert sha(ROOT/ref['path'])==ref['sha256']
+    assert read(ROOT/ref['path'])['diagnostics']['error_code']=='10002007'
+    for f,h in p['input_hashes'].items():assert sha(ROOT/f)==h
+    for f,h in p['native_sdk_hashes'].items():assert sha(f)==h
+    for ref in p['native_evidence_refs'].values():assert sha(ref['path'])==ref['sha256']
+    completed_cutoff(clock(),DAY)
+    assert 'onedrive' not in str(Path(p['native_directory']).resolve()).lower()
+    return t
+
+def child(p):
+    gate(p);claim_child_dispatch(p);socket.setdefaulttimeout(20)
+    def audit(event,args):
+        if event=='socket.connect' and args[1]!=('public-api.baostock.com',10030):raise PermissionError('unexpected_target')
+        if event in ('subprocess.Popen','os.system'):raise PermissionError('child_spawn')
+    sys.addaudithook(audit);sys.path.insert(0,p['sdk_directory'])
+    import baostock as bs
+    import baostock.common.context as context
+    import baostock.common.contants as constants
+    assert constants.BAOSTOCK_PER_PAGE_COUNT==2000
+    out=Path(p['native_directory'])/'capture';path=out/'journal.json'
+    j={'started_utc':clock(),'guest_handshake_attempts':0,'semantic_query_attempts':0,
+       'next_calls':0,'logout_attempts':0,'stage':'before_guest','failure_type':None,
+       'socket_seconds':20,'transport_phase':'guest','transport_exceptions':[],'transport_events_omitted':0}
+    sdk_filename=str(Path(p['sdk_directory'])/'baostock/util/socketutil.py')
+    def trace(frame,event,arg):
+        if (frame.f_code.co_name!='send_msg' or
+            frame.f_code.co_filename.replace('\\','/').casefold()!=sdk_filename.replace('\\','/').casefold()):return None
+        frame.f_trace_lines=False
+        item=exception_record(frame,event,arg,sdk_filename,j['transport_phase'])
+        if item:
+            if len(j['transport_exceptions'])<8:j['transport_exceptions'].append(item)
+            else:j['transport_events_omitted']+=1
+            write(path,j)
+        return trace
+    sys.settrace(trace)
+    try:
+        j['guest_handshake_attempts']=1;write(path,j);lg=bs.login();j['handshake_error_code']=str(lg.error_code);write(path,j)
+        if str(lg.error_code)!='0':raise ValueError('anonymous_guest_handshake_failed')
+        j.update(stage='fixed_current_dated_list',transport_phase='query',semantic_query_attempts=1,sent_at_utc=clock());write(path,j)
+        rs=bs.query_all_stock(day=DAY)
+        j.update(returned_at_utc=clock(),error_code=str(rs.error_code),fields=list(rs.fields),response_day=str(getattr(rs,'day','')),
+                 cached_rows=len(rs.data) if isinstance(rs.data,list) else None);write(path,j)
+        rows=first_response(rs,FIELDS,12000)
+        payload={'schema':'regis.current_dated_list_raw.v1','fields':FIELDS,'rows':rows,
+                 'observed_at_utc':j['returned_at_utc'],'client_identifier':str(constants.BAOSTOCK_CLIENT_VERSION),
+                 'SDK_distribution_version':p['SDK_distribution_version'],'query_day':DAY,'response_day':j['response_day']}
+        f=out/'source.json';write(f,payload,exclusive=True);j['source_ref']={'path':str(f),'sha256':sha(f)};write(path,j)
+        if j['response_day']!=DAY:raise ValueError('dated_list_response_day_mismatch')
+        j['summary']=validate_list(rows);j['stage']='dated_provider_catalogue_observed'
+        # No next/page retry. Exact2000 means a known unresolved page boundary.
+        # Other lengths still cannot certify fullA, types or PIT completeness.
+    except Exception as exc:
+        j['failure_type']=type(exc).__name__
+        if isinstance(exc,ValueError):j['validation_label']=str(exc)[:180]
+    finally:
+        if j.get('handshake_error_code')=='0':
+            j['logout_attempts']=1;j['transport_phase']='logout';write(path,j)
+            try:j['logout_error_code']=str(bs.logout().error_code)
+            except Exception as exc:j['logout_failure_type']=type(exc).__name__
+        if hasattr(context,'default_socket'):
+            try:context.default_socket.close()
+            except Exception:pass
+        sys.settrace(None);j['ended_utc']=clock();write(path,j)
+    return 0 if j['failure_type'] is None else 1
+
+def run(p):
+    t=gate(p);protocol_hash,implementation_hash=sha(P),sha(__file__)
+    out=Path(p['native_directory'])/'capture';out.mkdir(exist_ok=False)
+    write(out/'protocol.json',p,exclusive=True);write(out/'frozen_task.json',t,exclusive=True)
+    r={'schema':'regis.dated_list_transport_result.v1','started_utc':clock(),'child_returncode':None,
+       'child_timed_out':False,'failure_type':None,'fresh_source_dispatches':1,'within_child_retries':0,'case_level_retries':1,
+       'same_case_source_attempt_number':2,'prior_attempt_preserved':True,
+       'same_case_recovery_dispatches':1,'automatic_retries':0,'socket_seconds':20,
+       'economic_runs':0,'new_formulas':0,'raw_rows_exported':False,'model_admitted':False,
+       'full_goal_complete':False,'historical_universe_PIT_verified':False,'market_gate_ready':False}
+    phase='single_child_source_capture'
+    try:
+        q=subprocess.run([sys.executable,'-I','-X','utf8',str(Path(__file__).resolve()),'--child'],
+                         cwd=out,capture_output=True,timeout=55,creationflags=0x08000000 if sys.platform=='win32' else 0)
+        r['child_returncode']=q.returncode;(out/'stdout.log').write_bytes(q.stdout);(out/'stderr.log').write_bytes(q.stderr)
+        j=read(out/'journal.json');r['diagnostics']=j;r['failure_type']=j.get('failure_type')
+        if q.returncode!=0 or r['failure_type']:raise ValueError('current_dated_list_source_not_passed')
+        phase='post_source_binding';gate(p);r['state']='same_case_transport_study_catalogue_observed'
+    except subprocess.TimeoutExpired as exc:
+        r.update(child_timed_out=True,failure_type='TimeoutExpired',failure_phase=phase)
+        (out/'stdout.log').write_bytes(exc.stdout or b'');(out/'stderr.log').write_bytes(exc.stderr or b'')
+    except Exception as exc:
+        r['failure_type']=r['failure_type'] or type(exc).__name__;r['failure_phase']=phase
+        if phase=='post_source_binding':r['native_source_invalidated_by_binding_failure']=True
+    if 'diagnostics' not in r:
+        try:r['diagnostics']=read(out/'journal.json')
+        except (OSError,ValueError):r['diagnostics']={'partial_journal_unavailable':True}
+    if r['failure_type']:r['state']='same_case_transport_study_failure_preserved'
+    r.update(ended_utc=clock(),protocol_sha256=protocol_hash,implementation_sha256=implementation_hash,
+             contract_sha256=t['contract_sha256'],source_clock_role='actual_receipt_not_historical_PIT',
+             source_identifier_role='SDK_client_protocol_identifier_not_server_release',
+             SDK_internal_wire_bytes_or_retry_counts='unknown',full_A_verified=False,orders_enabled=False)
+    write(O,r);write(out/'terminal.json',r,exclusive=True);print(json.dumps(r))
+    return 0 if r['failure_type'] is None else 1
+
+if __name__=='__main__':
+    ap=argparse.ArgumentParser(description=__doc__);g=ap.add_mutually_exclusive_group()
+    g.add_argument('--validate-plan',action='store_true');g.add_argument('--child',action='store_true')
+    args=ap.parse_args();p=read(P)
+    if args.validate_plan:gate(p);print(json.dumps({'frozen_scope_checked':True,'source_calls':0}))
+    else:raise SystemExit(child(p) if args.child else run(p))

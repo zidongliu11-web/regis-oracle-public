@@ -1,0 +1,23 @@
+name: Bug 报告
+description: 报告可以复现的代码、文档或工作台问题
+title: "[Bug] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题和预期行为
+      description: 不要包含 Token、账户、私有路径或真实数据。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 最小复现
+      description: 命令、版本、虚构输入、实际与预期输出。
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境与已尝试步骤
+

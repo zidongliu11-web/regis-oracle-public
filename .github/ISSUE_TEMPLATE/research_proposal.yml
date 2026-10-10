@@ -1,0 +1,23 @@
+name: 研究提案
+description: 提交因子、策略或战法的可验证研究问题
+title: "[Research] "
+body:
+  - type: textarea
+    id: mechanism
+    attributes:
+      label: 机制、公式与失败条件
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: 数据、许可、历史覆盖与当时可见性
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: 试验预算、主比较、成本执行与独立时序验证
+    validations:
+      required: true
+

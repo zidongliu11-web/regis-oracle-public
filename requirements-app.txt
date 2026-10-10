@@ -1,0 +1,22 @@
+# Optional workstation prototype. Not part of the offline-core CI promise.
+-r requirements.txt
+Flask>=3.1,<4
+Werkzeug>=3.1,<4
+waitress>=3,<4
+requests>=2.32,<3
+akshare>=1.18,<2
+baostock>=0.9,<1
+beautifulsoup4>=4.13,<5
+lxml>=6,<7
+scikit-learn>=1.7,<2
+pyarrow>=20
+matplotlib>=3.10,<4
+psutil>=7,<8
+mini-racer>=0.12,<1
+pypdf>=6,<7
+cryptography>=46
+tqdm>=4.67,<5
+loguru>=0.7,<1
+openpyxl>=3.1,<4
+certifi>=2025.1
+

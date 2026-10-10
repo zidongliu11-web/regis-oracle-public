@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% block title %}Regis Oracle · 账户中心{% endblock %}
+
+{% block nav_pos %}active{% endblock %}
+
+{% block head %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   账户中心 · 与仪表盘同款设计令牌与配色（spa.html 同源）
+   价格方向：A股红涨绿跌（.c-bull=红涨 / .c-bear=绿跌）
+   语义状态：--bull=绿好 / --bear=红坏 / --gold=警示
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --bg-void:#060709;--bg-surface:#0D0F14;--bg-elevated:#14171F;--bg-hover:#1C2029;
+  --border-subtle:#394352;--border-default:#556173;
+  --text-primary:#F0F1F5;--text-secondary:#8B8F9A;--text-tertiary:#8B8F9A;
+  --bull:#00D672;--bear:#FF4458;--accent:#63B3FF;--button-primary:#0066D6;--gold:#FFB800;--purple:#BF5AF2;
+  --text-base:15px;--text-sm:13px;--text-xs:12px;
+  --space-xs:4px;--space-sm:8px;--space-md:16px;--space-lg:24px;--space-xl:32px;
+  --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;
+  --font-number:'SF Mono','JetBrains Mono','Consolas',monospace;
+  /* 覆盖 base.html / mom.css 令牌 → 顶栏与全页同用仪表盘配色 */
+  --color-bg:#060709;--color-bg-elevated:#14171F;--color-surface:#0D0F14;--color-surface-hover:#1C2029;
+  --color-border:#556173;--color-border-light:#718096;
+  --color-primary:#63B3FF;--color-primary-hover:#9CCFFF;
+  --color-accent:#63B3FF;--color-accent-hover:#9CCFFF;
+  --color-foreground:#F0F1F5;--color-text:#E2E8F0;--color-text-muted:#8B8F9A;--color-text-dim:#8B8F9A;
+  --color-profit:#F6465D;--color-loss:#2EBD85;--color-buy:#F6465D;--color-sell:#2EBD85;--color-warning:#FFB800;
+  --radius-sm:8px;--radius-md:12px;--radius-lg:16px;
+  --font-number:'SF Mono','JetBrains Mono','Consolas',monospace;
+}
+body{background:var(--bg-void)}
+.pos-page{display:flex;flex-direction:column;gap:var(--space-md);max-width:1080px;margin:0 auto;width:100%}
+.pos-hero{padding:2px 0 4px}
+.pos-hero h1{font-size:24px;font-weight:700;color:var(--text-primary);letter-spacing:0.01em}
+.pos-hero p{font-size:var(--text-sm);color:var(--text-tertiary);margin-top:2px}
+
+/* ── 卡片（与仪表盘 .card 一致）────────────────── */
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.4),0 8px 32px rgba(0,0,0,0.3)}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border-subtle);gap:var(--space-sm)}
+.card-title{font-size:var(--text-sm);font-weight:600;color:var(--text-secondary);letter-spacing:0.02em}
+.card-badge{font-size:var(--text-xs);font-weight:600;padding:3px 10px;border-radius:10px;background:rgba(10,132,255,0.12);color:var(--accent)}
+.card-body{padding:16px 20px}
+.card-body.no-pad{padding:0}
+
+/* ── 语义色 / 价格方向 ───────────────────────── */
+.c-bull{color:#F6465D}.c-bear{color:#2EBD85}.c-accent{color:var(--accent)}.c-gold{color:var(--gold)}
+.c-dim{color:var(--text-tertiary)}
+.num{font-family:var(--font-number);font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+
+/* ── 按钮（与仪表盘 .btn 一致）────────────────── */
+.btn{padding:8px 16px;min-height:40px;border-radius:8px;font-size:var(--text-sm);font-weight:600;transition:all 200ms;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:var(--button-primary);color:#fff}
+.btn-primary:hover{background:#0066d6}
+.btn-ghost{background:transparent;color:var(--text-secondary);border:1px solid var(--border-default)}
+.btn-ghost:hover{background:var(--bg-hover);color:var(--text-primary)}
+.btn-danger{background:transparent;color:var(--bear);border:1px solid rgba(255,68,88,0.35)}
+.btn-danger:hover{background:rgba(255,68,88,0.1)}
+.pos-sellable{min-height:30px;padding:4px 9px;border:1px solid var(--border-default);border-radius:6px;background:transparent;color:var(--accent);font-size:var(--text-xs);cursor:pointer}
+.pos-sellable:hover{border-color:var(--accent);background:rgba(99,179,255,.08)}
+.pos-sellable:disabled{opacity:.55;cursor:wait}
+
+/* ── 记录买入表单 ───────────────────────────── */
+.rec-chips{margin-bottom:var(--space-md)}
+.rec-chips-label{font-size:var(--text-xs);color:var(--text-tertiary);margin-bottom:8px}
+.rec-chip{display:inline-flex;align-items:center;min-height:38px;padding:5px 12px;margin:0 6px 6px 0;border:1px solid var(--border-default);border-radius:999px;font-size:var(--text-sm);cursor:pointer;color:var(--text-secondary);background:transparent;transition:all 200ms}
+.rec-chip:hover{border-color:var(--bull);color:var(--bull)}
+.rec-chip.sel{border-color:var(--accent);background:rgba(10,132,255,0.12);color:var(--accent)}
+.rec-decision-link{display:inline-flex;align-items:center;min-height:38px;padding:7px 12px;border:1px solid var(--border-default);border-radius:6px;background:rgba(99,179,255,.06);color:var(--accent);font-size:var(--text-sm);text-decoration:none;transition:border-color 160ms ease,background-color 160ms ease,color 160ms ease}
+.rec-decision-link:hover{border-color:var(--accent);background:rgba(99,179,255,.11);color:#9ccfff}
+.rec-decision-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rec-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:var(--space-md);align-items:end}
+.rec-form.actual-fill-form{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rec-help{margin-top:12px;font-size:var(--text-sm);line-height:1.6;color:var(--text-secondary)}
+@media(max-width:800px){.rec-form,.rec-form.actual-fill-form{grid-template-columns:1fr}}
+.rec-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.rec-field label{font-size:var(--text-xs);color:var(--text-tertiary)}
+.rec-field input,.rec-field select{padding:10px 14px;font-size:var(--text-base);border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);min-width:0;font-family:var(--font-number)}
+.rec-field input:focus,.rec-field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,132,255,0.15)}
+.rec-save{padding:10px 28px;min-height:42px;font-size:var(--text-sm);font-weight:700;background:var(--button-primary);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap}
+.rec-save:hover{background:#0066d6}
+.rec-result{margin-top:var(--space-md);padding:12px 16px;border-radius:var(--radius-sm);font-size:var(--text-sm);display:none}
+.rec-result.ok{display:block;background:rgba(0,214,114,0.1);color:var(--bull)}
+.rec-result.err{display:block;background:rgba(255,68,88,0.1);color:var(--bear)}
+
+/* ── 账户与组合总览（桌面端）────────────────── */
+.portfolio-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.portfolio-metric{padding:13px 14px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);background:var(--bg-elevated)}
+.portfolio-metric .k{display:block;color:var(--text-tertiary);font-size:var(--text-xs);margin-bottom:6px}
+.portfolio-metric .v{display:block;color:var(--text-primary);font:700 18px/1.2 var(--font-number)}
+.portfolio-action{margin-top:12px;padding:12px 14px;border-left:3px solid var(--accent);border-radius:var(--radius-sm);background:rgba(99,179,255,.08);color:var(--text-secondary);font-size:var(--text-sm);line-height:1.6}
+.portfolio-action strong{color:var(--text-primary)}
+.portfolio-policy{margin-top:10px;padding:12px 14px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);background:linear-gradient(145deg,rgba(99,179,255,.07),rgba(9,13,20,.5))}
+.portfolio-policy-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.portfolio-policy-head small{display:block;color:var(--text-tertiary);font-size:var(--text-xs)}
+.portfolio-policy-head strong{display:block;margin-top:3px;color:var(--text-primary);font:700 16px/1.35 var(--font-number)}
+.portfolio-policy-head .status{max-width:54%;text-align:right;color:var(--text-secondary);font-size:var(--text-xs);line-height:1.5}
+.portfolio-policy-layers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.portfolio-policy-layer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:9px 10px;border:1px solid var(--border-subtle);border-radius:var(--radius-sm);background:rgba(13,15,20,.72)}
+.portfolio-policy-layer.bind{border-color:rgba(99,179,255,.5);background:rgba(99,179,255,.09)}
+.portfolio-policy-layer b{color:var(--text-primary);font-size:var(--text-sm)}
+.portfolio-policy-layer em{color:var(--accent);font:700 var(--text-sm)/1.3 var(--font-number);font-style:normal}
+.portfolio-policy-layer span{grid-column:1/-1;color:var(--text-tertiary);font-size:12px;line-height:1.45}
+.portfolio-policy-foot{margin-top:9px;color:var(--text-tertiary);font-size:12px;line-height:1.55}
+.portfolio-risk-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.portfolio-risk-fact{padding:10px 12px;border:1px solid var(--border-subtle);border-radius:var(--radius-sm);background:var(--bg-elevated)}
+.portfolio-risk-fact .k{display:block;color:var(--text-tertiary);font-size:var(--text-xs)}
+.portfolio-risk-fact .v{display:block;margin-top:4px;color:var(--text-primary);font:700 14px/1.35 var(--font-number)}
+.portfolio-risk-fact .s{display:block;margin-top:3px;color:var(--text-tertiary);font-size:12px;line-height:1.45}
+.portfolio-risk-model{margin-top:10px;border:1px solid var(--border-subtle);border-radius:var(--radius-sm);background:rgba(7,19,30,.34)}
+.portfolio-risk-model>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;padding:0 12px;color:var(--text-secondary);font-size:var(--text-sm);cursor:pointer;list-style:none}
+.portfolio-risk-model>summary::-webkit-details-marker{display:none}.portfolio-risk-model>summary::after{content:'展开';margin-left:auto;color:var(--accent);font-size:12px}.portfolio-risk-model[open]>summary::after{content:'收起'}
+.portfolio-risk-model>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}.portfolio-risk-model .portfolio-risk-strip{margin:0;padding:0 10px 10px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.portfolio-risk-method{margin:0;padding:0 12px 11px;color:var(--text-tertiary);font-size:12px;line-height:1.55}
+.account-row{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:12px;align-items:end;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border-subtle)}
+.snapshot-form{display:grid;grid-template-columns:1.2fr .8fr .8fr .8fr .9fr auto;gap:12px;align-items:end}
+.cashflow-form{display:grid;grid-template-columns:.75fr .9fr 1.25fr .9fr 1.1fr auto;gap:12px;align-items:end;margin-top:18px;padding-top:18px;border-top:1px solid var(--border-subtle)}
+.cashflow-reconcile-form{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(280px,1.8fr) auto;gap:12px;align-items:end;margin-top:14px}
+.cashflow-reconcile-status{min-height:20px;margin-top:8px;color:var(--text-secondary);font-size:var(--text-sm)}
+.form-note{margin-top:10px;color:var(--text-tertiary);font-size:var(--text-xs);line-height:1.6}
+
+/* ── 持仓卡片：卖出时机 ─────────────────────── */
+.pos-row{padding:14px 20px;border-bottom:1px solid var(--border-subtle)}
+.pos-row:last-child{border-bottom:none}
+.pos-row.sell-alert{background:rgba(255,184,0,0.05);border-left:3px solid var(--gold)}
+.pos-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pos-name{font-size:var(--text-base);font-weight:700;color:var(--text-primary)}
+.pos-code{font-size:var(--text-xs);color:var(--text-tertiary)}
+.pos-shares{margin-left:auto;font-size:var(--text-xs);color:var(--text-tertiary)}
+.sell-badge{margin-left:4px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(255,184,0,0.15);color:var(--gold)}
+.pos-del{flex:none;min-width:44px;min-height:36px;font-size:12px;color:var(--text-tertiary);border:1px solid var(--border-default);border-radius:999px;padding:3px 10px;cursor:pointer;background:transparent;transition:all 200ms}
+.pos-del:hover{color:var(--bear);border-color:var(--bear)}
+.pos-sell{flex:none;min-width:44px;min-height:36px;font-size:12px;font-weight:700;color:var(--accent);border:1px solid rgba(10,132,255,0.4);border-radius:999px;padding:3px 12px;cursor:pointer;background:rgba(10,132,255,0.08);transition:all 200ms}
+.pos-sell:hover{background:var(--button-primary);color:#fff}
+.pos-px{display:flex;align-items:baseline;gap:var(--space-md);margin-top:8px;flex-wrap:wrap}
+.pos-cur{font-size:26px;font-weight:800;font-family:var(--font-number)}
+.pos-chg{font-size:var(--text-base);font-weight:700;font-family:var(--font-number)}
+.pos-pnl{font-size:var(--text-xs);color:var(--text-tertiary);font-family:var(--font-number)}
+
+/* 风险线与结构观察区间（gold 系，仪表盘警示色） */
+.sl-band{margin-top:14px}
+.sl-track{position:relative;height:12px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,0.06)}
+.sl-zone{position:absolute;top:0;bottom:0}
+.sl-zone.sl-risk{background:rgba(255,184,0,0.25)}
+.sl-zone.sl-observe{background:rgba(255,184,0,0.42)}
+.sl-tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--text-primary);opacity:0.85}
+.sl-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--bg-elevated);box-shadow:0 1px 4px rgba(0,0,0,0.35);z-index:2}
+.sl-labels{display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--text-tertiary);margin-top:6px;font-family:var(--font-number)}
+.sl-labels .risk{color:var(--gold)}.sl-labels .observe{color:var(--gold)}
+.sl-suggest{margin-top:10px;padding:9px 14px;border-radius:var(--radius-sm);font-size:var(--text-sm);font-weight:600}
+.sl-suggest.sug-sell{background:rgba(255,184,0,0.12);color:var(--gold)}
+.sl-suggest.sug-observe{background:rgba(255,184,0,0.12);color:var(--gold)}
+.sl-suggest.sug-hold{background:rgba(255,255,255,0.04);color:var(--text-tertiary)}
+.sl-suggest small{font-weight:400;opacity:0.8}
+
+/* ── 平仓历史 ─────────────────────────────── */
+.his-row{display:flex;align-items:center;gap:var(--space-md);padding:12px 20px;border-bottom:1px solid var(--border-subtle);font-size:var(--text-sm);flex-wrap:wrap}
+.his-row:last-child{border-bottom:none}
+.his-row .his-name{font-weight:700;font-size:var(--text-base);color:var(--text-primary)}
+.empty-state{padding:32px;text-align:center;color:var(--text-tertiary);font-size:var(--text-sm)}
+
+/* ── 卖出 Modal（与仪表盘 timing-modal 一致）─── */
+.timing-modal-mask{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:2000}
+.timing-modal{width:min(460px,92vw);background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.timing-modal h3{margin-bottom:4px;font-size:var(--text-base);color:var(--text-primary)}
+.sell-summary{display:flex;flex-direction:column;gap:6px;padding:12px 14px;background:rgba(255,255,255,0.02);border-radius:var(--radius-sm);font-size:var(--text-xs);margin:10px 0 14px}
+.sell-summary .ss-row{display:flex;justify-content:space-between;color:var(--text-secondary)}
+.sell-summary .ss-row b{color:var(--text-primary);font-family:var(--font-number)}
+.sell-field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.sell-field label{font-size:var(--text-xs);color:var(--text-tertiary)}
+.sell-field input{padding:10px 14px;font-size:var(--text-base);border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-family:var(--font-number)}
+.sell-field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,132,255,0.15)}
+.sell-remaining{font-size:var(--text-xs);color:var(--text-secondary);min-height:18px}
+.sell-remaining.invalid{color:var(--bear)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px}
+.timing-modal:focus{outline:none}
+.pos-name:focus-visible,.rec-chip:focus-visible,.pos-sell:focus-visible,.pos-del:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ── Toast（与仪表盘一致）───────────────────── */
+.toast-container{position:fixed;top:72px;right:24px;z-index:3000;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:12px;font-size:var(--text-sm);font-weight:500;animation:toastIn 400ms cubic-bezier(0.34,1.56,0.64,1);backdrop-filter:blur(20px);border:1px solid var(--border-default)}
+.toast.info{background:rgba(10,132,255,0.15);color:var(--accent)}
+.toast.success{background:rgba(0,214,114,0.1);color:var(--bull)}
+.toast.error{background:rgba(255,68,88,0.1);color:var(--bear)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pos-page">
+
+  <div class="pos-hero">
+    <h1>账户中心 · 仓位与组合风险</h1>
+    <p>真实账户事实 → 总仓风险预算 → 单笔计划损失 → 行业与相关性 → 历史尾部压力 · 所有动作均需人工确认</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">组合实时总览</span><span class="card-badge" id="portfolioFreshness">加载中…</span></div>
+    <div class="card-body">
+      <div class="portfolio-grid">
+        <div class="portfolio-metric"><span class="k">账户权益</span><span class="v" id="pfEquity">—</span></div>
+        <div class="portfolio-metric"><span class="k">剩余现金</span><span class="v" id="pfCash">—</span></div>
+        <div class="portfolio-metric"><span class="k">持仓市值</span><span class="v" id="pfMarketValue">—</span></div>
+        <div class="portfolio-metric"><span class="k">当前仓位</span><span class="v" id="pfExposure">—</span></div>
+        <div class="portfolio-metric"><span class="k">风险预算总仓上限</span><span class="v" id="pfTarget">—</span></div>
+        <div class="portfolio-metric"><span class="k">成本后浮盈亏</span><span class="v" id="pfPnl">—</span></div>
+      </div>
+      <div class="portfolio-risk-strip" aria-label="组合风险预算">
+        <div class="portfolio-risk-fact"><span class="k">组合计划风险占用</span><span class="v" id="pfOpenRisk">—</span><span class="s" id="pfOpenRiskNote">按现价到有效风险线估算</span></div>
+        <div class="portfolio-risk-fact"><span class="k">最坏情形行业暴露</span><span class="v" id="pfIndustryRisk">—</span><span class="s" id="pfIndustryRiskNote">未分类持仓按未知风险桶预留</span></div>
+        <div class="portfolio-risk-fact"><span class="k">单笔新增风险预算</span><span class="v" id="pfTradeRisk">—</span><span class="s">到风险线并计买卖费用；回撤只会下调</span></div>
+        <div class="portfolio-risk-fact"><span class="k">总仓增量空间上限</span><span class="v" id="pfExposureRoom">—</span><span class="s" id="pfExposureRoomNote">只表示风险预算空间，不是买入建议</span></div>
+      </div>
+      <section class="portfolio-policy" aria-label="仓位决策分解">
+        <div class="portfolio-policy-head">
+          <div><small>仓位决策分解</small><strong id="pfPolicyConclusion">正在核验约束…</strong></div>
+          <span class="status" id="pfExecutableTarget">可执行目标：尚未形成</span>
+        </div>
+        <div class="portfolio-policy-layers" id="pfPolicyLayers"></div>
+        <div class="portfolio-policy-foot" id="pfPolicyFoot">总仓上限、精确股数和风险预算是三个不同问题；页面不会再把上限伪装成建议仓位。</div>
+      </section>
+      <details class="portfolio-risk-model" id="portfolioRiskModel">
+        <summary><span>组合风险模型证据</span><span class="card-badge" id="pfRiskModelBadge">展开后计算</span></summary>
+        <div class="portfolio-risk-strip" aria-label="组合风险模型指标">
+          <div class="portfolio-risk-fact"><span class="k">历史单日损失估计（95%）</span><span class="v" id="pfVar95">—</span><span class="s" id="pfVar95Note">按真实持仓与审计日线计算</span></div>
+          <div class="portfolio-risk-fact"><span class="k">相对沪深300敏感度</span><span class="v" id="pfBeta">—</span><span class="s" id="pfBetaNote">需至少20个共同交易日</span></div>
+          <div class="portfolio-risk-fact"><span class="k">账户当前回撤</span><span class="v" id="pfDrawdown">—</span><span class="s" id="pfDrawdownNote">只从人工成交账本重建净值</span></div>
+          <div class="portfolio-risk-fact"><span class="k">行业集中度</span><span class="v" id="pfIndustryHhi">—</span><span class="s" id="pfIndustryHhiNote">同行业持仓合并计算</span></div>
+          <div class="portfolio-risk-fact"><span class="k">有效独立风险数</span><span class="v" id="pfEffectiveBets">—</span><span class="s" id="pfEffectiveBetsNote">按协方差风险贡献，不按股票只数</span></div>
+          <div class="portfolio-risk-fact"><span class="k">历史尾部压力</span><span class="v" id="pfHistoricalStress">—</span><span class="s" id="pfHistoricalStressNote">同期真实持仓权重的最差历史区间</span></div>
+        </div>
+        <p class="portfolio-risk-method">用途：这些指标只会降低新增交易的风险预算，不会放大仓位；候选与现有账户高度同向时缩小新增股数。缺数据时明确显示不可用，不用成本价或 0 替代。历史压力不是未来损失上限，本模型不声称收益最优。</p>
+      </details>
+      <div class="portfolio-action" id="portfolioAction"><strong>正在计算组合建议…</strong></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" id="accountFacts"><span class="card-title">录入账户事实</span><span class="card-badge">{{ '可维护人工记录' if regis_access.server_writes_enabled else '只读 · 不可保存' }}</span></div>
+    <div class="card-body">
+      <div id="accountFactGaps" role="status">账户事实待核验</div>
+      <fieldset class="account-write-fields" {% if not regis_access.server_writes_enabled %}disabled{% endif %}>
+      <div class="account-row">
+        <div class="rec-field"><label for="cashBalance">重新输入券商当前可用资金（¥）</label><input id="cashBalance" type="number" min="0" step="0.01" inputmode="decimal" autocomplete="off" placeholder="不会自动回填旧值"></div>
+        <button type="button" class="rec-save" id="cashSave">保存剩余资金</button>
+      </div>
+      <div class="snapshot-form">
+        <div class="rec-field"><label for="snapCode">现有持仓名称或代码</label><input id="snapCode" autocomplete="off" placeholder="如：平安银行 或 000001"></div>
+        <div class="rec-field"><label for="snapShares">持仓股数</label><input id="snapShares" type="number" min="1" step="1" inputmode="numeric" placeholder="允许包含零股"></div>
+        <div class="rec-field"><label for="snapCost">持仓成本价</label><input id="snapCost" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="券商成本价"></div>
+        <div class="rec-field"><label for="snapFee">已含买入费用（可选）</label><input id="snapFee" type="number" min="0" step="0.01" inputmode="decimal" placeholder="留空估算"></div>
+        <div class="rec-field"><label for="snapCash">录入后剩余资金</label><input id="snapCash" type="number" min="0" step="0.01" inputmode="decimal" placeholder="当前可用资金"></div>
+        <button type="button" class="rec-save" id="snapshotSave">录入持仓</button>
+      </div>
+      <div class="form-note">上方总览显示当前已记录值；更新现金时必须重新查看券商并输入，避免把旧值一键刷新成新时点。“录入持仓”用于导入已经存在的账户事实，不算作今天新买入；后续实际买卖仍在下方记录，现金会随成交自动增减。</div>
+      <div class="cashflow-form" aria-label="外部资金变动">
+        <div class="rec-field"><label for="cashflowType">外部资金变动</label><select id="cashflowType"><option value="deposit">入金</option><option value="withdrawal">出金</option></select></div>
+        <div class="rec-field"><label for="cashflowAmount">金额（¥）</label><input id="cashflowAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="仅外部资金"></div>
+        <div class="rec-field"><label for="cashflowAt">发生时间（北京时间）</label><input id="cashflowAt" type="datetime-local" step="60"></div>
+        <div class="rec-field"><label for="cashflowCashAfter">变动后可用资金</label><input id="cashflowCashAfter" type="number" min="0" step="0.01" inputmode="decimal" placeholder="券商显示值"></div>
+        <div class="rec-field"><label for="cashflowNote">备注（可选）</label><input id="cashflowNote" maxlength="500" autocomplete="off" placeholder="例如银行卡转入"></div>
+        <button type="button" class="rec-save" id="cashflowSave">记录资金变动</button>
+      </div>
+      <div class="form-note">只记录真实入金或出金，不记录买卖成交。系统会核对“变动前现金 ± 金额 = 变动后现金”，并把外部资金与投资收益分开；缺少事件不能把现金变化冒充收益。</div>
+      <div class="cashflow-reconcile-form" aria-label="资金完整性核对">
+        <div class="rec-field"><label for="cashflowReconcileDate">确认截至日期</label><input id="cashflowReconcileDate" type="date"></div>
+        <div class="form-note">仅当你已核对券商流水，并确认此前所有入金、出金均已记录时使用；后续补录更早事件会自动使确认失效。</div>
+        <button type="button" class="rec-save" id="cashflowReconcileSave">确认无遗漏</button>
+      </div>
+      <div class="cashflow-reconcile-status" id="cashflowReconcileStatus" role="status" aria-live="polite">正在读取资金完整性…</div>
+      <div class="rec-result" id="accountResult" role="status" aria-live="polite"></div>
+      </fieldset>
+    </div>
+  </div>
+
+  <!-- 记录已发生买入 -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">记录已发生的买入成交</span><span class="card-badge">不是系统下单</span></div>
+    <div class="card-body">
+      <fieldset class="account-write-fields" {% if not regis_access.server_writes_enabled %}disabled{% endif %}>
+      <div class="rec-chips">
+        <div class="rec-chips-label" id="recChipsLabel">成交记录入口 · 账户页不生成买入建议</div>
+        <div id="recChips"><a class="rec-decision-link" href="/?workspace=intraday">返回今日决策核对同一观察时点计划、股数与有效期</a></div>
+      </div>
+      <div class="rec-form actual-fill-form">
+        <div class="rec-field"><label for="recCode">成交证券代码（必填）</label><input id="recCode" autocomplete="off" inputmode="numeric" maxlength="6" placeholder="沪深6位代码，如 601127"></div>
+        <div class="rec-field"><label for="recName">名称（用户填写，可选）</label><input id="recName" autocomplete="off" maxlength="40" placeholder="留空显示代码，不依赖实时行情"></div>
+        <div class="rec-field"><label for="recShares">实际成交股数（不是委托量）</label><input id="recShares" type="number" min="1" step="1" inputmode="numeric" placeholder="逐笔记录实际成交量"></div>
+        <div class="rec-field"><label for="recPrice">券商实际成交价（必填）</label><input id="recPrice" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="不使用现价代填" required></div>
+        <div class="rec-field"><label for="recBuyFee">券商实际买入费用（可选，¥）</label><input id="recBuyFee" type="number" min="0" step="0.01" inputmode="decimal" placeholder="留空则按模型估算"></div>
+        <button type="button" class="rec-save" id="recSave">记录买入</button>
+      </div>
+      <p class="rec-help">本入口只记录已经发生的成交，不要求当前行情或开仓额度，也不授予买入许可。保存后从账本现金扣除成交金额及费用；若已经录入交易后的现金，请先核对，避免重复扣款。实际成交时间可在复盘中补记；当前可卖数量须另行确认。</p>
+      <div class="rec-result" id="recResult" role="status" aria-live="polite"></div>
+      </fieldset>
+    </div>
+  </div>
+
+  <!-- 我的持仓 -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">我的持仓 · 卖出时机</span>
+      <span class="card-badge" id="posCount">—</span>
+    </div>
+    <div class="card-body no-pad" id="positionsBody">
+      <div class="empty-state">还没有持仓 · 在上方录入现有持仓，或记录已发生的买入成交</div>
+    </div>
+  </div>
+
+  <!-- 平仓历史 -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">平仓历史</span><span id="realizedPnl" class="card-badge" style="background:transparent;color:var(--text-tertiary)">—</span></div>
+    <div class="card-body no-pad" id="closedBody">
+      <div class="empty-state">还没有卖出记录</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 当日可卖库存核验 Modal -->
+<div class="timing-modal-mask" id="sellableMask" style="display:none" aria-hidden="true">
+  <div class="timing-modal" role="dialog" aria-modal="true" aria-labelledby="sellableTitle" tabindex="-1">
+    <h3 id="sellableTitle">核验券商今日可卖数量</h3>
+    <div class="sell-summary" id="sellableSummary"></div>
+    <div class="sell-field">
+      <label for="sellableShares">照抄券商当前显示的“可卖”股数</label>
+      <input id="sellableShares" type="number" min="0" step="1" inputmode="numeric" autocomplete="off" placeholder="例如 700" required>
+      <div class="sell-remaining" id="sellableHint" role="status" aria-live="polite">只记录账户事实，不自动卖出。</div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="sellableCancel">取消</button>
+      <button type="button" class="btn btn-primary" id="sellableConfirm">确认并参与仓位分析</button>
+    </div>
+  </div>
+</div>
+
+<!-- 卖出 Modal -->
+<div class="timing-modal-mask" id="sellMask" style="display:none" aria-hidden="true">
+  <div class="timing-modal" role="dialog" aria-modal="true" aria-labelledby="sellTitle" tabindex="-1">
+    <h3 id="sellTitle">记录卖出</h3>
+    <div class="sell-summary" id="sellSummary"></div>
+    <div class="sell-field">
+      <label for="sellPrice">券商实际卖出成交价（¥，不使用现价代填）</label>
+      <input id="sellPrice" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="输入卖出价" required>
+    </div>
+    <div class="sell-field">
+      <label for="sellShares">实际卖出数量（整手；零股须一次卖完，不默认清仓）</label>
+      <input id="sellShares" type="number" min="1" step="1" inputmode="numeric" placeholder="输入卖出股数" required>
+      <div class="sell-remaining" id="sellRemaining" role="status" aria-live="polite">卖出后剩余—股</div>
+    </div>
+    <div class="sell-field">
+      <label for="sellFee">券商实际卖出费用（可选，¥）</label>
+      <input id="sellFee" type="number" min="0" step="0.01" inputmode="decimal" placeholder="留空则按模型估算">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="sellCancel">取消</button>
+      <button type="button" class="btn btn-primary" id="sellConfirm">确认卖出</button>
+    </div>
+  </div>
+</div>
+<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/positions.js?v=23" defer></script>
+{% endblock %}

@@ -1,0 +1,17 @@
+<span hidden id="regisAccessPolicy" data-write-policy="{{ regis_access.write_policy }}"></span>
+<style>
+.access-policy-notice{margin:0 0 16px;padding:12px 16px;border:1px solid #9a793e;border-radius:8px;background:#211d15;color:#f3d69d;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.access-policy-notice strong{display:block;color:#ffe6b1}
+[data-write-unavailable]{opacity:.55;cursor:not-allowed!important}
+fieldset.account-write-fields{border:0;padding:0;margin:0;min-width:0}
+.fill-time-dialog{box-sizing:border-box;margin:auto;width:min(680px,calc(100vw - 48px));max-height:85vh;overflow:auto;padding:24px;border:1px solid #37546b;border-radius:10px;background:#0c1a25;color:#d8e2ec;color-scheme:dark;line-height:1.6}.fill-time-dialog::backdrop{background:#0009}.fill-time-dialog label{display:grid;gap:6px;margin:16px 0}.fill-time-dialog input,.fill-time-dialog select{box-sizing:border-box;width:100%;min-width:0;padding:10px;background:#091520;border:1px solid #37546b;color:inherit;font:inherit}.fill-time-dialog p{overflow-wrap:anywhere}.fill-time-actions{display:flex;justify-content:flex-end;gap:12px}.fill-time-actions button{padding:8px 14px;background:#12314c;color:inherit;border:1px solid #37546b;border-radius:5px}
+</style>
+{% if not regis_access.server_writes_enabled %}
+<section class="access-policy-notice" role="status" id="accessPolicyNotice">
+  <strong>人工账本只读 · 历史实验可在研究工作台登记</strong>
+  {{ regis_access.reason }} 查看行情、现有账户与研究结果不受此权限限制；数据是否齐备另行核验。
+</section>
+{% endif %}
+<script src="/static/access-policy.js?v=1"></script>
+<script src="/static/fill-time.js?v=2"></script>
+<script src="/static/fill-plan.js?v=1"></script>

@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>V88 证监会实体映射人工盲审</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #08111f;
+      --panel: #101c2e;
+      --panel-2: #17253a;
+      --line: #2b3c56;
+      --text: #eef4ff;
+      --muted: #a8b6ca;
+      --accent: #62d6a6;
+      --danger: #ff8f8f;
+      --warn: #ffd166;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { width: min(1180px, calc(100% - 32px)); margin: 28px auto 60px; }
+    a { color: #8bc8ff; }
+    .topbar { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+    .topbar h1 { margin: 0; font-size: clamp(21px, 3vw, 30px); }
+    .back { white-space: nowrap; }
+    .warning, .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+    .warning { padding: 14px 16px; border-color: #73512b; color: #ffe3aa; }
+    .progress-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin: 18px 0;
+    }
+    progress { width: 100%; height: 12px; accent-color: var(--accent); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(310px, .75fr); gap: 18px; }
+    .card { padding: 18px; min-width: 0; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--muted); margin-bottom: 12px; }
+    h2 { margin: 0 0 10px; font-size: 21px; }
+    h3 { margin: 18px 0 8px; font-size: 15px; color: var(--muted); }
+    .source-box {
+      margin: 0;
+      padding: 12px;
+      min-height: 90px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #0b1626;
+    }
+    .skip-link { position: fixed; left: 12px; top: 8px; z-index: 20; padding: 9px 12px; border-radius: 8px; background: var(--text); color: var(--bg); transform: translateY(-160%); }
+    .skip-link:focus { transform: translateY(0); }
+    label { display: block; margin: 14px 0 6px; font-weight: 650; }
+    input, select, textarea, button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #0b1626;
+      color: var(--text);
+      padding: 10px 11px;
+      font: inherit;
+    }
+    textarea { min-height: 92px; resize: vertical; }
+    input:focus, select:focus, textarea:focus, button:focus-visible {
+      outline: 2px solid #74b9ff;
+      outline-offset: 2px;
+    }
+    .help { color: var(--muted); font-size: 13px; margin-top: 5px; }
+    .alias-results { display: grid; gap: 6px; margin-top: 8px; }
+    .alias-result { text-align: left; padding: 8px 10px; font-weight: 500; }
+    .alias-result small { display: block; color: var(--muted); margin-top: 2px; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+    button { cursor: pointer; background: var(--panel-2); font-weight: 700; }
+    button.primary { background: #146946; border-color: #29936a; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .status { min-height: 24px; margin: 12px 0 0; color: var(--muted); }
+    .status.error { color: var(--danger); }
+    .status.success { color: var(--accent); }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      color: #0a1826;
+      background: var(--warn);
+      font-weight: 800;
+      font-size: 12px;
+    }
+    @media (max-width: 820px) {
+      main { width: min(100% - 20px, 1180px); margin-top: 16px; }
+      .layout { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; gap: 8px; }
+    }
+  </style>
+  <link rel="stylesheet" href="/static/premium.css">
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">跳到主要内容</a>
+  <main id="mainContent" tabindex="-1">
+    <div class="topbar">
+      <a class="back" href="/risk?view=evidence">← 返回完整研究证据</a>
+      <h1>V88 证监会实体映射人工盲审</h1>
+      <span class="pill">回测关闭</span>
+    </div>
+
+    <div class="warning">
+      本页只显示冻结的证监会原文，不显示 V88 的代码匹配、别名或实体分类预测。
+      请根据原文独立标注；不要查看收益、回报或后续行情。完成 200 条且双项准确率达到 95% 只代表映射可用，仍不构成策略、推荐或交易授权。
+    </div>
+
+    <div class="progress-row" aria-live="polite">
+      <strong id="progressText">加载中…</strong>
+      <progress id="progress" max="200" value="0"></progress>
+      <span id="remainingText">—</span>
+    </div>
+
+    <div class="layout">
+      <section class="card" aria-labelledby="sourceTitle">
+        <div class="meta">
+          <span id="recordPosition">—</span>
+          <span id="publishedAt">—</span>
+          <span id="categoryId">—</span>
+          <a id="officialUrl" href="#" target="_blank" rel="noopener noreferrer">打开证监会原文</a>
+        </div>
+        <h2 id="sourceTitle">正在读取冻结原文…</h2>
+        <h3>当事人区块</h3>
+        <pre class="source-box" id="partyBlock"></pre>
+        <h3>案件前言（截至“本案现”之前）</h3>
+        <pre class="source-box" id="preamble"></pre>
+        <h3>完整原文</h3>
+        <pre class="source-box" id="fullContent"></pre>
+      </section>
+
+      <aside class="card" aria-labelledby="reviewTitle">
+        <h2 id="reviewTitle">独立标注</h2>
+        <form id="reviewForm">
+          <label for="reviewerId">审核人标识</label>
+          <input id="reviewerId" maxlength="80" required autocomplete="name" placeholder="请输入真实审核人姓名或固定代号">
+          <div class="help">用于证明这不是模型自评；浏览器仅在本机保存该输入。</div>
+
+          <label for="stockCodes">正确的 A 股代码</label>
+          <input id="stockCodes" autocomplete="off" placeholder="如 sh.600000; sz.000001；没有则留空">
+          <div class="help">只接受 sh.600000 / sz.000001 格式。无对应 A 股时留空。</div>
+
+          <label for="aliasSearch">官方证券别名辅助查询</label>
+          <input id="aliasSearch" autocomplete="off" placeholder="由审核人主动输入公司名或股票简称">
+          <div class="help">只查沪深交易所冻结别名库，不读取当前案件、不自动匹配，也不显示 V88 预测。</div>
+          <div class="alias-results" id="aliasResults" aria-live="polite"></div>
+
+          <label for="entityType">正确的实体类型</label>
+          <select id="entityType" required>
+            <option value="">请选择</option>
+            <option value="issuer">issuer：仅上市公司</option>
+            <option value="both">both：上市公司与个人同时被处罚</option>
+            <option value="individual">individual：仅个人</option>
+            <option value="other_institution">other_institution：其他机构</option>
+            <option value="ambiguous">ambiguous：原文无法唯一判断</option>
+            <option value="unmapped">unmapped：无对应 A 股主体</option>
+          </select>
+
+          <label for="notes">审核备注</label>
+          <textarea id="notes" maxlength="1000" placeholder="记录判断依据或歧义；可留空"></textarea>
+
+          <div class="actions">
+            <button type="button" id="previousButton">上一条</button>
+            <button type="button" id="nextButton">跳过 / 下一条</button>
+            <button class="primary" type="submit" id="saveButton" style="grid-column:1 / -1">保存并进入下一条</button>
+          </div>
+          <p class="status" id="status" role="status"></p>
+        </form>
+      </aside>
+    </div>
+  </main>
+
+  <script nonce="{{ csp_nonce }}">
+    const state = { index: 0, total: 200, manuscriptId: null, loadSequence: 0 };
+    const requests = new Map();
+    const byId = id => document.getElementById(id);
+
+    async function requestJSON(path, options = {}, requestKey = path) {
+      const previous = requests.get(requestKey);
+      if (previous) previous.abort();
+      const controller = new AbortController();
+      requests.set(requestKey, controller);
+      const timeout = setTimeout(() => controller.abort('timeout'), 10000);
+      try {
+        const response = await fetch(path, { ...options, signal: controller.signal });
+        const text = await response.text();
+        let body = {};
+        try { body = text ? JSON.parse(text) : {}; }
+        catch (error) { throw new Error(`服务器返回了无法解析的数据（HTTP ${response.status}）`, { cause: error }); }
+        if (!response.ok || !body.ok) throw new Error(body.error || `请求失败（HTTP ${response.status}）`);
+        if (requests.get(requestKey) !== controller) throw new DOMException('已被较新的请求取代', 'AbortError');
+        return body;
+      } catch (error) {
+        if (controller.signal.aborted && controller.signal.reason === 'timeout') throw new Error('请求超时，请重试');
+        throw error;
+      } finally {
+        clearTimeout(timeout);
+        if (requests.get(requestKey) === controller) requests.delete(requestKey);
+      }
+    }
+
+    function safeExternalUrl(value) {
+      if (!value) return '';
+      try {
+        const url = new URL(String(value));
+        return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : '';
+      } catch (error) {
+        console.error('[mapping-review:official-url]', error);
+        return '';
+      }
+    }
+
+    function setStatus(message, kind = '') {
+      const node = byId('status');
+      node.textContent = message;
+      node.className = `status ${kind}`;
+    }
+
+    function setSourceText(id, value) {
+      byId(id).textContent = value || '（冻结原文未提供该区块）';
+    }
+
+    function populate(data) {
+      const item = data.item || {};
+      state.index = data.index;
+      state.total = data.total;
+      state.manuscriptId = item.manuscript_id;
+      byId('progressText').textContent = `已完成 ${data.completed}/${data.total}`;
+      byId('progress').max = data.total;
+      byId('progress').value = data.completed;
+      byId('remainingText').textContent = `剩余 ${data.remaining}`;
+      byId('recordPosition').textContent = `队列第 ${data.index + 1}/${data.total} 条`;
+      byId('publishedAt').textContent = item.published_at || '发布日期未知';
+      byId('categoryId').textContent = item.category_id || '类别未知';
+      byId('sourceTitle').textContent = item.title || '无标题';
+      const url = safeExternalUrl(item.official_url);
+      byId('officialUrl').hidden = !url;
+      if (url) byId('officialUrl').href = url;
+      setSourceText('partyBlock', item.party_block);
+      setSourceText('preamble', item.preamble);
+      setSourceText('fullContent', item.content);
+      const label = data.existing_label || {};
+      byId('stockCodes').value = (label.correct_stock_codes || []).join('; ');
+      byId('entityType').value = label.correct_entity_type || '';
+      byId('notes').value = label.notes || '';
+      byId('aliasSearch').value = '';
+      byId('aliasResults').replaceChildren();
+      if (label.reviewer_id) byId('reviewerId').value = label.reviewer_id;
+      byId('previousButton').disabled = data.index === 0;
+      byId('nextButton').disabled = data.index >= data.total - 1;
+      setStatus(label.reviewed_at ? `该条已由 ${label.reviewer_id} 于 ${label.reviewed_at} 审核。` : '该条尚未审核。');
+      document.title = `V88 盲审 ${data.completed}/${data.total}`;
+      window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
+
+    async function load(index = null) {
+      const sequence = ++state.loadSequence;
+      setStatus('读取冻结盲审队列…');
+      const suffix = Number.isInteger(index) ? `?index=${index}` : '';
+      const body = await requestJSON(`/api/research/csrc-mapping-review${suffix}`, { cache: 'no-store' }, 'review-load');
+      if (sequence !== state.loadSequence) return;
+      populate(body.data);
+    }
+
+    async function save(event) {
+      event.preventDefault();
+      if (!state.manuscriptId) return;
+      const reviewerId = byId('reviewerId').value.trim();
+      if (!reviewerId) {
+        setStatus('请填写真实审核人标识。', 'error');
+        byId('reviewerId').focus();
+        return;
+      }
+      try { localStorage.setItem('v88MappingReviewerId', reviewerId); }
+      catch (error) { console.error('[mapping-review:reviewer-storage]', error); }
+      byId('saveButton').disabled = true;
+      setStatus('保存人工标签…');
+      try {
+        const body = await requestJSON(`/api/research/csrc-mapping-review/${encodeURIComponent(state.manuscriptId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reviewer_id: reviewerId,
+            correct_stock_codes: byId('stockCodes').value,
+            correct_entity_type: byId('entityType').value,
+            notes: byId('notes').value,
+          }),
+        }, 'review-save');
+        populate(body.data);
+        if (body.audit_error) setStatus(body.audit_error, 'error');
+        else if (body.audit) {
+          const verdict = body.audit.mapping_data_ready ? '双 95% 映射门禁通过' : '映射门禁未通过，V88 已保持封存';
+          setStatus(`200 条盲审完成：${verdict}；回测仍关闭。`, body.audit.mapping_data_ready ? 'success' : 'error');
+        } else setStatus('已保存，已进入下一条。', 'success');
+      } catch (error) {
+        setStatus(error.message || String(error), 'error');
+      } finally {
+        byId('saveButton').disabled = false;
+      }
+    }
+
+    function addAliasCode(code) {
+      const field = byId('stockCodes');
+      const codes = field.value.split(/[;,，\s]+/).map(value => value.trim()).filter(Boolean);
+      if (!codes.includes(code)) codes.push(code);
+      field.value = codes.join('; ');
+      field.focus();
+    }
+
+    function renderAliasResults(items) {
+      const container = byId('aliasResults');
+      container.replaceChildren();
+      if (!items.length) {
+        const empty = document.createElement('span');
+        empty.className = 'help';
+        empty.textContent = '冻结官方别名库中没有匹配项。';
+        container.appendChild(empty);
+        return;
+      }
+      for (const item of items) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'alias-result';
+        button.textContent = `${item.alias} · ${item.code}`;
+        const detail = document.createElement('small');
+        detail.textContent = `${item.effective_date || '日期未知'} · ${item.source || '官方冻结清单'}`;
+        button.appendChild(detail);
+        button.addEventListener('click', () => addAliasCode(item.code));
+        container.appendChild(button);
+      }
+    }
+
+    let aliasSearchTimer = null;
+    byId('aliasSearch').addEventListener('input', event => {
+      window.clearTimeout(aliasSearchTimer);
+      const query = event.target.value.trim();
+      if (query.length < 2) {
+        byId('aliasResults').replaceChildren();
+        return;
+      }
+      aliasSearchTimer = window.setTimeout(async () => {
+        try {
+          const body = await requestJSON(`/api/research/csrc-security-aliases?q=${encodeURIComponent(query)}`, { cache: 'no-store' }, 'alias-search');
+          if (byId('aliasSearch').value.trim() !== query) return;
+          renderAliasResults(body.data.items || []);
+        } catch (error) {
+          if (error.name === 'AbortError') return;
+          console.error('[mapping-review:alias-search]', error);
+          const container = byId('aliasResults');
+          container.replaceChildren();
+          const message = document.createElement('span');
+          message.className = 'status error';
+          message.textContent = error.message || String(error);
+          container.appendChild(message);
+        }
+      }, 250);
+    });
+
+    function handleLoadError(error) {
+      if (error.name === 'AbortError') return;
+      console.error('[mapping-review:load]', error);
+      setStatus(error.message || String(error), 'error');
+    }
+
+    byId('reviewForm').addEventListener('submit', save);
+    byId('previousButton').addEventListener('click', () => load(state.index - 1).catch(handleLoadError));
+    byId('nextButton').addEventListener('click', () => load(state.index + 1).catch(handleLoadError));
+    try { byId('reviewerId').value = localStorage.getItem('v88MappingReviewerId') || ''; }
+    catch (error) { console.error('[mapping-review:reviewer-storage]', error); }
+    load().catch(handleLoadError);
+    window.addEventListener('pagehide', () => {
+      window.clearTimeout(aliasSearchTimer);
+      requests.forEach(controller => controller.abort());
+      requests.clear();
+    }, { once: true });
+  </script>
+  <script src="/static/premium.js"></script>
+</body>
+</html>

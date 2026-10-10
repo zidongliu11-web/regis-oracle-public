@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A股因子挖掘、策略回测与量化研究工作台">
+  <title>因子研究工厂 · A股交易助手</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='research.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">A</span>
+      <div><strong>A股交易驾驶舱</strong><small>真实数据 · 因子工厂 · 量化研究</small></div>
+    </div>
+    <nav class="terminal-nav" aria-label="页面导航">
+      <a href="{{ url_for('index') }}">交易驾驶舱</a>
+      <a href="{{ url_for('analysis_page') }}">个股分析</a>
+      <a class="active" href="{{ url_for('research_page') }}">研究工厂</a>
+      <a href="{{ url_for('quant_page') }}">量化研究</a>
+      <a href="{{ url_for('kronos_page') }}">Kronos 预测</a>
+    </nav>
+    <div class="top-status">
+      <span id="factoryConnectionDot" class="status-dot"></span>
+      <span id="factoryConnection">正在读取研究报告…</span>
+      <time id="factoryClock"></time>
+    </div>
+  </header>
+
+  <main class="factory-main">
+    <section class="research-workspace-switcher" aria-label="研究工作空间切换">
+      <div>
+        <span>研究工作空间</span>
+        <small>在这里切换总览与 FinHack 专属进度</small>
+      </div>
+      <div class="research-workspace-tabs" role="tablist" aria-label="研究工作空间">
+        <button id="researchOverviewTab" class="active" type="button" role="tab" aria-selected="true">研究工厂总览</button>
+        <button id="finhackWorkspaceTab" type="button" role="tab" aria-selected="false">FinHack 独立工作区</button>
+      </div>
+    </section>
+
+    <section id="finhackWorkspace" class="panel finhack-workspace" aria-labelledby="finhackWorkspaceTitle" hidden>
+      <div class="finhack-workspace-hero">
+        <div>
+          <p class="section-kicker">FINHACK · ISOLATED RESEARCH WORKSPACE</p>
+          <h1 id="finhackWorkspaceTitle">FinHack 独立工作区</h1>
+          <p>这里只展示 FinHack 的真实接入、因子库存和验证进度；研究工厂其他任务不会混进来。</p>
+        </div>
+        <b id="finhackReportStatus" class="tag gray">读取报告</b>
+      </div>
+
+      <div class="finhack-live-grid">
+        <article class="finhack-live-primary">
+          <span>此刻是否正在工作</span>
+          <strong id="finhackWorkingNow">核对中</strong>
+          <h2 id="finhackCurrentTask">正在读取 FinHack 状态</h2>
+          <p id="finhackTaskReason">只显示真实文件和真实任务，不用研究总轮次代替进度。</p>
+          <dl class="finhack-task-facts">
+            <div><dt>最近真实产物</dt><dd id="finhackLastOutput">读取中</dd></div>
+            <div><dt>剩余时间</dt><dd id="finhackEta">等待真实样本</dd></div>
+            <div><dt>FinHack状态</dt><dd id="finhackState">读取中</dd></div>
+          </dl>
+        </article>
+        <aside class="finhack-live-side">
+          <article>
+            <span>研究工厂全局任务</span>
+            <strong id="finhackGlobalWorker">正在核对</strong>
+            <small id="finhackGlobalStep">全局任务不等于 FinHack 正在计算</small>
+          </article>
+          <article>
+            <span>固定源码与许可证</span>
+            <strong id="finhackPinnedCommit">等待报告</strong>
+            <small id="finhackLicence">等待许可证核对</small>
+          </article>
+        </aside>
+      </div>
+
+      <div class="finhack-workspace-progress" aria-label="FinHack真实接入进度">
+        <div><span>真实接入进度</span><b id="finhackProgressText">0 / 10 · 0.0%</b></div>
+        <i><b id="finhackProgressBar"></b></i>
+        <small id="finhackProgressDetail">等待读取报告；只统计已有输出证据的步骤。</small>
+      </div>
+
+      <div class="finhack-inventory-grid">
+        <article><span>候选公式总数</span><strong id="finhackFormulaCount">0</strong><small>仅库存，尚不代表有效</small></article>
+        <article><span>Alpha101</span><strong id="finhackAlpha101">0</strong><small>等待兼容与点时验证</small></article>
+        <article><span>Alpha191</span><strong id="finhackAlpha191">0</strong><small>等待兼容与点时验证</small></article>
+        <article><span>源码静态审计</span><strong id="finhackSourceAudit">0 文件 · 0 错误</strong><small>未执行第三方代码</small></article>
+      </div>
+
+      <section class="toolchain-audit-card" aria-labelledby="toolchainAuditTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">CLAUDE CODE FOLDER · TRUST REVIEW</p>
+            <h2 id="toolchainAuditTitle">因子工具链采用决策</h2>
+          </div>
+          <b id="toolchainAuditStatus" class="tag gray">等待读取</b>
+        </div>
+        <p id="toolchainAuditSummary" class="toolchain-audit-summary">正在核对文件去重、算子语义和证据边界。</p>
+        <div class="toolchain-audit-metrics">
+          <article><span>源文件</span><strong id="toolchainSourceFiles">—</strong><small>含副本</small></article>
+          <article><span>独立内容</span><strong id="toolchainUnique">—</strong><small>按 SHA-256 去重</small></article>
+          <article><span>烟雾测试</span><strong id="toolchainChecks">—</strong><small>真实数值断言</small></article>
+        </div>
+        <div class="toolchain-decision-grid">
+          <article>
+            <h3>采用</h3>
+            <ul id="toolchainAdopted"><li>等待读取审计结论</li></ul>
+          </article>
+          <article>
+            <h3>拒绝或修正</h3>
+            <ul id="toolchainCorrected"><li>等待读取审计结论</li></ul>
+          </article>
+          <article>
+            <h3>下一层证据</h3>
+            <ul id="toolchainNextEvidence"><li>等待读取审计结论</li></ul>
+          </article>
+        </div>
+        <p class="factory-footnote">页面只公开文件级审计和验证边界，不展示具体因子公式、参数或策略核心。</p>
+      </section>
+
+      <div class="panel-heading finhack-workspace-section">
+        <div><p class="section-kicker">TEN-STAGE INTAKE</p><h2>十步接入与验证</h2></div>
+        <b id="finhackStageStatus" class="tag gray">读取状态</b>
+      </div>
+      <div id="finhackStageRows" class="finhack-stage-rows"></div>
+
+      <div class="finhack-workspace-columns">
+        <section>
+          <div class="panel-heading">
+            <div><p class="section-kicker">FACTOR INVENTORY</p><h2>候选因子组</h2></div>
+            <b id="finhackGroupCount" class="tag gray">0 组</b>
+          </div>
+          <div id="finhackGroupRows" class="registry-rows"></div>
+        </section>
+        <section>
+          <div class="panel-heading">
+            <div><p class="section-kicker">SECURITY & LICENCE</p><h2>隔离项与阻塞原因</h2></div>
+            <b class="tag red">未验证不推荐</b>
+          </div>
+          <div id="finhackSecurityFlags" class="finhack-security-flags"></div>
+          <ul id="finhackBlockers" class="finhack-blockers"></ul>
+        </section>
+      </div>
+
+      <!-- Multi-source open-source factor catalog -->
+      <div class="panel-heading finhack-workspace-section">
+        <div><p class="section-kicker">OPEN-SOURCE UNIVERSE</p><h2>全球开源因子库总览</h2></div>
+        <b id="factorCatalogStatus" class="tag gray">读取中</b>
+      </div>
+      <div class="catalog-summary-strip" id="factorCatalogSummary">
+        <div><span>已登记来源</span><strong id="catalogSourceCount">—</strong></div>
+        <div><span>已知公式总数</span><strong id="catalogFormulaKnown">—</strong></div>
+        <div><span>已克隆本地</span><strong id="catalogFormulaCloned">—</strong></div>
+        <div><span>已沙箱审计</span><strong id="catalogSourcesAudited">—</strong></div>
+        <div><span>MIT / Apache 许可</span><strong id="catalogPermissiveCount">—</strong></div>
+      </div>
+      <div class="catalog-source-grid" id="catalogSourceGrid" aria-label="多源因子库对比">
+        <!-- JS populated -->
+      </div>
+      <p class="factory-footnote" id="catalogFootnote">等待多源因子目录报告。</p>
+
+      <!-- Unified sandbox audit summary -->
+      <div class="panel-heading finhack-workspace-section">
+        <div><p class="section-kicker">SANDBOX AUDIT</p><h2>统一沙箱审计结果</h2></div>
+        <b id="auditReportStatus" class="tag gray">等待报告</b>
+      </div>
+      <div class="catalog-summary-strip" id="auditSummaryStrip">
+        <div><span>扫描仓库</span><strong id="auditRepoCount">—</strong></div>
+        <div><span>Python 文件</span><strong id="auditPyFiles">—</strong></div>
+        <div><span>公式引用点</span><strong id="auditFormulaRefs">—</strong></div>
+        <div><span>⚠ 凭证泄漏</span><strong id="auditCredsLeaked">—</strong></div>
+        <div><span>✓ 可独立回测</span><strong id="auditBacktestReady">—</strong></div>
+      </div>
+      <div class="audit-repo-grid" id="auditRepoGrid" aria-label="沙箱审计详情">
+        <!-- JS populated -->
+      </div>
+      <p class="factory-footnote" id="auditFootnote">等待统一第三方审计报告。</p>
+
+      <div class="finhack-boundary">
+        <strong>固定边界</strong>
+        <span>未经公式兼容、点时统计和完整成本回测的候选，不进入今日机会。</span>
+      </div>
+    </section>
+
+    <section class="factory-hero">
+      <div>
+        <p class="eyebrow">FACTOR & STRATEGY RESEARCH FACTORY</p>
+        <h1>每一个因子，都必须留下证据链</h1>
+        <p>本地确定性规则负责提出假设、读取数据、检验和回测。这里不展示虚构胜率。</p>
+      </div>
+      <div class="factory-actions">
+        <span id="factoryGeneratedAt">等待首次同步</span>
+        <button id="factoryRefresh" class="ghost-button" type="button">刷新研究状态</button>
+      </div>
+    </section>
+
+    <!-- ── PIPELINE HEALTH & GATE UNLOCK ──────────────────────────── -->
+    <section class="panel pipeline-health-panel" aria-labelledby="pipelineHealthTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">PIPELINE HEALTH</p>
+          <h2 id="pipelineHealthTitle">管线健康</h2>
+        </div>
+        <b id="pipelineHealthGenerated" class="tag gray">等待报告</b>
+      </div>
+
+      <!-- MA200 Regime + Gate Summary Row -->
+      <div class="pipeline-hero-row">
+        <!-- MA200 Regime -->
+        <article class="pipeline-ma200-card" id="ma200Card">
+          <span class="pipeline-card-kicker">上证指数 MA200 市场状态</span>
+          <div class="pipeline-ma200-gauge">
+            <strong id="ma200IndexClose">——</strong>
+            <span id="ma200StatusLabel" class="tag gray">等待数据</span>
+          </div>
+          <div class="pipeline-ma200-detail">
+            <div><span>MA200</span><strong id="ma200Value">—</strong></div>
+            <div><span>涨跌幅</span><strong id="ma200ChangePct">—</strong></div>
+            <div><span>MA200斜率(20日)</span><strong id="ma200Slope">—</strong></div>
+            <div><span>历史会话</span><strong id="ma200Sessions">—</strong></div>
+          </div>
+          <small id="ma200Description">读取上证指数数据中</small>
+        </article>
+
+      </div>
+
+      <!-- Factor Pipeline + historical model evidence -->
+      <div class="pipeline-secondary-row">
+        <article class="pipeline-info-card" id="factorPipelineCard">
+          <span class="pipeline-card-kicker">第三方历史公式审查</span>
+          <strong id="factorPipelineStatus">等待数据</strong>
+          <div class="pipeline-info-stats">
+            <div><span>FinHack 已测试</span><strong id="fpFinHack">—</strong></div>
+            <div><span>popbo 已测试</span><strong id="fpPopbo">—</strong></div>
+            <div><span>历史记录已审查</span><strong id="fpReviewed">—</strong></div>
+            <div><span>正式可用</span><strong id="fpProductionEligible">—</strong></div>
+          </div>
+          <small id="fpNextAction">—</small>
+        </article>
+        <article class="pipeline-info-card" id="deepseekPipelineCard">
+          <span class="pipeline-card-kicker">DeepSeek 历史发现效率</span>
+          <strong id="dsEfficiency">等待数据</strong>
+          <div class="pipeline-info-stats">
+            <div><span>累计轮次</span><strong id="dsRounds">—</strong></div>
+            <div><span>可执行候选</span><strong id="dsActionable">—</strong></div>
+            <div><span>效率</span><strong id="dsRate">—</strong></div>
+          </div>
+          <small id="dsRecommendation">—</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel strategy-proximity-panel" aria-labelledby="proximityTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">UNLOCK PROXIMITY · FASTEST PATH TO GATE</p>
+          <h2 id="proximityTitle">策略研究仪表盘</h2>
+        </div>
+        <b id="proximityBestStrategy" class="tag yellow">V23 股东增持事件驱动</b>
+      </div>
+      <p id="proximitySummary" class="proximity-summary">正在读取策略历史数据…</p>
+      <div class="proximity-hero-grid">
+        <article class="proximity-hero-card" id="proximityV23Card">
+          <div class="proximity-card-head">
+            <span id="proximityPrimaryBadge" class="strategy-badge primary">V23 历史诊断</span>
+            <strong id="proximityPrimaryTitle">股东增持事件驱动</strong>
+            <small id="proximityPrimaryScope">历史回测数据，仅供参考研究</small>
+          </div>
+          <div class="proximity-gauges">
+            <div class="proximity-gauge" id="v23WinRateGauge">
+              <span>胜率目标 60%</span>
+              <div class="gauge-track"><b class="gauge-fill" id="v23WinRateBar"></b></div>
+              <small>当前 <strong id="v23WinRateValue">--</strong> · 目标 60% · 差距 <strong id="v23WinRateGap">--</strong></small>
+            </div>
+            <div class="proximity-gauge" id="v23AnnualReturnGauge">
+              <span>年化收益目标 15%</span>
+              <div class="gauge-track"><b class="gauge-fill" id="v23AnnualReturnBar"></b></div>
+              <small>当前 <strong id="v23AnnualReturnValue">--</strong> · 目标 15% · 差距 <strong id="v23AnnualReturnGap">--</strong></small>
+            </div>
+          </div>
+          <div class="proximity-stats">
+            <div><span>交易笔数</span><strong id="v23TradeCount">--</strong><small>需 ≥100</small></div>
+            <div><span>最大回撤</span><strong id="v23MaxDrawdown">--</strong><small>需 ≤15%</small></div>
+            <div><span>盈利因子</span><strong id="v23ProfitFactor">--</strong><small>需 ≥1.20</small></div>
+            <div><span>Wilson 95% CI 下界</span><strong id="v23WilsonLow">--</strong><small>需 ≥50%</small></div>
+          </div>
+          <p id="v23NextAction" class="proximity-next-action"></p>
+        </article>
+
+        <article class="proximity-hero-card" id="proximityV3Card">
+          <div class="proximity-card-head">
+            <span class="strategy-badge secondary">V3-A 备选</span>
+            <strong>低波动择时</strong>
+            <small>低相关性第二策略</small>
+          </div>
+          <div class="proximity-stats compact">
+            <div><span>胜率</span><strong id="v3WinRate">--</strong></div>
+            <div><span>年化收益</span><strong id="v3AnnualReturn">--</strong></div>
+            <div><span>交易笔数</span><strong id="v3TradeCount">--</strong></div>
+            <div><span>最大回撤</span><strong id="v3MaxDrawdown">--</strong></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="proximity-secondary-grid">
+        <article class="proximity-info-card" id="v44ShadowCard">
+          <div class="proximity-card-head">
+            <span class="strategy-badge observing">V44 影子观察</span>
+            <strong>含成本影子纸面账本</strong>
+          </div>
+          <div class="v44-shadow-stats">
+            <div><span>等待信号</span><strong id="v44WaitingSignals">--</strong></div>
+            <div><span>信号日期</span><strong id="v44ObservingDays">--</strong></div>
+            <div><span>产品资格</span><strong id="v44GateStatus">--</strong></div>
+            <div><span>已完成样本</span><strong id="v44CompletedTrades">--</strong></div>
+          </div>
+          <small id="v44ShadowNote" class="proximity-note"></small>
+        </article>
+
+        <article class="proximity-info-card" id="deepseekEfficiencyCard">
+          <div class="proximity-card-head">
+            <span class="strategy-badge warning">DeepSeek 历史效率</span>
+            <strong>已停用模型的历史轮次记录</strong>
+          </div>
+          <div class="deepseek-efficiency-stats">
+            <div><span>累计发现轮次</span><strong id="dsEfficiencyRounds">--</strong></div>
+            <div><span>可执行候选</span><strong id="dsEfficiencyCandidates">--</strong></div>
+            <div><span>累计Token估算</span><strong id="dsEfficiencyTokens">--</strong></div>
+            <div><span>当前状态</span><strong id="dsEfficiencyStatus">--</strong></div>
+          </div>
+          <small id="dsEfficiencyNote" class="proximity-note"></small>
+        </article>
+
+        <article class="proximity-info-card" id="quickActionsCard">
+          <div class="proximity-card-head">
+            <span class="strategy-badge action">快速行动</span>
+            <strong>最快解锁路径建议</strong>
+          </div>
+          <ol id="quickActionsList" class="quick-actions-list">
+            <li>正在读取各策略状态…</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section id="v25CampaignPanel" class="panel v25-campaign-panel" aria-labelledby="v25CampaignTitle">
+      <div class="v25-campaign-heading">
+        <div>
+          <p class="section-kicker">V25 · FIXED RESEARCH CAMPAIGN</p>
+          <h2 id="v25CampaignTitle">下一批真实研究 · 结构性因子三路检验</h2>
+        </div>
+        <b id="v25CampaignStatus" class="tag gray">等待队列</b>
+      </div>
+      <div class="v25-campaign-grid">
+        <div class="v25-progress-card primary">
+          <span>V25固定任务总进度</span>
+          <strong id="v25OverallPct">0.0%</strong>
+          <i><b id="v25OverallBar"></b></i>
+          <small id="v25RemainingPct">剩余 100.0%</small>
+        </div>
+        <div class="v25-progress-card">
+          <span>当前阶段进度</span>
+          <strong id="v25PhasePct">0.0%</strong>
+          <i><b id="v25PhaseBar"></b></i>
+          <small id="v25PhaseUnits">等待实际工作单元</small>
+        </div>
+        <div class="v25-progress-card">
+          <span>条件预计剩余</span>
+          <strong id="v25Eta">等待速率</strong>
+          <small id="v25EtaBasis">等待第一批真实耗时样本</small>
+        </div>
+        <div class="v25-progress-card">
+          <span>本批实际计算</span>
+          <strong id="v25ActualCompute">0秒</strong>
+          <small id="v25Result">尚无统计裁决</small>
+        </div>
+      </div>
+      <div class="v25-current-work">
+        <div>
+          <span>此刻正在做</span>
+          <strong id="v25CurrentTask">等待研究工人领取任务</strong>
+        </div>
+        <div>
+          <span>当前阶段</span>
+          <strong id="v25CurrentPhase">等待队列</strong>
+        </div>
+      </div>
+      <div id="v25TaskList" class="v25-task-list" aria-label="V25研究阶段"></div>
+      <p id="v25Definition" class="progress-definition"></p>
+    </section>
+
+    <section id="v21PilotPanel" class="panel v21-pilot-panel" aria-labelledby="v21PilotTitle">
+      <div class="v21-pilot-heading">
+        <div>
+          <p id="v21PilotKicker" class="section-kicker">HISTORICAL EVIDENCE · NOT A PRODUCT GATE</p>
+          <h2 id="v21PilotTitle">历史证据观察 · 产品与真钱锁定</h2>
+        </div>
+        <b id="v21PilotStatus" class="tag gray">正在读取裁决</b>
+      </div>
+      <p id="v21PilotMessage" class="v21-pilot-message">正在读取独立样本与完整成本结果…</p>
+      <div class="v21-pilot-grid">
+        <div class="v21-pilot-metrics">
+          <div><span>2026段10BP收益</span><strong id="v21Return">--</strong></div>
+          <div><span>完成交易</span><strong id="v21Trades">--</strong></div>
+          <div><span>2026段胜率</span><strong id="v21WinRate">--</strong></div>
+          <div><span>60%胜率证据</span><strong id="v24WinTarget">--</strong></div>
+          <div><span>买卖实现复核</span><strong id="v24Implementation">--</strong></div>
+          <div><span>最大回撤</span><strong id="v21Drawdown">--</strong></div>
+          <div><span>盈利因子</span><strong id="v21ProfitFactor">--</strong></div>
+        </div>
+        <div id="v21Candidate" class="v21-candidate empty-state compact">
+          今天没有新的V21公告信号，保持空仓等待，不追旧信号。
+        </div>
+      </div>
+      <div class="v21-execution-row">
+        <p><b>买入时间：</b><span id="v21EntryRule">--</span></p>
+        <p><b>卖出时间：</b><span id="v21ExitRule">--</span></p>
+        <p><b>错过处理：</b><span id="v21MissedRule">--</span></p>
+        <p><b>仓位上限：</b><span id="v21PositionRule">--</span></p>
+      </div>
+      <p id="v22CombinedEvidence" class="live-secondary"></p>
+      <p id="v21Limitations" class="eta-warning"></p>
+    </section>
+
+    <section id="objectiveStrip" class="objective-strip" aria-label="研究目标"></section>
+
+    <section class="factory-summary-grid">
+      <article class="factory-summary primary">
+        <span>研究总览</span>
+        <strong id="factoryGate">检查中</strong>
+        <small id="factoryGateReason">正在核对真实数据与策略结果</small>
+      </article>
+      <article class="factory-summary">
+        <span>真实日线覆盖</span>
+        <strong id="factoryCoverage">--</strong>
+        <small id="factoryCoverageDetail">等待下载报告</small>
+      </article>
+      <article class="factory-summary">
+        <span>正式检验 / 统计通过</span>
+        <strong id="factoryFactors">--</strong>
+        <small>统计通过后仍须行业归因与含成本策略验证</small>
+      </article>
+      <article class="factory-summary">
+        <span>后台研究</span>
+        <strong id="factoryWorker">--</strong>
+        <small id="factoryWorkerDetail">等待心跳</small>
+      </article>
+    </section>
+
+    <section class="panel fifteen-hour-panel" aria-labelledby="fifteenHourTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">REAL VALIDATION SESSION · TIME LEDGER</p>
+          <h2 id="fifteenHourTitle">真实历史验证会话（固定任务制）</h2>
+        </div>
+        <span id="fifteenHourStatus" class="tag yellow">正在启动</span>
+      </div>
+      <div class="fifteen-hour-grid">
+        <article>
+          <span>时间账本（真实）</span>
+          <strong id="fifteenHourCompute">有效计算 --</strong>
+          <small id="fifteenHourWall">自然运行、等待与实际计算分开显示</small>
+        </article>
+        <article>
+          <span>当前正在做</span>
+          <strong id="fifteenHourTask">等待本地计算</strong>
+          <small id="fifteenHourTaskTime">--</small>
+        </article>
+        <article>
+          <span>结果</span>
+          <strong id="fifteenHourGate">尚未通过</strong>
+          <small>固定验证完成不等于自动开门</small>
+        </article>
+        <article>
+          <span>全历史任务矩阵</span>
+          <strong id="fifteenHourWork">等待执行器</strong>
+          <small id="fifteenHourCoverage">4,802只真实A股</small>
+        </article>
+      </div>
+      <div class="fifteen-hour-progress">
+        <span id="fifteenHourProgressLabel">有效计算预算（15小时为上限，不是必须填满） <b id="fifteenHourProgressText">0.000%</b></span>
+        <i><b id="fifteenHourProgressBar"></b></i>
+      </div>
+      <div class="fifteen-hour-progress work-progress">
+        <span>固定验证工作量 <b id="fifteenHourWorkProgressText">0.000%</b></span>
+        <i><b id="fifteenHourWorkProgressBar"></b></i>
+      </div>
+      <p id="fifteenHourExplanation" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel live-command-panel" aria-labelledby="liveConsoleTitle">
+      <div class="panel-heading live-command-heading">
+        <div>
+          <p class="section-kicker">LIVE RESEARCH COMMAND</p>
+          <h2 id="liveConsoleTitle">实时研究控制台</h2>
+        </div>
+        <div class="live-command-status">
+          <span id="liveConsolePulse" class="live-pulse"></span>
+          <strong id="liveConsoleStatus">正在连接后台…</strong>
+          <small id="liveConsoleUpdatedAt">等待首次状态</small>
+        </div>
+      </div>
+
+      <div class="live-command-grid">
+        <article class="live-command-card worker-card">
+          <div class="live-card-title">
+            <span>本地研究工人</span>
+            <b id="liveStepMode" class="tag gray">读取中</b>
+          </div>
+          <strong id="liveCurrentStep" class="live-primary-value">等待状态</strong>
+          <p id="liveStepTiming" class="live-secondary">正在计算预计时间…</p>
+          <p id="liveStepDetail" class="live-operation-detail">等待逐项进度…</p>
+          <div class="live-cycle-progress">
+            <span>本轮进度 <b id="liveCycleProgressText">--</b></span>
+            <i><b id="liveCycleProgressBar"></b></i>
+          </div>
+          <div class="live-worker-meta">
+            <span>心跳 <b id="liveHeartbeat">--</b></span>
+            <span>轮次 <b id="liveCycleNumber">--</b></span>
+          </div>
+          <p id="experimentQueueSummary" class="live-secondary">实验队列读取中…</p>
+          <ol id="liveCycleStages" class="live-cycle-stages"></ol>
+        </article>
+
+        <article class="live-command-card deepseek-card">
+          <div class="live-card-title">
+            <span id="deepseekCardTitle">外部付费模型 · 历史记录</span>
+            <b id="deepseekLiveState" class="tag gray">已禁用</b>
+          </div>
+          <strong id="deepseekLiveAction" class="live-primary-value">外部付费 API 已禁用，本地确定性研究继续</strong>
+          <p id="deepseekLiveRole" class="live-secondary">历史证据只读保留；页面不会发起新模型请求。</p>
+          <div class="deepseek-round-progress" aria-label="外部模型历史任务记录">
+            <span>历史任务 <b id="deepseekProgressText">--</b></span>
+            <i><b id="deepseekProgressBar"></b></i>
+            <small id="deepseekProgressEta">正在读取历史记录…</small>
+          </div>
+          <div class="deepseek-work-grid" aria-label="外部模型禁用状态与历史记录">
+            <div>
+              <span>此刻是否工作</span>
+              <b id="deepseekWorkingNow">读取中</b>
+            </div>
+            <div>
+              <span>当前任务</span>
+              <b id="deepseekCurrentJob">读取中</b>
+            </div>
+            <div>
+              <span>历史最近完成</span>
+              <b id="deepseekCurrentElapsed">--</b>
+            </div>
+            <div>
+              <span>数据能否回测</span>
+              <b id="deepseekDataReady">核对中</b>
+            </div>
+          </div>
+          <p id="deepseekLatestVerdict" class="deepseek-verdict">正在读取只读历史裁决…</p>
+          <div id="deepseekTaskList" class="deepseek-task-list"></div>
+          <div class="deepseek-live-stats">
+            <div><span>历史最近完成</span><b id="deepseekLastRun">--</b></div>
+            <div><span>历史用量</span><b id="deepseekLiveTokens">--</b></div>
+          </div>
+          <div class="live-artifacts">
+            <span>最近产生的研究产物</span>
+            <div id="liveArtifacts"></div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="research-truth-grid" aria-label="真实研究状态">
+      <article class="panel truth-panel">
+        <p class="section-kicker">CURRENT REAL WORK</p>
+        <h2>当前真实工作</h2>
+        <strong id="truthCurrentWork">正在读取…</strong>
+        <p id="truthCurrentReason" class="factory-footnote"></p>
+        <small id="truthCompletionCondition"></small>
+      </article>
+      <article class="panel truth-panel">
+        <p class="section-kicker">DATA HEALTH</p>
+        <h2>数据健康</h2>
+        <strong id="truthPrimarySource">正在读取…</strong>
+        <p id="truthPrimaryDetail" class="factory-footnote"></p>
+        <small id="truthFallbackSource"></small>
+      </article>
+      <article class="panel truth-panel">
+        <p class="section-kicker">RESEARCH LEDGER</p>
+        <h2>研究账本</h2>
+        <strong id="truthLedger">正在读取…</strong>
+        <p id="truthLedgerDetail" class="factory-footnote"></p>
+      </article>
+      <article class="panel truth-panel">
+        <p class="section-kicker">OPEN-SOURCE FACTOR REGISTRY</p>
+        <h2>开源候选</h2>
+        <strong id="truthRegistry">正在读取…</strong>
+        <p id="truthRegistryDetail" class="factory-footnote"></p>
+        <small id="truthVolumeRatio"></small>
+      </article>
+    </section>
+
+    <section class="panel registry-panel" aria-labelledby="registryTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">AUDITABLE OPEN-SOURCE CANDIDATES</p>
+          <h2 id="registryTitle">V18 开源候选验证结果</h2>
+        </div>
+        <span id="truthRegistryTag" class="tag gray">等待首个候选</span>
+      </div>
+      <div id="truthRegistryRows" class="registry-rows"></div>
+    </section>
+
+    <section class="panel registry-panel" aria-labelledby="v27RegistryTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">NEW MECHANISMS · PREREGISTERED</p>
+          <h2 id="v27RegistryTitle">V27 新机制候选验证结果</h2>
+        </div>
+        <span id="v27RegistryTag" class="tag gray">等待首个候选</span>
+      </div>
+      <p id="v27RegistrySummary" class="factory-footnote">正在读取冻结来源、许可和研究范围…</p>
+      <div id="v27RegistryRows" class="registry-rows"></div>
+      <div class="panel-heading compact-heading">
+        <div>
+          <p class="section-kicker">COST &amp; COMBINATION ADJUDICATION</p>
+          <h3>含成本策略与组合裁决</h3>
+        </div>
+        <span id="v27AdjudicationTag" class="tag gray">等待成本回测</span>
+      </div>
+      <div id="v27AdjudicationRows" class="registry-rows"></div>
+    </section>
+
+    <section class="panel registry-panel" aria-labelledby="v28RegistryTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">NEW COHORT · FAMILY-WISE CORRECTED</p>
+          <h2 id="v28RegistryTitle">V28 价格几何新因子批次</h2>
+        </div>
+        <span id="v28RegistryTag" class="tag gray">已预注册 · 等待计算</span>
+      </div>
+      <p id="v28RegistrySummary" class="factory-footnote">正在读取来源、许可、多重检验和冻结范围…</p>
+      <div id="v28RegistryRows" class="registry-rows"></div>
+    </section>
+
+    <section class="panel registry-panel" aria-labelledby="v29RegistryTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">NEXT COHORT · DISTINCT MECHANISMS</p>
+          <h2 id="v29RegistryTitle">V29 路径与量能结构新因子批次</h2>
+        </div>
+        <span id="v29RegistryTag" class="tag gray">已预注册 · 等待V28裁决</span>
+      </div>
+      <p id="v29RegistrySummary" class="factory-footnote">正在读取来源、许可、多重检验和冻结范围…</p>
+      <div id="v29RegistryRows" class="registry-rows"></div>
+      <div class="panel-heading compact-heading">
+        <div>
+          <p class="section-kicker">COST &amp; COMBINATION ADJUDICATION</p>
+          <h3>V29 含成本策略与组合裁决</h3>
+        </div>
+        <span id="v29AdjudicationTag" class="tag gray">等待统计筛选完成</span>
+      </div>
+      <div id="v29AdjudicationRows" class="registry-rows"></div>
+    </section>
+
+    <section class="panel pipeline-panel">
+      <div class="panel-heading">
+        <div><p class="section-kicker">RESEARCH PIPELINE</p><h2>从真实数据到策略研究</h2></div>
+        <span class="tag red">不能跳级</span>
+      </div>
+      <div id="pipelineStages" class="pipeline-stages"></div>
+      <div id="labelProtocol" class="label-protocol" aria-label="回测标签执行口径"></div>
+    </section>
+
+    <section class="panel accelerated-panel" aria-labelledby="acceleratedTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">ACCELERATED HISTORICAL SIMULATION</p>
+          <h2 id="acceleratedTitle">10–15小时加速历史仿真与本周交付</h2>
+        </div>
+        <span id="acceleratedStatus" class="tag gray">读取中</span>
+      </div>
+      <div class="accelerated-layout">
+        <article>
+          <strong id="acceleratedDecision">正在核对最新策略证据…</strong>
+          <p id="acceleratedPurpose"></p>
+          <div id="acceleratedRuntime" class="accelerated-runtime"></div>
+          <div class="accelerated-clock-progress">
+            <span>15小时真实历史验证管线 <b id="acceleratedProgressText">--</b></span>
+            <i><b id="acceleratedProgressBar"></b></i>
+          </div>
+          <div id="acceleratedProtocol" class="accelerated-protocol"></div>
+          <p id="acceleratedBoundary" class="factory-footnote"></p>
+        </article>
+        <aside id="deliveryPlan" class="delivery-plan"></aside>
+      </div>
+    </section>
+
+    <section class="factory-grid">
+      <article class="panel factor-lab">
+        <div class="panel-heading factor-heading">
+          <div>
+            <p class="section-kicker">FACTOR LAB</p>
+            <h2>全量 V4 正式因子检验</h2>
+            <small id="factorPeriod">等待训练、验证与测试区间</small>
+          </div>
+          <div id="factorFilters" class="factor-filters" role="group" aria-label="因子筛选">
+            <button class="active" type="button" aria-pressed="true" data-stage="all">全部</button>
+            <button type="button" aria-pressed="false" data-stage="statistical">统计通过</button>
+            <button type="button" aria-pressed="false" data-stage="production">生产可用</button>
+            <button type="button" aria-pressed="false" data-stage="rejected">未通过</button>
+          </div>
+        </div>
+        <div id="factorFamilySummary" class="factor-family-summary"></div>
+        <div class="factor-table-wrap">
+          <table class="factor-table">
+            <thead>
+              <tr>
+                <th>因子、周期与公式</th>
+                <th>验证集 IC</th>
+                <th>测试 IC / 95% CI</th>
+                <th>十分组单调性</th>
+                <th>扣往返10BP后头部-中间</th>
+                <th>当前状态</th>
+              </tr>
+            </thead>
+            <tbody id="factorTableBody">
+              <tr><td colspan="6">正在读取真实因子报告…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p id="factorWarning" class="factory-footnote"></p>
+      </article>
+
+      <aside class="factory-side">
+        <article class="panel blockers-panel">
+          <div class="panel-heading">
+            <div><p class="section-kicker">ACTIVE BLOCKERS</p><h2>现在为什么不能交易</h2></div>
+            <span id="blockerCount" class="tag red">读取中</span>
+          </div>
+          <div id="blockerList" class="blocker-list"></div>
+        </article>
+
+        <article class="panel experiment-panel">
+          <div class="panel-heading">
+            <div><p class="section-kicker">FALSIFIABLE NEXT</p><h2>下一轮可证伪实验</h2></div>
+            <span class="tag yellow">V4.2 已预注册</span>
+          </div>
+          <ol id="experimentList" class="experiment-list"></ol>
+        </article>
+      </aside>
+    </section>
+
+    <section class="panel v41-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V4.1 EXPLORATORY DIAGNOSTICS</p>
+          <h2>风险过滤与滚动方向：只做探索，不解锁交易</h2>
+        </div>
+        <span id="v41EvidenceTag" class="tag yellow">等待报告</span>
+      </div>
+      <div id="v41Cards" class="v41-cards"></div>
+      <p id="v41Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v42-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V4.2 MICROSTRUCTURE RESEARCH</p>
+          <h2>T+1 微观结构：六项冻结检验</h2>
+        </div>
+        <span id="v42EvidenceTag" class="tag gray">等待报告</span>
+      </div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>假设、因子与周期</th>
+              <th>验证 IC</th>
+              <th>测试 IC / 95% CI</th>
+              <th>Holm 校正 P</th>
+              <th>低波动过滤后</th>
+              <th>门禁</th>
+            </tr>
+          </thead>
+          <tbody id="v42TableBody">
+            <tr><td colspan="6">等待 V4.2 全量研究报告。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="v42Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v5-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V5 PRE-REGISTERED EVENT STUDY</p>
+          <h2>A股首次涨停后的三交易日溢出效应</h2>
+        </div>
+        <span id="v5EvidenceTag" class="tag gray">等待报告</span>
+      </div>
+      <div id="v5Summary" class="v44-summary"></div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>样本区间</th>
+              <th>可执行事件</th>
+              <th>扣10BP平均收益</th>
+              <th>相对对照组</th>
+              <th>95%区间 / P值</th>
+              <th>裁决</th>
+            </tr>
+          </thead>
+          <tbody id="v5TableBody">
+            <tr><td colspan="6">等待 V5 真实A股研究报告。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="v5Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v6-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V6 PRE-REGISTERED LOTTERY EFFECT</p>
+          <h2>非涨停型彩票偏好 MAX 效应</h2>
+        </div>
+        <span id="v6EvidenceTag" class="tag gray">等待报告</span>
+      </div>
+      <div id="v6Summary" class="v44-summary"></div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>样本区间</th>
+              <th>平均IC / 95%区间</th>
+              <th>十分组单调性</th>
+              <th>头部-中间（扣10BP）</th>
+              <th>裁决</th>
+            </tr>
+          </thead>
+          <tbody id="v6TableBody">
+            <tr><td colspan="5">等待 V6 真实A股研究报告。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="v6Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v9-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V9 REAL EXCHANGE MARGIN FACTOR</p>
+          <h2>融资买入强度：真实交易所数据门禁</h2>
+        </div>
+        <span id="v9EvidenceTag" class="tag gray">等待报告</span>
+      </div>
+      <div id="v9Summary" class="v44-summary"></div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>样本区间</th>
+              <th>平均IC / 95%区间</th>
+              <th>十分组单调性</th>
+              <th>头部-中间（扣10BP）</th>
+              <th>裁决</th>
+            </tr>
+          </thead>
+          <tbody id="v9TableBody">
+            <tr><td colspan="5">等待 V9 真实交易所研究报告。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="v9Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v14-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V14 PREREGISTERED MARGIN ACCELERATION</p>
+          <h2>融资余额加速度：新机制真实历史门禁</h2>
+        </div>
+        <span id="v14EvidenceTag" class="tag gray">等待启动</span>
+      </div>
+      <div id="v14Summary" class="v44-summary"></div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>样本区间</th>
+              <th>平均IC / 95%区间</th>
+              <th>十分组单调性</th>
+              <th>头部-中间（扣10BP）</th>
+              <th>裁决</th>
+            </tr>
+          </thead>
+          <tbody id="v14TableBody">
+            <tr><td colspan="5">等待 V14 融资余额加速度研究。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="v14Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v15-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V15 OFFICIAL ELIGIBILITY EVENT STUDY</p>
+          <h2>融资融券标的调入：官方事件与收益门禁</h2>
+        </div>
+        <span id="v15EvidenceTag" class="tag gray">等待启动</span>
+      </div>
+      <div id="v15Summary" class="v44-summary"></div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>验证阶段</th>
+              <th>样本</th>
+              <th>扣10BP平均收益</th>
+              <th>胜率 / 95%区间</th>
+              <th>当前裁决</th>
+            </tr>
+          </thead>
+          <tbody id="v15TableBody">
+            <tr><td colspan="5">等待 V15 官方事件与收益研究。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="v15Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v16-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V16 PREREGISTERED REPURCHASE EVENT STUDY</p>
+          <h2>首次股份回购方案：真实公告与收益门禁</h2>
+        </div>
+        <span id="v16EvidenceTag" class="tag gray">等待启动</span>
+      </div>
+      <div id="v16Summary" class="v44-summary"></div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>验证阶段</th>
+              <th>样本 / 独立日期</th>
+              <th>扣10BP平均收益</th>
+              <th>胜率 / 95%区间</th>
+              <th>当前裁决</th>
+            </tr>
+          </thead>
+          <tbody id="v16TableBody">
+            <tr><td colspan="5">等待 V16 真实公告与收益研究。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="v16Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v17-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V17 PREREGISTERED LIMIT-DOWN LIQUIDITY STUDY</p>
+          <h2>跌停量能枯竭后的价格恢复：新机制门禁</h2>
+        </div>
+        <span id="v17EvidenceTag" class="tag gray">等待启动</span>
+      </div>
+      <div id="v17Summary" class="v44-summary"></div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>验证阶段</th>
+              <th>可执行事件 / 独立日期</th>
+              <th>扣10BP平均收益</th>
+              <th>胜率 / 95%区间</th>
+              <th>当前裁决</th>
+            </tr>
+          </thead>
+          <tbody id="v17TableBody">
+            <tr><td colspan="5">等待 V17 全市场真实日线检验。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="v17Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v10-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V10 POINT-IN-TIME PEER RETURN GAP</p>
+          <h2>跨股票信息扩散：点时同伴收益差门禁</h2>
+        </div>
+        <span id="v10EvidenceTag" class="tag gray">等待报告</span>
+      </div>
+      <div id="v10Summary" class="v44-summary"></div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>样本区间</th>
+              <th>平均IC / 95%区间</th>
+              <th>十分组单调性</th>
+              <th>头部-中间（扣10BP）</th>
+              <th>裁决</th>
+            </tr>
+          </thead>
+          <tbody id="v10TableBody">
+            <tr><td colspan="5">等待 V10 点时同伴研究报告。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="v10Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v11-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V11 POINT-IN-TIME UNLOCK ANNOUNCEMENT</p>
+          <h2>限售股解禁公告：供给压力事件门禁</h2>
+        </div>
+        <span id="v11EvidenceTag" class="tag gray">等待报告</span>
+      </div>
+      <div id="v11Summary" class="v44-summary"></div>
+      <div id="v11Coverage" class="v44-cost-breakdown"></div>
+      <p id="v11Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel v44-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">V4.4 PRE-REGISTERED & COST-FIRST</p>
+          <h2>三项因子实验与 ¥10,000 低换手策略</h2>
+        </div>
+        <span id="v44EvidenceTag" class="tag gray">等待报告</span>
+      </div>
+      <div id="v44Summary" class="v44-summary"></div>
+      <div class="factor-table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>预注册假设</th>
+              <th>测试 IC / 95% CI</th>
+              <th>单调性</th>
+              <th>扣往返10BP后头部-中间</th>
+              <th>失败原因</th>
+            </tr>
+          </thead>
+          <tbody id="v44TableBody">
+            <tr><td colspan="5">等待 V4.4 因子报告。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="v44CostBreakdown" class="v44-cost-breakdown"></div>
+      <p id="v44Warning" class="factory-footnote"></p>
+    </section>
+
+    <section class="panel strategy-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">COST-AWARE STRATEGY LAB</p>
+          <h2>策略结果：收益优先，但必须稳定</h2>
+        </div>
+        <p class="strategy-rule">排序：扣费后收益 → 跨时期稳定性 → 回撤 → 盈利因子；胜率只作辅助解释。</p>
+      </div>
+      <div id="strategyCards" class="strategy-cards"></div>
+    </section>
+
+    <section class="lower-factory-grid">
+      <article class="panel regime-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">REGIME MATRIX</p><h2>不同市场状态表现</h2></div>
+          <span class="tag gray">偏强 / 震荡 / 偏弱</span>
+        </div>
+        <div id="regimeMatrix" class="regime-matrix"></div>
+        <p class="factory-footnote">熊市或极差行情不承诺盈利；系统目标是减少暴露、允许0只推荐并优先空仓。</p>
+      </article>
+
+      <article class="panel activity-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">LIVE RESEARCH LOG</p><h2>24小时研究活动</h2></div>
+          <span id="activityStatus" class="tag gray">等待状态</span>
+        </div>
+        <div id="workerProgress" class="factory-worker-progress">
+          <div><span>历史数据准备进度（非策略通过率）</span><strong id="workerProgressText">--</strong></div>
+          <i><b id="workerProgressBar"></b></i>
+        </div>
+        <div id="activityList" class="activity-list"></div>
+      </article>
+    </section>
+
+    <section class="factory-safety">
+      <strong>当前边界</strong>
+      <span id="factorySafety">所有研究结果保持锁定，不生成可执行订单。</span>
+    </section>
+  </main>
+
+  <div id="factoryToast" class="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='research.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+/* A股量化研究台 — 叠加在 app.css 之上 */
+.quant-main {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 28px clamp(20px, 5vw, 72px) 60px;
+  display: grid;
+  gap: 16px;
+}
+
+/* ── Hero / 运行控制 ── */
+.quant-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 28px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.quant-hero h1 { margin-bottom: 8px; }
+.quant-hero p { max-width: 720px; margin: 0; }
+.quant-run-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.quant-run-controls label span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.quant-run-controls select { width: 130px; }
+.quant-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #0e1218;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.quant-check input { width: auto; height: auto; }
+.quant-run-controls button {
+  min-width: 132px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── 结论横幅 ── */
+.quant-verdict {
+  padding: 14px 16px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  display: grid;
+  gap: 6px;
+}
+.quant-verdict b { font-size: 14px; }
+.quant-verdict p { margin: 0; font-size: 12.5px; }
+.quant-verdict.excellent { border-color: rgba(53,181,125,.55); background: linear-gradient(135deg, var(--green-soft), var(--panel)); }
+.quant-verdict.good { border-color: rgba(53,181,125,.35); }
+.quant-verdict.marginal { border-color: rgba(232,184,75,.45); }
+.quant-verdict.poor, .quant-verdict.error { border-color: rgba(239,75,82,.5); background: linear-gradient(135deg, var(--red-soft), var(--panel)); }
+
+/* ── 汇总卡片 ── */
+.quant-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+.quant-summary-grid .metric strong { font-size: 20px; }
+@media (max-width: 1100px) {
+  .quant-summary-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .quant-summary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── 运行日志 ── */
+.quant-log {
+  min-height: 120px;
+  max-height: 240px;
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #0e1218;
+  font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #c9d3df;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.quant-log .log-line { padding: 1px 0; border-bottom: 1px solid rgba(255,255,255,.03); }
+.quant-log .log-time { color: var(--muted); margin-right: 8px; }
+.quant-log .log-err { color: #ff9ca2; }
+.quant-log .empty-state { margin: 0; }
+
+/* ── 因子库 ── */
+.quant-factor-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+.quant-factor-group {
+  border: 1px solid var(--line-soft);
+  background: var(--panel-2);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.quant-factor-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.quant-factor-group-head b { font-size: 12.5px; color: var(--text); }
+.quant-factor-group-head span { font-size: 11px; color: var(--muted); }
+.quant-factor-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.quant-factor-chip {
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: #1a2230;
+  border: 1px solid var(--line-soft);
+  font-size: 11px;
+  color: #c4ccd7;
+  font-variant-numeric: tabular-nums;
+}
+.quant-factor-chip:hover {
+  border-color: var(--blue);
+  color: var(--text);
+  cursor: default;
+}
+
+/* ── IC 表格 ── */
+.table-wrap { overflow-x: auto; }
+.quant-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.quant-table th, .quant-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  white-space: nowrap;
+}
+.quant-table th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.quant-table tbody tr:hover { background: rgba(90,157,245,.05); }
+.quant-empty-row { text-align: center; color: var(--muted); padding: 22px 10px !important; }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.quant-tier-tag { padding: 3px 7px; border-radius: 5px; font-size: 10.5px; font-weight: 700; }
+.quant-tier-t1 { background: var(--green-soft); color: #86e1b8; }
+.quant-tier-t2 { background: var(--yellow-soft); color: #ffd876; }
+.quant-tier-t3 { background: #2b3340; color: #c4ccd7; }
+.quant-tier-t4 { background: var(--red-soft); color: #ff9ca2; }
+
+/* ── 策略卡片 ── */
+.quant-strategy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 1080px) {
+  .quant-strategy-grid { grid-template-columns: 1fr; }
+}
+.quant-strategy-card {
+  border: 1px solid var(--line);
+  background: rgba(20,25,34,.94);
+  border-radius: 10px;
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
+.quant-strategy-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.quant-strategy-head h2 { font-size: 15px; }
+.quant-strategy-head .tag { font-size: 11px; }
+.quant-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.quant-metric-grid .metric { padding: 11px 12px; }
+.quant-metric-grid .metric strong { font-size: 16px; }
+.quant-metric-grid .metric span { font-size: 10.5px; }
+.quant-strategy-factors {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 7px;
+  background: #0e1218;
+  font-size: 11.5px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.quant-strategy-factors li { list-style: none; }
+.quant-strategy-factors li b { color: #c4ccd7; font-weight: 550; }
+.quant-spark { width: 100%; height: 52px; display: block; }
+.quant-spark path.line { fill: none; stroke: var(--blue); stroke-width: 1.6; }
+.quant-spark path.area { fill: rgba(90,157,245,.12); }
+.quant-trades-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+}
+.quant-trades-head span { color: var(--muted); font-size: 11px; }
+.quant-trades-list {
+  max-height: 168px;
+  overflow: auto;
+  display: grid;
+  gap: 4px;
+}
+.quant-trade-row {
+  display: grid;
+  grid-template-columns: 74px 1fr 58px 64px auto;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.quant-trade-row .tt { color: var(--muted); }
+.quant-trade-row .tk { color: #c4ccd7; }
+.quant-trade-row .pnl { font-weight: 650; }
+
+/* ── OOS ── */
+.quant-oos-panel[hidden] { display: none; }
+.quant-oos-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.quant-oos-row:last-child { border-bottom: 0; }
+.quant-oos-phase {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  display: grid;
+  gap: 4px;
+}
+.quant-oos-phase span { color: var(--muted); font-size: 10.5px; }
+.quant-oos-phase strong { font-size: 15px; font-variant-numeric: tabular-nums; }
+.quant-oos-phase small { color: var(--muted); font-size: 11px; }
+
+/* ── 边界 ── */
+.quant-safety {
+  margin-top: 4px;
+  padding: 12px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.quant-safety strong { color: var(--yellow); font-size: 12px; }
+
+/* ── 加权方法对比表 · 首选行 ── */
+.quant-row-best td { background: rgba(34,197,94,.06); }
+.quant-row-best td:first-child { font-weight: 600; }
+
+/* ── 分年度收益条形 ── */
+.quant-years {
+  margin-top: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+}
+.quant-years-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.quant-years-bars {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  min-height: 40px;
+}
+.yr { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.yr-bar { width: 18px; border-radius: 3px 3px 0 0; min-height: 2px; }
+.yr-bar.yr-pos { background: var(--green, #22c55e); }
+.yr-bar.yr-neg { background: var(--red, #ef4444); }
+.yr-label { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ── 摘要卡微调 ── */
+#quantBestAnnual { font-size: 22px; }
+#quantBestSharpe { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

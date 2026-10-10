@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Kronos 金融K线基础模型：未来5/10/20/30日走势预测，与量化因子研究共振">
+  <title>Kronos 预测 · A股交易助手</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='kronos.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">K</span>
+      <div><strong>Kronos 预测</strong><small>金融K线基础模型 · 未来行情预测 × 量化因子共振</small></div>
+    </div>
+    <nav class="terminal-nav" aria-label="页面导航">
+      <a href="{{ url_for('index') }}">交易驾驶舱</a>
+      <a href="{{ url_for('analysis_page') }}">AI 个股分析</a>
+      <a href="{{ url_for('research_page') }}">研究工厂</a>
+      <a href="{{ url_for('quant_page') }}">量化研究</a>
+      <a class="active" href="{{ url_for('kronos_page') }}">Kronos 预测</a>
+    </nav>
+    <div class="top-status">
+      <span id="kronosDot" class="status-dot"></span>
+      <span id="kronosConnection">正在读取 Kronos 状态…</span>
+      <time id="kronosClock"></time>
+    </div>
+  </header>
+
+  <main class="kronos-main">
+    <section class="kronos-hero">
+      <div>
+        <p class="eyebrow">NEOQUASAR KRONOS · K-LINE FOUNDATION MODEL</p>
+        <h1>Kronos 未来行情预测</h1>
+        <p>用 <b>NeoQuasar/Kronos-small</b>（24.7M 参数解码器 Transformer，A股 K 线预训练）对<b>流动性前 200 只 A 股</b>外推未来 30 日 OHLCV 轨迹，产出 5/10/20/30 日预测收益与方向强度。右侧与<b>量化因子研究台</b>（135 因子 · 点时宇宙 · 年化 34.0% · Calmar 1.19）的复合排名/持仓并排对照——预测与因子<b>共振</b>的股票优先标注。结果只用于研究，不生成任何可执行订单。</p>
+      </div>
+      <div class="kronos-run-controls">
+        <label>
+          <span>宇宙规模</span>
+          <select id="kronosUniverse">
+            <option value="100">100 只</option>
+            <option value="200" selected>200 只（流动性最优）</option>
+            <option value="300">300 只（全样本）</option>
+          </select>
+        </label>
+        <label>
+          <span>预测长度</span>
+          <select id="kronosPredLen">
+            <option value="20">20 日</option>
+            <option value="30" selected>30 日</option>
+            <option value="45">45 日</option>
+            <option value="60">60 日</option>
+          </select>
+        </label>
+        <button id="kronosRunBtn" class="ghost-button" type="button">▶ 重新推理</button>
+      </div>
+    </section>
+
+    <section class="kronos-summary-grid" id="kronosSummary">
+      <article class="metric"><span>模型</span><strong id="kronosModel">--</strong><small>NeoQuasar/Kronos-small</small></article>
+      <article class="metric"><span>快照日期</span><strong id="kronosDate">--</strong><small>OHLCV 末交易日</small></article>
+      <article class="metric"><span>推理股票</span><strong id="kronosUniverse">--</strong><small>按平均成交额排序</small></article>
+      <article class="metric"><span>预测长度</span><strong id="kronosPred">--</strong><small>5/10/20/30 日收益</small></article>
+      <article class="metric"><span>推理耗时</span><strong id="kronosElapsed">--</strong><small id="kronosPeak">峰值内存 --</small></article>
+      <article class="metric"><span>20日方向</span><strong id="kronosDirection">--</strong><small>预测路径在现价以上占比</small></article>
+    </section>
+
+    <section class="panel kronos-fusion-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">PREDICTION × FACTOR · CROSS-SIGNAL</p>
+          <h2>预测 × 量化 共振带</h2>
+        </div>
+        <b id="kronosFusionTag" class="tag gray">等待快照</b>
+      </div>
+      <div class="kronos-fusion-body">
+        <div class="kronos-fusion-quant">
+          <span class="kronos-fusion-label">量化研究台（135 因子 · 点时宇宙 · walk-forward）</span>
+          <div class="kronos-fusion-metrics">
+            <div class="metric"><span>年化收益</span><strong id="kronosQuantAnnual">--</strong><small>样本外 · 含成本</small></div>
+            <div class="metric"><span>夏普</span><strong id="kronosQuantSharpe">--</strong><small id="kronosQuantDate">快照日期 --</small></div>
+            <div class="metric"><span>Calmar</span><strong id="kronosQuantCalmar">--</strong><small>正年 <span id="kronosQuantYears">--</span></small></div>
+          </div>
+        </div>
+        <div class="kronos-fusion-cols">
+          <div class="kronos-fusion-col">
+            <span class="kronos-fusion-label">共振股票（Kronos 看多 ∧ 量化组合持仓）</span>
+            <div id="kronosBullReso" class="kronos-reso"><p class="empty-state compact">--</p></div>
+          </div>
+          <div class="kronos-fusion-col">
+            <span class="kronos-fusion-label">背离股票（Kronos 看多 ∧ 量化排名靠后）</span>
+            <div id="kronosDivergence" class="kronos-reso"><p class="empty-state compact">--</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel kronos-rank-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">PREDICTED 20D RETURN · FULL UNIVERSE</p>
+          <h2>预测 20 日收益排行</h2>
+        </div>
+        <b id="kronosRankTag" class="tag gray">等待快照</b>
+      </div>
+      <div class="kronos-sort-row">
+        <span>排序维度：</span>
+        <button type="button" data-sort="pred_ret_20d" class="kronos-sortbtn">预测 20日收益</button>
+        <button type="button" data-sort="pred_ret_10d" class="kronos-sortbtn">预测 10日收益</button>
+        <button type="button" data-sort="direction" class="kronos-sortbtn">方向强度</button>
+        <button type="button" data-sort="quant_rank" class="kronos-sortbtn">量化排名</button>
+      </div>
+      <div class="table-wrap">
+        <table class="kronos-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>代码</th>
+              <th>现价</th>
+              <th>预测 5日</th>
+              <th>预测 10日</th>
+              <th>预测 20日</th>
+              <th>预测 30日</th>
+              <th>方向强度</th>
+              <th>量化排名</th>
+              <th>组合</th>
+            </tr>
+          </thead>
+          <tbody id="kronosBody">
+            <tr><td colspan="10" class="kronos-empty-row">正在读取快照…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel kronos-dist-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">DIRECTION DISTRIBUTION · PER HORIZON</p>
+          <h2>预测方向分布</h2>
+        </div>
+        <b id="kronosDistTag" class="tag gray">等待快照</b>
+      </div>
+      <div id="kronosDistBars" class="kronos-dist-bars">
+        <p class="empty-state compact">运行快照后显示各持有期看多/看空占比。</p>
+      </div>
+    </section>
+
+    <section class="panel kronos-run-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">PIPELINE STATUS</p>
+          <h2>推理进度</h2>
+        </div>
+        <b id="kronosRunStatus" class="tag gray">空闲</b>
+      </div>
+      <div id="kronosLog" class="kronos-log" aria-live="polite">
+        <p class="empty-state compact">尚未运行推理。点击右上角“重新推理”开始（Kronos-small · CPU · 约 1–5 分钟）。</p>
+      </div>
+    </section>
+
+    <section class="kronos-safety">
+      <strong>研究边界</strong>
+      <span>Kronos 为 K 线基础模型的概率外推，非收益保证；所有预测保持研究状态，不生成可执行订单，不参与真钱与自动交易门禁。</span>
+    </section>
+  </main>
+
+  <div id="kronosToast" class="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='kronos.js') }}"></script>
+</body>
+</html>

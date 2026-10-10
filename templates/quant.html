@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A股64因子量化研究台：诚实 walk-forward 因子加权、样本外回测、因子稳定性">
+  <title>量化研究 · A股交易助手</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='quant.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">Q</span>
+      <div><strong>A股量化研究</strong><small>64因子库 · walk-forward 加权 · 诚实样本外回测</small></div>
+    </div>
+    <nav class="terminal-nav" aria-label="页面导航">
+      <a href="{{ url_for('index') }}">交易驾驶舱</a>
+      <a href="{{ url_for('analysis_page') }}">AI 个股分析</a>
+      <a href="{{ url_for('research_page') }}">研究工厂</a>
+      <a class="active" href="{{ url_for('quant_page') }}">量化研究</a>
+      <a href="{{ url_for('kronos_page') }}">Kronos 预测</a>
+    </nav>
+    <div class="top-status">
+      <span id="quantConnectionDot" class="status-dot"></span>
+      <span id="quantConnection">正在读取量化状态…</span>
+      <time id="quantClock"></time>
+    </div>
+  </header>
+
+  <main class="quant-main">
+    <section class="quant-hero">
+      <div>
+        <p class="eyebrow">A-SHARE MULTIFACTOR QUANT LAB</p>
+        <h1>量化因子研究台</h1>
+        <p>在<b>点时宇宙</b>（历史头部 500 池，含退市/失效股票；每个调仓日按近 20 日成交额<b>实时排名</b>选前 300 只）上计算 <b>135</b> 个因子（量价 + 同花顺 THS 点时基本面）。每个调仓日只用<b>当日之前</b>的 trailing IC 选因子并加权（半衰期衰减/ICIR），<b>T+1 开盘成交</b>、真实印花税、涨跌停成交过滤，全程样本外验证、含真实成本。结果只用于研究，不生成任何可执行订单。</p>
+      </div>
+      <div class="quant-run-controls">
+        <label>
+          <span>宇宙规模</span>
+          <select id="quantUniverse">
+            <option value="100">100 池</option>
+            <option value="200">200 池</option>
+            <option value="300">300 池</option>
+            <option value="500" selected>500 池 · 点时 top-300</option>
+          </select>
+        </label>
+        <button id="quantRunBtn" class="ghost-button" type="button">▶ 重新研究</button>
+      </div>
+    </section>
+
+    <section id="quantVerdict" class="quant-verdict" hidden></section>
+
+    <section class="quant-summary-grid" id="quantSummary">
+      <article class="metric"><span>可用因子</span><strong id="quantFactorCount">--</strong><small>135 因子库实测（量价+THS基本面）</small></article>
+      <article class="metric"><span>T1 优秀因子</span><strong id="quantT1">--</strong><small>|mean IC| ≥ 0.02 且方向稳定</small></article>
+      <article class="metric"><span>T2 良好因子</span><strong id="quantT2">--</strong><small>|mean IC| ≥ 0.01</small></article>
+      <article class="metric"><span>研究样本</span><strong id="quantSample">--</strong><small id="quantUniverseDetail">等待研究</small></article>
+      <article class="metric"><span>耗时</span><strong id="quantElapsed">--</strong><small id="quantSource">数据源：--</small></article>
+      <article class="metric"><span>最佳策略年化</span><strong id="quantBestAnnual">--</strong><small id="quantBestSharpe">样本外 · 含成本</small></article>
+      <article class="metric"><span>正收益年份</span><strong id="quantPosYears">--</strong><small id="quantPortIc">组合 IC：--</small></article>
+    </section>
+
+    <section class="panel quant-run-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">PIPELINE STATUS</p>
+          <h2>研究进度</h2>
+        </div>
+        <b id="quantRunStatus" class="tag gray">空闲</b>
+      </div>
+      <div id="quantLog" class="quant-log" aria-live="polite">
+        <p class="empty-state compact">尚未运行研究。点击右上角“重新研究”开始（首次需构建因子/IC，约 1–3 分钟）。</p>
+      </div>
+    </section>
+
+    <section class="panel quant-methods-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">WEIGHTING METHODS · HEAD-TO-HEAD</p>
+          <h2>加权方法对比（walk-forward，真实成本）</h2>
+        </div>
+        <b id="quantMethodsTag" class="tag gray">等待研究</b>
+      </div>
+      <div class="table-wrap">
+        <table class="quant-table">
+          <thead>
+            <tr>
+              <th>方法</th>
+              <th>年化</th>
+              <th>夏普</th>
+              <th>最大回撤</th>
+              <th>Calmar</th>
+              <th>组合IC</th>
+              <th>正年份</th>
+              <th>换手</th>
+            </tr>
+          </thead>
+          <tbody id="quantMethodsBody">
+            <tr><td colspan="8" class="quant-empty-row">运行研究后显示各加权方法对比。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="quantStrategies" class="quant-strategy-grid"></section>
+
+    <section class="panel quant-factor-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">FACTOR LIBRARY</p>
+          <h2>因子库总览</h2>
+        </div>
+        <b id="quantFactorLibraryTag" class="tag gray">读取中</b>
+      </div>
+      <div id="quantFactorGroups" class="quant-factor-groups">
+        <p class="empty-state compact">正在读取因子库…</p>
+      </div>
+    </section>
+
+    <section class="panel quant-ic-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">FACTOR IC · FULL-SAMPLE HONEST STATS</p>
+          <h2>因子 IC 排名与稳定性</h2>
+        </div>
+        <b id="quantIcTag" class="tag gray">等待研究</b>
+      </div>
+      <div class="table-wrap">
+        <table class="quant-table">
+          <thead>
+            <tr>
+              <th>因子</th>
+              <th>分组</th>
+              <th>mean IC</th>
+              <th>ICIR</th>
+              <th>正相关占比</th>
+              <th>方向稳定</th>
+              <th>三段 IC</th>
+              <th>等级</th>
+            </tr>
+          </thead>
+          <tbody id="quantIcBody">
+            <tr><td colspan="8" class="quant-empty-row">运行研究后显示因子 IC 稳定性。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="quant-safety">
+      <strong>研究边界</strong>
+      <span>所有量化结果保持研究状态，不生成可执行订单；不参与真钱与自动交易门禁。</span>
+    </section>
+  </main>
+
+  <div id="quantToast" class="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='quant.js') }}"></script>
+</body>
+</html>

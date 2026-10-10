@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B0F16'/%3E%3Cpath d='M7 8v10M7 8h1.6M7 18h1.6' stroke='%23F6465D' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3Crect x='10' y='12' width='3.2' height='7' rx='0.8' fill='%232EBD85'/%3E%3Cpath d='M13.2 15.5H16v6M16 21.5h1.5M16 15.5h1.5' stroke='%23F6465D' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3Crect x='20' y='9' width='3.2' height='8' rx='0.8' fill='%23F6465D'/%3E%3Cpath d='M23.2 13v7M23.2 13h1.4M23.2 20h1.4' stroke='%232EBD85' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <title>{% block title %}Regis Oracle{% endblock %}</title>
+  <!-- 2026-08-18：移除外部 Google Fonts（fonts.googleapis 被本机网络阻断 → CDP resource 失败），
+       中文字体回退系统栈：macOS PingFang SC / Windows Microsoft YaHei -->
+  <link rel="stylesheet" href="/static/mom.css">
+  <link rel="stylesheet" href="/static/premium.css">
+  <link rel="stylesheet" href="/static/legacy-shell.css?v=4">
+  <style>@media (max-width:1100px){.app-shell{grid-template-columns:216px minmax(700px,1fr)}.topnav{width:216px}}</style>
+  {% block head %}{% endblock %}
+  <link rel="stylesheet" href="/static/desktop-terminal-unify.css?v=1">
+  <link rel="stylesheet" href="/static/site-foundation.css?v=1">
+</head>
+<body class="dark legacy-site {% block body_class %}{% endblock %}"{% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %} data-local-research-preview="true"{% endif %}>
+  <a class="skip-link" href="#mainContent">跳到主要内容</a>
+  <div class="app-shell">
+    <nav class="topnav" aria-label="站点主导航">
+      <a href="/" class="topnav-brand">
+        <span class="legacy-brand-mark" aria-hidden="true">R</span>
+        <span><strong>Regis Oracle</strong><small>A股 · 市场认知终端</small></span>
+      </a>
+      <button type="button" class="legacy-mobile-nav" id="legacyMobileNav" aria-controls="legacyNavigation" aria-expanded="false">功能导航</button>
+      <div class="legacy-sidebar-links" id="legacyNavigation">
+        <section class="legacy-nav-group" aria-labelledby="legacyNavDecision">
+          <h2 id="legacyNavDecision">决策</h2>
+          <a href="/" class="topnav-link {% block nav_dash %}{% endblock %}"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>今日决策</span></a>
+          <a href="/next-session-plan" class="topnav-link"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 11h18M7 15h4"/></svg></span><span>明日计划</span></a>
+          <a href="/risk" class="topnav-link"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-3 7.4-7 10-4-2.6-7-5.4-7-10V6l7-3zM9 12l2 2 4-4"/></svg></span><span>风险与仓位</span></a>
+          <a href="/review" class="topnav-link"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18M8 15v3M13 10v8M18 6v12"/></svg></span><span>盘后复盘</span></a>
+          <a href="/signals" class="topnav-link"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></span><span>买卖提醒记录</span></a>
+        </section>
+        <section class="legacy-nav-group" aria-labelledby="legacyNavMarket">
+          <h2 id="legacyNavMarket">市场</h2>
+          <a href="/market-panorama" class="topnav-link {% block nav_market %}{% endblock %}"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></span><span>市场中心</span></a>
+        </section>
+        <section class="legacy-nav-group" aria-labelledby="legacyNavResearch">
+          <h2 id="legacyNavResearch">研究</h2>
+          <a href="/stock" class="topnav-link {% block nav_stock %}{% endblock %}"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18M8 15v3M13 10v8M18 6v12"/></svg></span><span>个股研究</span></a>
+          <a href="/strategy-lab" class="topnav-link {% block nav_lab %}{% endblock %}"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5.5L4.7 17a2 2 0 0 0 1.8 3h11a2 2 0 0 0 1.8-3L14 8.5V3M7.5 14.5h9"/></svg></span><span>策略与战法</span></a>
+          <a href="/factor-system" class="topnav-link {% block nav_factor %}{% endblock %}"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5.5L4.7 17a2 2 0 0 0 1.8 3h11a2 2 0 0 0 1.8-3L14 8.5V3M7.5 14.5h9"/></svg></span><span>因子研究</span></a>
+        </section>
+        <section class="legacy-nav-group" aria-labelledby="legacyNavManage">
+          <h2 id="legacyNavManage">管理</h2>
+          <a href="/positions" class="topnav-link {% block nav_pos %}{% endblock %}"><span class="legacy-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></span><span>账户中心</span></a>
+          <a href="/data-center" class="topnav-link"><span class="legacy-nav-icon" aria-hidden="true">◫</span><span>数据中心</span></a>
+        </section>
+      </div>
+      <div class="topnav-status" role="status" aria-live="polite">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">核对时段中</span>
+        <span style="margin-left:8px" id="navClock"></span>
+        <div class="legacy-density-switch" role="group" aria-label="信息密度">
+          <button type="button" data-shell-density="compact" aria-pressed="false">紧凑</button>
+          <button type="button" data-shell-density="comfortable" aria-pressed="true">舒适</button>
+        </div>
+        <button class="alert-pref-button" id="alertPrefsButton" type="button" aria-pressed="true">提醒已开启 · 初始化中</button>
+        <button class="alert-pref-button" id="alertPrefsDisableButton" type="button" hidden>关闭提醒</button>
+      </div>
+    </nav>
+    <main class="main-content" id="mainContent" tabindex="-1">
+      {% include "access_policy.html" %}
+      <div class="site-foundation-tools"><a href="/data-center">数据与恢复</a><a href="/decision-v2">今日决策台</a><span>输入、服务或存储异常可在数据中心逐项检查。</span></div>
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+      <span>Regis Oracle v5 · A股市场认知与人工决策终端 · 不连接券商 · 不自动交易</span>
+      <span class="footer-time" id="footerTime"></span>
+    </footer>
+  </div>
+  <script src="/static/site_shell.js?v=7"></script>
+<script src="/static/position_alert.js?v=28"></script>
+  <script src="/static/premium.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

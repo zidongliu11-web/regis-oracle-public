@@ -1,0 +1,125 @@
+/* Shared desktop-terminal finish loaded after page-local styles.
+   One visual system, A-share red-up/green-down, restrained motion. */
+body.dark {
+  --bg-void:var(--ro-canvas);
+  --bg-surface:var(--ro-panel);
+  --bg-elevated:var(--ro-panel-muted);
+  --bg-hover:var(--ro-hover);
+  --bg-card:var(--ro-panel);
+  --border-subtle:var(--ro-border);
+  --border-default:var(--ro-border-strong);
+  --text-primary:var(--ro-text-primary);
+  --text-secondary:var(--ro-text-secondary);
+  --text-tertiary:var(--ro-text-muted);
+  --accent:var(--ro-accent);
+  --button-primary:var(--ro-primary);
+  --bull:var(--ro-success);
+  --bear:var(--ro-danger);
+  --gold:var(--ro-warning);
+  --c-up:var(--ro-price-up);
+  --c-down:var(--ro-price-down);
+  --itc-up:var(--ro-price-up);
+  --itc-down:var(--ro-price-down);
+  --itc-panel:var(--ro-panel);
+  --itc-panel-2:var(--ro-panel-muted);
+  --itc-border:var(--ro-border);
+  --itc-text:var(--ro-text-primary);
+  --itc-muted:var(--ro-text-secondary);
+  --itc-dim:var(--ro-text-muted);
+  --radius-sm:5px;
+  --radius-md:7px;
+  --radius-lg:9px;
+  --radius-xl:10px;
+}
+
+body.dark .pos-page,
+body.dark .slab-page,
+body.dark .fs-page {
+  max-width:none;
+}
+
+body.dark .card,
+body.dark .slab-card,
+body.dark .slab-flow,
+body.dark .fs-command,
+body.dark .fs-pipeline,
+body.dark .fs-recent,
+body.dark .fs-scout,
+body.dark .fs-workspace,
+body.dark .fs-table-wrap {
+  border-color:var(--ro-border);
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(16,31,45,.98),rgba(11,25,37,.98));
+  box-shadow:var(--ro-shadow-panel);
+}
+
+body.dark .card-header,
+body.dark .fs-table-head {
+  background:rgba(7,19,30,.42);
+}
+
+body.dark .portfolio-metric,
+body.dark .slab-state-item,
+body.dark .slab-flow-step,
+body.dark .fs-answer,
+body.dark .fs-step,
+body.dark .fs-zone,
+body.dark .fs-recent-card {
+  border-color:var(--ro-divider);
+  border-radius:6px;
+  background:var(--ro-panel-muted);
+}
+
+body.dark .btn,
+body.dark .rec-save,
+body.dark .fs-tab,
+body.dark .fs-view,
+body.dark .fs-more {
+  border-radius:5px;
+}
+
+body.dark .card,
+body.dark .slab-flow-step,
+body.dark .fs-zone,
+body.dark .fs-recent-card,
+body.dark .portfolio-metric {
+  transition:border-color 140ms ease,background-color 140ms ease,transform 140ms ease;
+}
+
+@media (hover:hover) {
+  body.dark .slab-flow-step:hover,
+  body.dark .fs-zone:hover,
+  body.dark .fs-recent-card:hover,
+  body.dark .portfolio-metric:hover {
+    border-color:var(--ro-border-strong);
+    background:var(--ro-hover);
+    transform:translateY(-1px);
+  }
+}
+
+body.dark[data-density="compact"] .pos-page,
+body.dark[data-density="compact"] .slab-page,
+body.dark[data-density="compact"] .fs-page {
+  gap:10px;
+}
+
+body.dark[data-density="compact"] .card-header,
+body.dark[data-density="compact"] .card-body,
+body.dark[data-density="compact"] .fs-command,
+body.dark[data-density="compact"] .fs-pipeline,
+body.dark[data-density="compact"] .fs-workspace {
+  padding:10px 12px;
+}
+
+@media (max-width:1100px) {
+  body.dark .app-shell { grid-template-columns:184px minmax(700px,1fr); }
+  body.dark .topnav { width:184px; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  body.dark .card,
+  body.dark .slab-flow-step,
+  body.dark .fs-zone,
+  body.dark .fs-recent-card,
+  body.dark .portfolio-metric { transition:none; }
+}

@@ -1,0 +1,2514 @@
+{% extends "base.html" %}
+{% block title %}Regis Oracle · 因子挖掘系统{% endblock %}
+{% block body_class %}factor-system-page{% endblock %}
+
+{% block nav_factor %}active{% endblock %}
+
+{% block head %}
+<style>
+.fs-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:1240px;margin:0 auto;width:100%}
+.fs-hero{display:flex;align-items:flex-end;gap:var(--space-lg);flex-wrap:wrap}
+.fs-hero h1{font-size:var(--text-2xl);font-weight:700;color:var(--color-foreground)}
+.fs-hero p{font-size:var(--text-sm);color:var(--color-text-dim);margin-top:6px}
+.fs-honesty{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;color:#60A5FA;background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.24);margin-left:auto}
+
+.fs-command{background:var(--color-surface);border:1px solid var(--color-border);border-left:4px solid var(--color-primary);border-radius:var(--radius-lg);padding:var(--space-lg)}
+.fs-command[data-state="failed"]{border-left-color:#EF4444}.fs-command[data-state="blocked"]{border-left-color:#F59E0B}.fs-command[data-state="online"]{border-left-color:#22C55E}
+.fs-command-head,.fs-section-head{display:flex;align-items:center;gap:var(--space-sm);flex-wrap:wrap}
+.fs-command-head h2,.fs-section-head h2{font-size:var(--text-lg);font-weight:700;color:var(--color-foreground)}
+.fs-command-head h2{margin-right:auto}.fs-section-head{justify-content:space-between;margin-bottom:var(--space-md)}
+.fs-command-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-md);margin-top:var(--space-md)}
+.fs-registry-health{margin-top:var(--space-md);padding:12px;border:1px solid #B45309;border-radius:var(--radius-md);color:#FBBF24;overflow-wrap:anywhere}
+.fs-answer{min-width:0;padding:var(--space-md);border-radius:var(--radius-md);background:var(--color-bg);border:1px solid var(--color-border)}
+.fs-answer-k{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--color-text-dim)}
+.fs-answer-v{margin-top:7px;font-size:var(--text-base);font-weight:700;line-height:1.45;color:var(--color-foreground);overflow-wrap:anywhere}
+.fs-answer-meta{display:block;margin-top:6px;font-size:12px;line-height:1.5;color:var(--color-text-muted);overflow-wrap:anywhere}
+.fs-refresh{font-size:12px;color:var(--color-text-dim);font-family:var(--font-mono)}
+.fs-source-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--color-border);font-size:12px;color:var(--color-text-muted)}
+.fs-source-strip strong{color:var(--color-foreground)}
+.fs-source-strip a{color:var(--color-primary);text-decoration:none}.fs-source-strip a:hover{text-decoration:underline}
+.fs-source-policy{color:var(--color-text-muted)}
+.fs-source-badge{display:inline-flex;margin:4px 0 0;padding:2px 7px;border-radius:999px;background:rgba(100,116,139,.16);color:#94A3B8;font:600 12px var(--font-mono);white-space:nowrap}
+.fs-source-badge.ready{background:rgba(34,197,94,.12);color:#22C55E}.fs-source-badge.pending{background:rgba(245,158,11,.12);color:#F59E0B}
+
+.fs-emotion{padding:var(--space-md) var(--space-lg);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg)}
+.fs-emotion-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fs-emotion-head h2{font-size:var(--text-lg);color:var(--color-foreground)}
+.fs-emotion-head p{margin-top:4px;font-size:12px;line-height:1.55;color:var(--color-text-dim)}
+.fs-emotion-alert{padding:5px 10px;border-radius:999px;background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.25);color:#F87171;font-size:12px;font-weight:700}
+.fs-emotion-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.fs-emotion-count{padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-bg)}
+.fs-emotion-count span{display:block;font-size:12px;color:var(--color-text-dim)}
+.fs-emotion-count strong{display:block;margin-top:4px;font:700 var(--text-lg) var(--font-mono);color:var(--color-foreground)}
+.fs-emotion-factor{margin-top:10px;padding:12px;border:1px solid rgba(245,158,11,.28);border-radius:var(--radius-md);background:rgba(245,158,11,.05);font-size:12px;line-height:1.6;color:var(--color-text-muted)}
+.fs-emotion-factor strong{display:block;color:#FBBF24;font-size:var(--text-sm)}
+.fs-emotion-current{margin-top:10px;padding:12px 14px;border:1px solid rgba(59,130,246,.35);border-radius:var(--radius-md);background:rgba(59,130,246,.07);font-size:12px;line-height:1.6;color:var(--color-text-muted)}
+.fs-emotion-current strong{color:#93C5FD;font-size:var(--text-sm)}
+.fs-emotion-matrix{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px}
+.fs-emotion-cell{min-width:0;padding:11px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-bg)}
+.fs-emotion-cell.is-factor-pass{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.06)}
+.fs-emotion-cell.is-current{outline:2px solid rgba(59,130,246,.55);outline-offset:1px}
+.fs-emotion-cell h3{font-size:var(--text-sm);color:var(--color-foreground)}
+.fs-emotion-cell .route{display:block;margin:3px 0 8px;font-size:12px;font-weight:700;color:var(--color-primary)}
+.fs-emotion-cell p{font-size:12px;line-height:1.55;color:var(--color-text-muted)}
+.fs-emotion-cell .playbooks{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--color-border);font-size:12px;line-height:1.5;color:#93C5FD}
+.fs-emotion-cell .factor{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--color-border);font-size:12px;color:#FBBF24}
+.fs-emotion-subhead{margin-top:14px;font-size:var(--text-sm);color:var(--color-foreground)}
+.fs-playbook-library{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.fs-playbook-card{padding:12px;border:1px solid rgba(59,130,246,.28);border-radius:var(--radius-md);background:rgba(59,130,246,.05)}
+.fs-playbook-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.fs-playbook-card h3{font-size:var(--text-sm);color:var(--color-foreground)}
+.fs-playbook-card header span{flex:none;padding:2px 6px;border-radius:999px;background:rgba(245,158,11,.12);color:#FBBF24;font-size:12px;font-weight:700}
+.fs-playbook-card dl{display:grid;gap:7px;margin-top:10px;font-size:12px;line-height:1.5}
+.fs-playbook-card dt{color:#93C5FD;font-weight:700}.fs-playbook-card dd{color:var(--color-text-muted);margin:1px 0 0}
+.fs-tactic-proof{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.fs-tactic-proof article{padding:10px 12px;border:1px solid rgba(239,68,68,.25);border-radius:var(--radius-sm);background:rgba(239,68,68,.05)}
+.fs-tactic-proof strong{display:block;font-size:12px;color:var(--color-foreground)}
+.fs-tactic-proof span{display:block;margin-top:4px;font-size:12px;line-height:1.55;color:var(--color-text-muted)}
+.fs-tactic-proof .proof-metrics{font-family:var(--font-mono)}
+.fs-factor-name{display:block;color:var(--color-primary);font-family:var(--font-family);font-size:12px;line-height:1.4}
+.fs-factor-description{display:block;margin-top:3px;max-width:240px;color:var(--color-text-dim);font:12px/1.35 var(--font-family)}
+
+.fs-pipeline,.fs-workspace,.fs-table-wrap{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg)}
+.fs-pipeline{padding:var(--space-md) var(--space-lg)}
+.fs-recent{padding:var(--space-md) var(--space-lg);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg)}
+.fs-recent-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+.fs-recent-card{padding:12px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-bg)}
+.fs-recent-card h3{font-size:var(--text-sm);color:var(--color-foreground)}
+.fs-recent-card .verdict{display:block;margin:6px 0;color:#F87171;font-size:12px;font-weight:700}
+.fs-recent-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:var(--color-text-dim)}
+.fs-recent-metrics b{display:block;color:var(--color-text);font-family:var(--font-mono)}
+.fs-recent-proof{margin-top:8px;font:12px/1.5 var(--font-mono);color:var(--color-text-dim);overflow-wrap:anywhere}
+.fs-scout{padding:var(--space-md) var(--space-lg);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg)}
+.fs-scout-meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--color-text-dim);font-size:12px}
+.fs-scout-table{width:100%;margin-top:12px;border-collapse:collapse;font-size:12px}
+.fs-scout-table th,.fs-scout-table td{padding:9px 10px;border-top:1px solid var(--color-border);text-align:left;vertical-align:top}
+.fs-scout-table th{color:var(--color-text-dim);font-weight:600;white-space:nowrap}
+.fs-scout-table td{color:var(--color-text-muted);line-height:1.5}
+.fs-scout-table td:first-child{color:var(--color-foreground);font-weight:650}
+.fs-scout-table a{color:var(--color-primary);text-decoration:none}.fs-scout-table a:hover{text-decoration:underline}
+.fs-scout-tag{display:inline-flex;padding:2px 7px;border:1px solid var(--color-border);border-radius:999px;background:var(--color-bg);color:var(--color-text-muted);white-space:nowrap}
+.fs-pipeline-head{display:flex;align-items:center;justify-content:space-between;gap:var(--space-sm);margin-bottom:12px;flex-wrap:wrap}
+.fs-pipeline-title{font-size:var(--text-sm);font-weight:700;color:var(--color-foreground)}
+.fs-pipeline-note{font-size:12px;color:var(--color-text-dim)}
+.fs-pipeline-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.fs-step{position:relative;min-width:0;padding:10px 11px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-bg)}
+.fs-step::after{content:"";position:absolute;top:50%;right:-9px;width:9px;height:1px;background:var(--color-border-light)}
+.fs-step:last-child::after{display:none}
+.fs-step.active{border-color:rgba(10,132,255,.65);background:rgba(10,132,255,.08)}
+.fs-step.done{border-color:rgba(34,197,94,.28)}
+.fs-step.failed{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.08)}
+.fs-step.blocked{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.06)}
+.fs-step.closed{border-color:var(--color-border);background:rgba(100,116,139,.06)}
+.fs-step.failed .fs-step-v{color:#F87171}
+.fs-step.blocked .fs-step-v{color:#F59E0B}
+.fs-step.closed .fs-step-v{color:#94A3B8}
+.fs-step-k{display:block;font-size:12px;color:var(--color-text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fs-step-v{display:block;margin-top:3px;font-family:var(--font-mono);font-size:var(--text-sm);font-weight:700;color:var(--color-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.fs-workspace{padding:var(--space-lg)}
+.fs-epoch{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:var(--color-bg);border:1px solid var(--color-border);font:600 12px var(--font-mono);color:var(--color-text-muted)}
+.fs-zones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-md)}
+.fs-zone{min-width:0;padding:var(--space-md);border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-bg);display:flex;flex-direction:column;gap:var(--space-sm)}
+.fs-zone-head{display:flex;align-items:center;gap:var(--space-sm);flex-wrap:wrap}
+.fs-zone-name{font-size:var(--text-sm);font-weight:700;color:var(--color-foreground);margin-right:auto}
+.fs-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;font-family:var(--font-mono)}
+.fs-badge .dot{width:8px;height:8px;border-radius:50%}
+.fs-badge.running{color:#3B82F6;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3)}
+.fs-badge.running .dot{background:#3B82F6;box-shadow:0 0 8px #3B82F6;animation:fs-pulse 1.2s ease-in-out infinite}
+.fs-badge.online{color:#22C55E;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3)}
+.fs-badge.online .dot{background:#22C55E;box-shadow:0 0 8px #22C55E;animation:fs-pulse 1.8s ease-in-out infinite}
+.fs-badge.pacing{color:#22C55E;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3)}
+.fs-badge.pacing .dot{background:#22C55E}
+.fs-badge.error{color:#EF4444;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35)}
+.fs-badge.error .dot{background:#EF4444}
+.fs-badge.stopped,.fs-badge.history{color:#94A3B8;background:rgba(100,116,139,.15);border:1px solid rgba(100,116,139,.3)}
+.fs-badge.stopped .dot{background:#64748B}
+.fs-badge.history .dot{background:#94A3B8}
+@keyframes fs-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.fs-badge.running .dot,.fs-badge.online .dot{animation:none}}
+.fs-zone-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-sm);font-size:var(--text-sm)}
+.fs-meta{display:flex;flex-direction:column;gap:2px;padding:8px;background:var(--color-surface);border-radius:var(--radius-sm)}
+.fs-meta .k{font-size:var(--text-xs);color:var(--color-text-dim)}
+.fs-meta .v{font-family:var(--font-mono);color:var(--color-text);font-weight:600;font-size:var(--text-sm);word-break:break-all}
+.fs-zone-res{display:flex;gap:var(--space-sm);font-size:12px;color:var(--color-text-dim);flex-wrap:wrap}
+.fs-zone-err{margin-top:auto;padding:10px 14px;border-radius:var(--radius-sm);font-size:var(--text-xs);background:rgba(239,68,68,0.08);color:#F87171;border:1px solid rgba(239,68,68,0.2);display:none;white-space:pre-wrap}
+.fs-zone-err.show{display:block}
+.fs-phase{width:100%;font-size:12px;color:var(--color-text-muted)}
+
+.fs-table-wrap{overflow:hidden}
+.fs-table-head{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-md) var(--space-lg);flex-wrap:wrap}
+.fs-table-head h2{font-size:var(--text-lg);font-weight:700;color:var(--color-foreground);margin-right:auto}
+.fs-tab{padding:7px 14px;border-radius:999px;font-size:var(--text-xs);font-weight:600;cursor:pointer;color:var(--color-text-muted);border:1px solid transparent;background:transparent;min-height:44px}
+.fs-tab:hover{color:var(--color-foreground)}
+.fs-tab.sel{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+.fs-tab:disabled,.fs-view:disabled,.fs-more:disabled{cursor:wait;opacity:.55}
+.fs-tab-cnt{opacity:.6;font-family:var(--font-mono);font-size:12px}
+.fs-view-switch{display:flex;gap:4px;margin-left:4px;padding-left:10px;border-left:1px solid var(--color-border)}
+.fs-view{padding:7px 11px;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;color:var(--color-text-dim);font-size:var(--text-xs);font-weight:600;min-height:44px}
+.fs-view.sel{border-color:var(--color-border-light);background:var(--color-bg-elevated);color:var(--color-foreground)}
+.fs-table-legend{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 var(--space-lg) 12px;font-size:12px;color:var(--color-text-dim)}
+.fs-table-scroll{overflow-x:auto;overflow-y:visible}
+.fs-tbl{width:100%;min-width:1020px;border-collapse:collapse;font-size:var(--text-sm)}
+.fs-table-wrap[data-view="summary"] .fs-detail-col{display:none}
+.fs-table-wrap[data-view="summary"] .fs-tbl{min-width:900px}
+.fs-tbl th{font-size:12px;font-weight:600;color:var(--color-text-dim);text-align:left;padding:10px var(--space-md);border-bottom:1px solid var(--color-border);white-space:nowrap;position:sticky;top:0;z-index:1;background:var(--color-surface)}
+.fs-tbl td{padding:10px var(--space-md);border-bottom:1px solid rgba(51,65,85,0.35);color:var(--color-text);vertical-align:middle}
+.fs-tbl tr:hover td{background:var(--color-surface-hover)}
+.fs-tbl .num{font-family:var(--font-mono);text-align:right}
+.fs-tbl .fid{font-family:var(--font-mono);font-size:12px;color:var(--color-primary)}
+.fs-tbl .fm{font-size:12px;color:var(--color-text-muted)}
+.fs-status{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.fs-status.production{color:#22C55E;background:rgba(34,197,94,.12)}
+.fs-status.historical_pass,.fs-status.validated{color:#F59E0B;background:rgba(245,158,11,.12)}
+.fs-status.registered,.fs-status.backtesting{color:#3B82F6;background:rgba(59,130,246,.12)}
+.fs-status.candidate{color:#A78BFA;background:rgba(139,92,246,.14)}
+.fs-status.rejected,.fs-status.invalidated{color:#94A3B8;background:rgba(100,116,139,.18)}
+.fs-status.frozen{color:#EF4444;background:rgba(239,68,68,.12)}
+.fs-pos{color:#22C55E}.fs-neg{color:#EF4444}.fs-warn{color:#F59E0B}
+.fs-empty{padding:var(--space-xl);text-align:center;color:var(--color-text-dim);font-size:var(--text-sm)}
+.fs-loading{display:flex;align-items:center;gap:10px;padding:var(--space-lg);color:var(--color-text-muted);font-size:var(--text-sm)}
+.fs-table-more{display:flex;justify-content:center;padding:12px;border-top:1px solid var(--color-border)}
+.fs-more{min-height:44px;padding:7px 18px;border:1px solid var(--color-border-light);border-radius:999px;background:var(--color-bg-elevated);color:var(--color-text);font-size:var(--text-xs);font-weight:600}
+.fs-more:hover{border-color:var(--color-primary);color:var(--color-foreground)}
+.fs-tab:focus-visible,.fs-view:focus-visible,.fs-more:focus-visible,.fs-disclosure>summary:focus-visible,.fs-table-scroll:focus-visible,.fs-archive-table:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+.fs-spin{width:18px;height:18px;border-radius:50%;border:2px solid var(--color-border);border-top-color:var(--color-primary);animation:fs-spin .8s linear infinite}
+@keyframes fs-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.fs-spin,.fs-badge.running .dot,.fs-badge.online .dot{animation:none}}
+.fs-archive-stack{display:flex;flex-direction:column;gap:var(--space-sm)}
+.fs-disclosure{border:1px solid var(--color-border);border-radius:var(--radius-md);background:rgba(13,15,20,.72);overflow:hidden}
+.fs-disclosure>summary{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;cursor:pointer;font-size:var(--text-sm);font-weight:700;color:var(--color-text-muted)}
+.fs-disclosure[open]>summary{border-bottom:1px solid var(--color-border)}
+.fs-archive-body{padding:var(--space-md)}
+.fs-archive-note,.fs-protocol,.fs-error-log{font-size:12px;color:var(--color-text-dim);line-height:1.7}
+.fs-archive-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.fs-archive-table{border:1px solid var(--color-border);border-radius:var(--radius-sm);overflow-x:auto;overflow-y:visible}
+.fs-archive-table .fs-tbl{min-width:760px}
+.fs-protocol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0;padding:var(--space-md);list-style:none}
+.fs-protocol li{padding:10px;background:var(--color-bg);border-radius:var(--radius-sm)}
+.fs-error-log{margin:12px 0 0;padding:10px;border-top:1px dashed var(--color-border);white-space:pre-wrap}
+@media(max-width:900px){
+  .fs-command-grid,.fs-zones{grid-template-columns:1fr}
+  .fs-emotion-matrix{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fs-playbook-library{grid-template-columns:1fr}
+  .fs-recent-grid{grid-template-columns:1fr 1fr}
+  .fs-pipeline-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fs-step:nth-child(3)::after,.fs-step:last-child::after{display:none}
+}
+@media(max-width:640px){
+  body.dark.factor-system-page .app-shell{display:block!important;min-width:0!important;width:100%}
+  body.dark.factor-system-page .topnav{position:sticky!important;top:0;width:100%!important;height:auto!important;padding:8px 10px;border-right:0;border-bottom:1px solid var(--ro-border)}
+  body.dark.factor-system-page .topnav-brand{min-height:42px;padding:0 4px 7px}
+  body.dark.factor-system-page .legacy-sidebar-links{flex-direction:row;gap:4px;margin-top:0;overflow-x:auto;overscroll-behavior-x:contain}
+  body.dark.factor-system-page .legacy-nav-group{flex:0 0 auto;flex-direction:row;gap:4px}
+  body.dark.factor-system-page .legacy-nav-group h2,body.dark.factor-system-page .topnav-status{display:none}
+  body.dark.factor-system-page .legacy-sidebar-links .topnav-link{min-height:36px;padding:0 9px;font-size:12px}
+  body.dark.factor-system-page .main-content{width:100%;padding:12px 10px 0}
+  body.dark.factor-system-page .site-footer{margin:12px 10px 0}
+  .fs-page{gap:var(--space-md)}
+  .fs-hero{align-items:flex-start}
+  .fs-honesty{margin-left:0}
+  .fs-command,.fs-workspace,.fs-pipeline{padding:12px}
+  .fs-emotion{padding:12px}
+  .fs-emotion-counts,.fs-emotion-matrix,.fs-tactic-proof,.fs-playbook-library{grid-template-columns:1fr}
+  .fs-pipeline-grid{grid-template-columns:1fr 1fr}
+  .fs-step:nth-child(2n)::after{display:none}
+  .fs-zone-meta{grid-template-columns:1fr 1fr}
+  .fs-table-head{padding:12px}
+  .fs-table-head h2{width:100%;margin-right:0}
+  .fs-tab,.fs-view{min-height:44px}
+  .fs-view-switch{width:100%;margin-left:0;padding:8px 0 0;border-left:0;border-top:1px solid var(--color-border)}
+  .fs-view{flex:1}
+  .fs-table-legend{padding:0 12px 12px}
+  .fs-table-wrap[data-view="summary"] .fs-table-scroll{max-height:760px;overflow:auto}
+  .fs-table-wrap[data-view="summary"] .fs-tbl,.fs-table-wrap[data-view="summary"] .fs-tbl tbody{display:block;min-width:0}
+  .fs-table-wrap[data-view="summary"] .fs-tbl thead{display:none}
+  .fs-table-wrap[data-view="summary"] .fs-tbl tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 12px;padding:12px;border-top:1px solid var(--color-border)}
+  .fs-table-wrap[data-view="summary"] .fs-tbl tr:first-child{border-top:0}
+  .fs-table-wrap[data-view="summary"] .fs-tbl td{display:none;padding:0;border:0;background:transparent!important;white-space:normal}
+  .fs-table-wrap[data-view="summary"] .fs-tbl td.fs-core{display:block}
+  .fs-table-wrap[data-view="summary"] .fs-tbl td.fs-core-id{grid-column:1;overflow-wrap:anywhere}
+  .fs-table-wrap[data-view="summary"] .fs-tbl td.fs-core-status{grid-column:2;grid-row:1}
+  .fs-table-wrap[data-view="summary"] .fs-tbl td.fs-core-metric{display:flex;justify-content:space-between;gap:8px;padding:7px 8px;background:var(--color-bg)!important;border-radius:6px;font-size:12px;text-align:left}
+  .fs-table-wrap[data-view="summary"] .fs-tbl td.fs-core-metric::before{content:attr(data-label);color:var(--color-text-dim);font-family:var(--font-family)}
+  .fs-table-wrap[data-view="summary"] .fs-tbl td.fs-core-reason{grid-column:1/-1;font-size:12px;line-height:1.5;color:var(--color-text-muted)}
+  .fs-table-wrap[data-view="summary"] .fs-tbl td.fs-core-reason::before{content:"判定记录：";color:var(--color-text-dim)}
+  .fs-protocol{grid-template-columns:1fr}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fs-page" id="accountIndependentFactorResearch">
+
+  <header class="fs-hero">
+    <div>
+      <h1>因子研究状态</h1>
+      <p>来源机制 → 固定规则 → 唯一成本后盲测 → 独立复现 → 前向观察；失败即封存，不靠重复算力调参复活</p>
+    </div>
+    <span class="fs-honesty">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      状态以服务端快照为准 · 研究宇宙：沪深主板+创业板（不含科创板、北交所）
+    </span>
+  </header>
+
+  {% if config.LOCAL_RESEARCH_HISTORY_ENABLED %}
+    {% include "local_daily_factors.html" %}
+  {% endif %}
+  {% include "factor_research_catalogue.html" %}
+
+  <details class="fs-historical-workbench">
+    <summary>历史实验工作台 · 输入核对、记录与重试</summary>
+    {% include "research_workbench.html" %}
+  </details>
+
+  <section class="fs-command" id="fsCommand" data-state="unknown" aria-labelledby="fsCommandTitle">
+    <div class="fs-command-head">
+      <h2 id="fsCommandTitle">运行总控</h2>
+      <span class="fs-badge stopped" id="fsCommandBadge"><span class="dot"></span><span class="label">读取中</span></span>
+      <span class="fs-refresh" id="refreshAt" aria-live="polite">等待服务端快照…</span>
+      <button type="button" class="fs-more" id="fsStatusRetry">重新读取运行状态</button>
+    </div>
+    <div class="fs-registry-health" id="fsRegistryHealth" role="status" hidden></div>
+    <a id="fsRegistryCatalogueLink" href="#factorResearchCatalogue" hidden>查看已保存的研究候选与战法</a>
+    <div class="fs-registry-health" id="fsStatusNotice" role="status" aria-live="polite" hidden></div>
+    <div class="fs-command-grid">
+      <article class="fs-answer">
+        <h3 class="fs-answer-k">现在在做什么</h3>
+        <p class="fs-answer-v" id="fsNow">读取运行态…</p>
+        <span class="fs-answer-meta" id="fsNowMeta">–</span>
+      </article>
+      <article class="fs-answer">
+        <h3 class="fs-answer-k">研究结论</h3>
+        <p class="fs-answer-v" id="fsResearchState">等待状态判断…</p>
+        <span class="fs-answer-meta" id="fsResearchStateMeta">失败因子永久归档，不重复调参</span>
+      </article>
+      <article class="fs-answer">
+        <h3 class="fs-answer-k">正式策略状态</h3>
+        <p class="fs-answer-v" id="fsNext">读取投产证据…</p>
+        <span class="fs-answer-meta" id="fsNextMeta">正式策略只记录完整证据，不授权自动交易</span>
+      </article>
+    </div>
+    <div class="fs-source-strip" id="fsSourceGate" aria-live="polite">
+      <strong id="fsSourceSummary">读取来源目录…</strong>
+      <span id="fsSourceCandidate">读取候选证据…</span>
+      <span id="fsSourceScout">读取公开来源侦察…</span>
+      <a id="fsSourceRepo" href="#" target="_blank" rel="noopener noreferrer" hidden>固定 commit</a>
+      <a id="fsSourceLicense" href="#" target="_blank" rel="noopener noreferrer" hidden>许可证</a>
+      <a id="fsSourcePaper" href="#" target="_blank" rel="noopener noreferrer" hidden>原论文</a>
+      <span id="fsSourceFrontier">读取下一条独立输入路径…</span>
+      <span class="fs-source-policy">“可启动候选为0”表示今天没有足够证据进入验证，不代表系统故障 · 后续研究须另行核验执行状态 · 公开代码只作研究线索 · 无目的暴力搜索已关闭</span>
+    </div>
+  </section>
+
+  <section class="fs-emotion" id="fsEmotionProgram" aria-labelledby="fsEmotionTitle">
+    <div class="fs-emotion-head">
+      <div>
+        <h2 id="fsEmotionTitle">不同情绪使用什么战法与因子</h2>
+        <p>先按市场情绪选路线，再看主线板块、账户和风险；年份只用于样本切分。中文名称、特点、入场与失效条件始终展开，失败规则不会换名复活。</p>
+      </div>
+      <span class="fs-emotion-alert" id="fsEmotionAlert">提醒权核对中…</span>
+    </div>
+    <div class="fs-emotion-counts" id="fsEmotionCounts" aria-live="polite"></div>
+    <div class="fs-emotion-current" id="fsEmotionCurrent" role="status" aria-live="polite">正在读取最近完成交易日的情绪与对应战法…</div>
+    <div class="fs-emotion-factor" id="fsEmotionFactor">正在读取情绪分格因子证据…</div>
+    <div class="fs-emotion-matrix" id="fsEmotionMatrix"><div class="fs-empty">正在读取五类市场阶段的适用性矩阵…</div></div>
+    <h3 class="fs-emotion-subhead">三套中文战法说明 · 研究规则库</h3>
+    <div class="fs-playbook-library" id="fsPlaybookLibrary"><div class="fs-empty">正在读取战法特点与适用条件…</div></div>
+    <h3 class="fs-emotion-subhead">已盲测失败的具体追龙头 / 打板规则 · 禁止使用</h3>
+    <div class="fs-tactic-proof" id="fsTacticProof"></div>
+  </section>
+
+  <section class="fs-scout" aria-labelledby="fsScoutTitle">
+    <div class="fs-pipeline-head">
+      <h2 class="fs-pipeline-title" id="fsScoutTitle">来源记录与队列</h2>
+      <div class="fs-scout-meta" id="fsScoutMeta">读取来源、历史时点数据可行性与关闭原因…</div>
+    </div>
+    <div class="fs-table-scroll">
+      <table class="fs-scout-table">
+        <thead><tr><th>机制 / 来源</th><th>研究状态</th><th>历史数据与输入</th><th>下一动作</th></tr></thead>
+        <tbody id="fsScoutRows"><tr><td colspan="4">正在读取公开来源侦察快照…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="fs-recent" aria-labelledby="fsRecentTitle">
+    <div class="fs-pipeline-head">
+      <h2 class="fs-pipeline-title" id="fsRecentTitle">封存研究档案 · 文件核对</h2>
+      <span class="fs-pipeline-note" id="fsRecentMeta">读取报告哈希与终段结果…</span>
+    </div>
+    <div class="fs-recent-grid" id="fsRecentResearch" aria-live="polite"></div>
+  </section>
+
+  <section class="fs-pipeline" aria-labelledby="fsPipelineTitle">
+    <div class="fs-pipeline-head">
+      <h2 class="fs-pipeline-title" id="fsPipelineTitle">当前证据流水线</h2>
+      <span class="fs-pipeline-note" id="fsPipelineNote" aria-live="polite">读取当前阶段与最近产物…</span>
+    </div>
+    <div class="fs-pipeline-grid" id="fsPipeline">
+      <div class="fs-step" data-step="source"><span class="fs-step-k">1 · 论文/GitHub 来源</span><span class="fs-step-v">–</span></div>
+      <div class="fs-step" data-step="preregister"><span class="fs-step-k">2 · 预注册</span><span class="fs-step-v">–</span></div>
+      <div class="fs-step" data-step="reproduce"><span class="fs-step-k">3 · 精确复现</span><span class="fs-step-v">–</span></div>
+      <div class="fs-step" data-step="multiple_test"><span class="fs-step-k">4 · 多重检验</span><span class="fs-step-v">–</span></div>
+      <div class="fs-step" data-step="blind_oos"><span class="fs-step-k">5 · 独立样本 / 成本容量</span><span class="fs-step-v">–</span></div>
+      <div class="fs-step" data-step="production"><span class="fs-step-k">6 · 正式因子归档</span><span class="fs-step-v">–</span></div>
+    </div>
+  </section>
+
+  <section class="fs-workspace" aria-labelledby="fsRoundTitle">
+    <div class="fs-section-head">
+      <h2 id="fsRoundTitle">当前轮次</h2>
+      <span class="fs-epoch" id="fsEpoch">研究批次 –</span>
+    </div>
+    <div class="fs-zones">
+    <section class="fs-zone" id="zoneMining" aria-labelledby="zoneMiningTitle">
+      <div class="fs-zone-head">
+        <span class="fs-zone-name" id="zoneMiningTitle">来源研究与候选复现</span>
+        <span class="fs-badge pacing"><span class="dot"></span><span class="label">同步状态</span></span>
+        <span class="fs-phase" aria-live="polite">–</span>
+      </div>
+      <div class="fs-zone-meta">
+        <div class="fs-meta"><span class="k">当前批次</span><span class="v">–</span></div>
+        <div class="fs-meta"><span class="k">上次成功</span><span class="v">–</span></div>
+        <div class="fs-meta"><span class="k">实评 / 候选</span><span class="v">– / –</span></div>
+        <div class="fs-meta"><span class="k">L3 入库 / 队列</span><span class="v">– / –</span></div>
+      </div>
+      <div class="fs-zone-res" id="resMining">–</div>
+      <div class="fs-zone-err" id="errMining" role="alert"></div>
+    </section>
+
+    <section class="fs-zone" id="zoneBacktest" aria-labelledby="zoneBacktestTitle">
+      <div class="fs-zone-head">
+        <span class="fs-zone-name" id="zoneBacktestTitle">历史确认</span>
+        <span class="fs-badge pacing"><span class="dot"></span><span class="label">同步状态</span></span>
+        <span class="fs-phase" aria-live="polite">–</span>
+      </div>
+      <div class="fs-zone-meta">
+        <div class="fs-meta"><span class="k">当前批次</span><span class="v">–</span></div>
+        <div class="fs-meta"><span class="k">上次成功</span><span class="v">–</span></div>
+        <div class="fs-meta"><span class="k">待回测队列</span><span class="v">–</span></div>
+        <div class="fs-meta"><span class="k">历史通过</span><span class="v">–</span></div>
+      </div>
+      <div class="fs-zone-res" id="resBacktest">–</div>
+      <div class="fs-zone-err" id="errBacktest" role="alert"></div>
+    </section>
+
+    <section class="fs-zone" id="zoneDaemon" aria-labelledby="zoneDaemonTitle">
+      <div class="fs-zone-head">
+        <span class="fs-zone-name" id="zoneDaemonTitle">自动研究进程</span>
+        <span class="fs-badge pacing"><span class="dot"></span><span class="label">同步状态</span></span>
+        <span class="fs-phase" aria-live="polite">–</span>
+      </div>
+      <div class="fs-zone-meta">
+        <div class="fs-meta"><span class="k">当前区</span><span class="v">–</span></div>
+        <div class="fs-meta"><span class="k">轮次 / 错误</span><span class="v">–</span></div>
+        <div class="fs-meta"><span class="k">心跳</span><span class="v">–</span></div>
+        <div class="fs-meta"><span class="k">下一计划</span><span class="v">–</span></div>
+      </div>
+      <div class="fs-zone-res" id="resDaemon">–</div>
+      <div class="fs-zone-err" id="errDaemon" role="alert"></div>
+    </section>
+    </div>
+  </section>
+
+  <div class="fs-table-wrap" id="fsTableWrap" data-view="summary">
+    <div class="fs-table-head">
+      <h2>当前研究批次因子</h2>
+      <button type="button" class="fs-tab fs-main-tab sel" data-f="all" aria-pressed="true">当前因子<span class="fs-tab-cnt" id="tAll"></span></button>
+      <button type="button" class="fs-tab fs-main-tab" data-f="candidate" aria-pressed="false">候选<span class="fs-tab-cnt" id="tCand"></span></button>
+      <button type="button" class="fs-tab fs-main-tab" data-f="pending" aria-pressed="false">验证/回测中<span class="fs-tab-cnt" id="tReg"></span></button>
+      <button type="button" class="fs-tab fs-main-tab" data-f="historical_pass" aria-pressed="false">历史通过<span class="fs-tab-cnt" id="tHist"></span></button>
+      <button type="button" class="fs-tab fs-main-tab" data-f="production" aria-pressed="false">投产<span class="fs-tab-cnt" id="tProd"></span></button>
+      <div class="fs-view-switch" aria-label="因子证据显示密度">
+        <button type="button" class="fs-view sel" data-view="summary" aria-pressed="true">核心列</button>
+        <button type="button" class="fs-view" data-view="full" aria-pressed="false">更多指标</button>
+      </div>
+    </div>
+    <div class="fs-table-legend"><span id="fsCurrentNote">仅显示当前研究批次仍在处理的因子。</span><span>历史通过不等于可用于当前决策。</span></div>
+    <div class="fs-table-scroll" tabindex="0" aria-label="因子注册证据表，可横向滚动查看完整列">
+      <table class="fs-tbl" id="fsTbl">
+        <thead>
+          <tr>
+            <th>因子名称与含义</th>
+            <th class="fs-detail-col">家族</th>
+            <th>状态</th>
+            <th class="num fs-detail-col">IS IC</th>
+            <th class="num fs-detail-col">IS IC_IR</th>
+            <th class="num fs-detail-col">raw IC</th>
+            <th class="fs-detail-col">中性化</th>
+            <th class="num fs-detail-col">单调</th>
+            <th class="num fs-detail-col">半衰期</th>
+            <th class="num fs-detail-col">换手</th>
+            <th class="num fs-detail-col">容量(亿)</th>
+            <th class="num fs-detail-col">增量IC</th>
+            <th class="num fs-detail-col">历史确认 IC_IR</th>
+            <th class="num">历史确认 IC t</th>
+            <th class="num fs-detail-col">保留率</th>
+            <th class="num fs-detail-col">LS年化</th>
+            <th class="num">回测年化</th>
+            <th class="num">超额</th>
+            <th class="num fs-detail-col">Sharpe</th>
+            <th class="num fs-detail-col">最大回撤</th>
+            <th class="num">多折通过</th>
+            <th class="num fs-detail-col">组合日收益t</th>
+            <th class="num fs-detail-col">组合换手</th>
+            <th class="fs-detail-col">换手预警</th>
+            <th>检验记录</th>
+          </tr>
+        </thead>
+        <tbody id="fsBody"></tbody>
+      </table>
+    </div>
+    <div class="fs-table-more" id="fsMoreWrap" style="display:none"><button class="fs-more" id="fsMore" type="button">加载下一页</button></div>
+    <div class="fs-empty" id="fsEmpty" style="display:none">当前研究批次暂无在途因子</div>
+    <div class="fs-loading" id="fsLoading" role="status" aria-live="polite"><span class="fs-spin"></span>加载当前因子…</div>
+  </div>
+
+  <div class="fs-archive-stack">
+    <details class="fs-disclosure" id="fsEvidenceArchive">
+      <summary><span>研究档案</span><span id="fsArchiveSummary">读取已结束证据计数…</span></summary>
+      <div class="fs-archive-body">
+        <p class="fs-archive-note">已淘汰、冻结与旧批次失效记录只供追溯，不计入当前因子或“通过”数量。</p>
+        <div class="fs-archive-tools" aria-label="研究档案筛选">
+          <button type="button" class="fs-tab fs-archive-tab sel" data-f="closed" aria-pressed="true">全部已结束<span class="fs-tab-cnt" id="tArchiveAll"></span></button>
+          <button type="button" class="fs-tab fs-archive-tab" data-f="rejected" aria-pressed="false">淘汰<span class="fs-tab-cnt" id="tRej"></span></button>
+          <button type="button" class="fs-tab fs-archive-tab" data-f="invalidated" aria-pressed="false">旧证据失效<span class="fs-tab-cnt" id="tInvalid"></span></button>
+          <button type="button" class="fs-tab fs-archive-tab" data-f="frozen" aria-pressed="false">冻结<span class="fs-tab-cnt" id="tFrozen"></span></button>
+        </div>
+        <div class="fs-archive-table" tabindex="0" aria-label="已结束研究证据表，可横向滚动">
+          <table class="fs-tbl">
+            <thead><tr><th>因子名称与含义</th><th>结束状态</th><th>研究批次</th><th>审计说明</th><th>证据</th></tr></thead>
+            <tbody id="fsArchiveBody"></tbody>
+          </table>
+        </div>
+        <div class="fs-empty" id="fsArchiveEmpty" style="display:none">当前筛选没有档案记录</div>
+        <div class="fs-loading" id="fsArchiveLoading" role="status" aria-live="polite" style="display:none"><span class="fs-spin"></span>加载研究档案…</div>
+        <div class="fs-table-more" id="fsArchiveMoreWrap" style="display:none"><button class="fs-more" id="fsArchiveMore" type="button">加载下一页</button></div>
+        <div class="fs-error-log" id="fsRecentErrors">最近错误记录将在这里显示；它们不会与当前写锁合并。</div>
+      </div>
+    </details>
+
+    <details class="fs-disclosure" id="fsProtocol">
+      <summary><span>研究协议</span><span>窗口 · 成本 · 门禁 · production</span></summary>
+      <ul class="fs-protocol">
+        <li><strong>来源 / 预注册</strong><br>只接公开论文与锁定 GitHub commit；许可证、公式、方向、数据和 PIT 规则先冻结。</li>
+        <li><strong>精确复现</strong><br>GitHub 只生成候选；本地实现、字段语义和时点审计未通过时 runnable 必须为 0。</li>
+        <li><strong>多重检验 / 盲 OOS / 成本</strong><br>验证批内 FDR、跨批 LOND；盲 OOS 后再过 t+1、涨跌停、费用、滑点与容量。全局前向起点：<span data-forward-start>等待服务端确认</span>。</li>
+        <li><strong>production</strong><br>仅因子自身 seal 后、且不早于全局起点的新数据形成 <span data-forward-days>—</span> 个完整标签并通过固定终测；production 仅表示研究注册状态，不授权真实交易。</li>
+      </ul>
+    </details>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if config.LOCAL_RESEARCH_HISTORY_ENABLED %}<script src="/static/local_daily_factors.js?v=1"></script>{% endif %}
+<script src="/static/factor_research_catalogue.js?v=1"></script>
+<script src="/static/research_workbench.js?v=6"></script>
+<script nonce="{{ csp_nonce }}">
+(function () {
+  var WORK_STATUSES = ['candidate', 'validated', 'registered', 'backtesting', 'historical_pass', 'production'];
+  var ARCHIVE_STATUSES = ['rejected', 'invalidated', 'frozen'];
+  var curFilter = 'all';
+  var archiveFilter = 'closed';
+  var factors = [];
+  var archiveFactors = [];
+  var currentResearchEpoch = '';
+  var latestStatus = null;
+  var latestMarketContext = null;
+  var marketContextController = null;
+  var marketContextRequestId = 0;
+  var latestRegistrySignature = '';
+  var loadErrors = { status: '', current: '', archive: '' };
+  var statusRenderErrors = [];
+  var statusTimer = null;
+  var statusController = null;
+  var statusRequestId = 0;
+  var STATUS_REFRESH_MS = 30000;
+  var FACTOR_REFRESH_MS = 10 * 60 * 1000;
+  var PAGE_SIZE = 50;
+  var pages = {
+    current: { cursor: '0', nextCursor: null, total: 0, hasMore: false, loading: false,
+               controller: null, requestId: 0, loadedAt: 0, version: '', asOf: '', legacyRows: null },
+    archive: { cursor: '0', nextCursor: null, total: 0, hasMore: false, loading: false,
+               controller: null, requestId: 0, loadedAt: 0, version: '', asOf: '', legacyRows: null },
+  };
+
+  function statusMatches(status, filter) {
+    if (filter === 'all') return WORK_STATUSES.indexOf(status) >= 0;
+    if (filter === 'pending') return ['registered', 'backtesting', 'validated'].indexOf(status) >= 0;
+    return status === filter;
+  }
+
+  function archiveMatches(status, filter) {
+    if (filter === 'closed') return ARCHIVE_STATUSES.indexOf(status) >= 0;
+    return status === filter;
+  }
+
+  function badge(label) {
+    var map = { production: '正式因子', historical_pass: '历史通过·待前向',
+                registered: '待历史确认', backtesting: '回测中', validated: '已检验',
+                rejected: '淘汰', frozen: '冻结', invalidated: '旧证据失效', candidate: '候选' };
+    var known = Object.prototype.hasOwnProperty.call(map, label);
+    return '<span class="fs-status' + (known ? ' ' + label : '') + '">' + esc(map[label] || label || '未知') + '</span>';
+  }
+  function sourceBadge(gate) {
+    gate = gate || {};
+    var status = String(gate.status || 'source_audit_failed');
+    if (status === 'legacy_unsourced') {
+      return '<span class="fs-source-badge">旧来源无证明 · 不可用</span>';
+    }
+    if (gate.runnable === true) {
+      return '<span class="fs-source-badge ready">来源已核验</span>';
+    }
+    if (['blind_rejected', 'rejected', 'superseded', 'invalidated'].indexOf(status) >= 0) {
+      return '<span class="fs-source-badge">已验证失败 · 已封存</span>';
+    }
+    return '<span class="fs-source-badge pending">证据待补 · 暂不可用</span>';
+  }
+  function fmt(v, d, pct) {
+    if (v === null || v === undefined || isNaN(v)) return '–';
+    if (pct) return (v * 100).toFixed(2) + '%';
+    return Number(v).toFixed(d === undefined ? 2 : d);
+  }
+  function sgn(v) {
+    if (v === null || v === undefined || isNaN(v)) return '';
+    return v >= 0 ? 'fs-pos' : 'fs-neg';
+  }
+  // 历史确认 IC t（证据里的显著性主指标，|t|≥2 才绿）
+  function icT(ev, factor) {
+    if (ev && ev.oos_ic && ev.oos_ic.t_stat !== null && ev.oos_ic.t_stat !== undefined) return ev.oos_ic.t_stat;
+    if (factor && factor.oos_ic_t_stat !== null && factor.oos_ic_t_stat !== undefined) return factor.oos_ic_t_stat;
+    return null;
+  }
+  function icTcl(ev, factor) {
+    var t = icT(ev, factor);
+    if (t === null) return '';
+    return Math.abs(t) >= 2 ? 'fs-pos' : 'fs-neg';
+  }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function escAttr(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+  function factorDisplayName(factor) {
+    var known = {
+      fresh_short_reversal_daily_5_5_v1: '5日短期反转（低收益者优先）',
+      fresh_maxret_daily_20_60_v1: '20日极端涨幅回落（低最大涨幅者优先）',
+      fresh_freefloat_abturn_daily_20_250_v2: '自由流通异常换手（低拥挤者优先）',
+      fresh_low_turnover_20_v1: '20日低换手',
+      fresh_pricedelayrsq_v1: '市场信息价格延迟',
+    };
+    if (known[factor.factor_id]) return known[factor.factor_id];
+    var name = String(factor.name || '');
+    if (/[一-鿿]/.test(name)) return name;
+    var description = String(factor.description || '').split('；')[0].trim();
+    return description || '未命名研究因子';
+  }
+  function factorDescription(factor) {
+    return String(factor.description || '尚无可读特点说明').split('；')[0].trim();
+  }
+  function operationalText(value) {
+    value = String(value || '');
+    if (value.indexOf('new licensed PIT input identity') >= 0) return '自动研究保持待命；只有获得新的合法历史时点数据或精确官方字段定义后，才继续验证该候选。';
+    return value
+      .replace(/\u4f4e\u529f\u8017(?:\u51b7\u5374|\u7b49\u5f85)?/g, '非法旧状态')
+      .replace(/\u7a7a\u95f2/g, '非法旧状态')
+      .replace(/\x69\x64\x6c\x65/gi, '非法旧状态')
+      .replace(/\x73\x6c\x65\x65\x70/gi, '非法旧状态');
+  }
+  function runtimeSourceLabel(source) {
+    var labels = {
+      daemon: '自动研究进程当前任务',
+      source_research_zone: '来源研究任务',
+      source_input_epoch: '公开来源历史时点数据任务',
+      multiyear_pit_input_epoch: '官方多年度历史时点数据任务',
+      input_readiness_contract_freeze: '输入合同冻结',
+      multiyear_pit_terminal_evidence_validation: '终局证据核验',
+      mining_zone: '来源研究与候选复现任务',
+      backtest_zone: '历史确认任务',
+      research_mutation_lock: '独立研究写任务',
+      source_contract_work: '新因子输入与月频评估合同',
+      supervisor_online: '自动研究进程连续调度',
+      stopped: '原记录：因子进程未运行',
+      legacy_status_fallback: '兼容状态',
+    };
+    return labels[source] || operationalText(source) || '服务端运行态';
+  }
+  // M1.5 单调对齐 soft 标记：≥0.6 绿，否则橙（warn 不否决）
+  function monoCl(v) {
+    if (v === null || v === undefined || isNaN(v)) return '';
+    return v >= 0.6 ? 'fs-pos' : 'fs-warn';
+  }
+  function nmode(m) {
+    if (!m) return '–';
+    return m === 'industry+size' ? '行业+市值' : (m === 'size+vol' ? '市值+波动' : '未中性化');
+  }
+
+  function statusName(st) {
+    return st && st.status ? st.status : 'unknown';
+  }
+
+  function stageLabel(stage) {
+    var labels = { search: '发现期搜索', dedupe: '跨重启去重', validate: '独立验证',
+                   register: '冻结配方', backtest: '历史确认', production: '前向终测',
+                   source_research: '公开来源复现', source_audit: '来源与预注册审计',
+                   source_input_epoch: '公开来源历史时点数据构建',
+                   multiyear_pit_input_epoch: '官方多年度历史时点数据构建',
+                   input_readiness_contract_freeze: '输入覆盖与形成期合同冻结',
+                   multiyear_pit_terminal_evidence_validation: '官方PIT终局证据核验',
+                   factor_discovery: '当前固定口径因子发现', factor_validation: '因子验证',
+                   historical_confirmation: '历史确认', forward_revalidation: '新数据再验证',
+                   forward_shadow: '前向影子等待', forward_monitoring: '前向监测',
+                   research_mutation: '持锁研究任务', registry_read: '读取注册表',
+                   supervisor_recovery: '自动研究进程恢复',
+                   pacing: '连续发现调度', guard: '资源守卫', stopped: '自动研究进程已停止' };
+    return labels[stage] || zoneLabel(stage) || '连续发现调度';
+  }
+
+  function factorExecution(data, worker, readFailed) {
+    var d = data.daemon || {};
+    return {
+      websiteDisabled: !!worker && (worker.local_website_mode === 'interactive_only' || worker.website_background_enabled === false),
+      known: !readFailed && typeof d.daemon === 'string',
+      online: !readFailed && d.daemon === 'running' && d.process_alive === true
+        && d.heartbeat_fresh === true && d.progress_fresh !== false
+        && d.operational_state !== 'offline' && d.operational_state !== 'error',
+    };
+  }
+
+  function executionEvidence(data) {
+    return factorExecution(data, window.RegisResearchWorkerStatus, !!loadErrors.status);
+  }
+
+  function knownCount(value) {
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? String(value) : '—';
+  }
+
+  function renderExecutionNotice(data) {
+    var evidence = executionEvidence(data);
+    var note = evidence.websiteDisabled ? '本网站后台研究已停用。' : '';
+    if (!evidence.online) {
+      var badge = document.getElementById('fsCommandBadge');
+      if (badge.className.indexOf('running') >= 0) {
+        badge.className = 'fs-badge stopped';
+        badge.querySelector('.label').textContent = '原任务记录 · 当前执行未核验';
+      }
+      document.getElementById('fsNow').textContent = note + (evidence.known
+        ? '未核实有正在执行的因子任务' : '因子运行状态未核验');
+      document.getElementById('fsNowMeta').textContent = '下方保留既有研究记录；旧计划不代表当前运行或自动接续。';
+      document.getElementById('fsPipelineNote').textContent = '当前执行状态：' + (evidence.known ? '未核实在运行' : '未核验');
+    } else if (note) {
+      document.getElementById('fsNowMeta').textContent = note + '独立因子进程已另行核验；网站模式与独立进程分别判断。';
+    }
+  }
+
+  function renderExecutionPanels() {
+    if (!latestStatus) {
+      if (loadErrors.status) settleMissingStatus();
+      return;
+    }
+    renderStatusSection('运行总控', ['fsNow', 'fsResearchState', 'fsNext'], function () { renderFocus(latestStatus); });
+    renderStatusSection('来源研究运行态', ['errMining'], function () { renderZone(document.getElementById('zoneMining'), 'mining', latestStatus); });
+    renderStatusSection('历史确认运行态', ['errBacktest'], function () { renderZone(document.getElementById('zoneBacktest'), 'backtest', latestStatus); });
+    renderStatusSection('研究进程', ['errDaemon'], function () { renderDaemon(document.getElementById('zoneDaemon'), latestStatus); });
+    renderStatusSection('证据流水线', ['fsPipelineNote'], function () { renderPipeline(latestStatus); });
+    renderStatusSection('执行核验', ['fsNowMeta'], function () { renderExecutionNotice(latestStatus); });
+    renderStatusNotice();
+  }
+
+  function statusMessage(id, message) {
+    var element = document.getElementById(id);
+    if (!element) return;
+    if (element.tagName === 'TBODY') {
+      var tr = document.createElement('tr'), td = document.createElement('td');
+      td.colSpan = 4; td.textContent = message; tr.appendChild(td); element.replaceChildren(tr);
+    } else element.textContent = message;
+    if (/^err/.test(id)) element.classList.add('show');
+  }
+
+  function renderStatusSection(label, ids, render) {
+    try { render(); statusRenderErrors = statusRenderErrors.filter(function (item) { return item !== label; }); }
+    catch (error) {
+      if (statusRenderErrors.indexOf(label) < 0) statusRenderErrors.push(label);
+      ids.forEach(function (id) { statusMessage(id, label + '显示失败，请重新读取运行状态。'); });
+      if (label === '来源记录') ['fsSourceRepo','fsSourceLicense','fsSourcePaper'].forEach(function (id) {
+        var link = document.getElementById(id); if (link) link.hidden = true;
+      });
+      var failedZone = {'来源研究运行态':'Mining','历史确认运行态':'Backtest','研究进程':'Daemon'}[label];
+      if (failedZone) {
+        var zone = document.getElementById('zone' + failedZone), badge = zone.querySelector('.fs-badge');
+        badge.className = 'fs-badge error'; badge.querySelector('.label').textContent = '显示失败 · 当前未核验';
+        zone.querySelector('.fs-phase').textContent = '旧运行标识已失效';
+        statusMessage('res' + failedZone, '当前运行详情无法展示；其他记录需另行核验。');
+      }
+      if (label === '证据流水线') document.querySelectorAll('#fsPipeline .fs-step').forEach(function (step) {
+        step.className = 'fs-step'; step.querySelector('.fs-step-v').textContent = '未核验';
+      });
+    }
+  }
+
+  function renderStatusNotice() {
+    var box = document.getElementById('fsStatusNotice');
+    if (!box) return;
+    var parts = [];
+    if (loadErrors.status) parts.push('运行状态读取失败：' + loadErrors.status + (latestStatus
+      ? '。下方保留上次读取的研究记录，当前状态未核验。' : '。尚无运行状态快照，数量与执行状态未知。'));
+    if (statusRenderErrors.length) parts.push('已读取状态，但部分内容显示失败：' + statusRenderErrors.join('、') + '。其他已读结果保留。');
+    box.textContent = parts.join(' '); box.hidden = !parts.length;
+    if (loadErrors.status || statusRenderErrors.indexOf('运行总控') >= 0) {
+      var badge = document.getElementById('fsCommandBadge');
+      badge.className = 'fs-badge error'; badge.querySelector('.label').textContent = '运行状态未核验';
+      document.getElementById('fsCommand').dataset.state = 'unknown';
+    }
+  }
+
+  function settleMissingStatus() {
+    // No empty status object: the normal renderers would invent zero counts.
+    var waiting = ['fsNow','fsResearchState','fsNext','fsSourceSummary','fsSourceCandidate','fsSourceScout',
+      'fsSourceFrontier','fsEmotionCurrent','fsEmotionFactor','fsEmotionMatrix','fsPlaybookLibrary',
+      'fsScoutMeta','fsScoutRows','fsRecentMeta','fsRecentResearch','fsPipelineNote','fsRecentErrors'];
+    waiting.forEach(function (id) { statusMessage(id, '运行状态未读取，点击「重新读取运行状态」重试。'); });
+    statusMessage('fsNowMeta', '日线计算、已登记目录与当前因子列表独立读取，不受此状态请求影响。');
+    statusMessage('fsResearchStateMeta', '缺失证据不代表零因子或已通过。');
+    statusMessage('fsNextMeta', '未取得正式策略证据，不增加交易权限。');
+    statusMessage('fsEmotionAlert', '提醒资格未核验');
+    statusMessage('fsEmotionCounts', '情绪分格计数未知');
+    statusMessage('fsArchiveSummary', '档案计数未知');
+    document.querySelectorAll('[data-forward-start]').forEach(function (el) { el.textContent = '未取得起点证据'; });
+    document.querySelectorAll('[data-forward-days]').forEach(function (el) { el.textContent = '—'; });
+    ['tProd','tHist','tCand','tReg','tRej','tFrozen','tInvalid','tAll','tArchiveAll'].forEach(function (id) { statusMessage(id, '—'); });
+    ['zoneMining','zoneBacktest','zoneDaemon'].forEach(function (id) {
+      var zone = document.getElementById(id), badge = zone.querySelector('.fs-badge');
+      badge.className = 'fs-badge stopped'; badge.querySelector('.label').textContent = '运行状态未核验';
+    });
+    renderStatusNotice();
+  }
+
+  window.addEventListener('regis-research-worker-status', renderExecutionPanels);
+
+  function workflowState(data) {
+    if (data.workflow && data.workflow.current_stage) return data.workflow;
+    var mining = data.mining || {};
+    var backtest = data.backtest || {};
+    var daemon = data.daemon || {};
+    var lock = data.research_lock || {};
+    var sourceGate = data.source_gate || {};
+    var metrics = mining.last_metrics || {};
+    var evaluated = Number((metrics.search || {}).fitness_evaluated) || 0;
+    var candidates = Number(metrics.candidates) || 0;
+    var supervisorOnline = executionEvidence(data).online;
+    var progressFresh = daemon.progress_fresh !== false;
+    var stage = 'source_audit';
+    var state = 'pacing';
+    if (daemon.daemon === 'error') {
+      stage = 'supervisor_recovery';
+      state = 'failed';
+    } else if (!supervisorOnline) {
+      stage = daemon.daemon === 'running' ? 'supervisor_recovery' : 'stopped';
+      state = 'blocked';
+    } else if (!progressFresh) {
+      stage = 'supervisor_recovery';
+      state = 'blocked';
+    } else if (mining.status === 'running') {
+      stage = mining.phase === 'validate' ? 'validate' : 'search';
+      state = 'running';
+    } else if (backtest.status === 'running') {
+      stage = 'backtest';
+      state = 'running';
+    } else {
+      stage = daemon.current_zone || 'factor_discovery';
+      if (daemon.low_power === true
+          || daemon.phase === '\x69\x64\x6c\x65'
+          || daemon.current_zone === '\x73\x6c\x65\x65\x70') {
+        stage = 'supervisor_recovery';
+        state = 'blocked';
+      } else state = daemon.phase === 'work'
+        && ['source_research', 'source_audit', 'gp', 'full_mining', 'backtest', 'revalidate'].indexOf(daemon.current_zone) >= 0
+        ? 'active' : 'pacing';
+    }
+    var blockers = [];
+    if (daemon.daemon === 'running' && daemon.heartbeat_fresh !== true) {
+      blockers.push({ code: 'daemon_heartbeat_stale', message: '自动研究进程心跳过期，恢复状态待核验', system_fault: true });
+    }
+    if (!progressFresh) {
+      blockers.push({ code: 'daemon_progress_stalled', message: '自动研究任务长时间没有新产出，恢复状态待核验', system_fault: true });
+    }
+    if (daemon.ingestion_blocker) {
+      blockers.push({
+        code: daemon.ingestion_blocker.code || 'factor_data_ingestion_blocked',
+        message: daemon.ingestion_blocker.message || daemon.ingestion_blocker.error || '新输入摄取失败',
+        system_fault: true,
+      });
+    }
+    if (lock.busy && state !== 'running') {
+      blockers.push({ code: 'research_lock_busy', message: '共享研究写锁正在被占用', system_fault: true });
+    } else if (sourceGate.valid === true && Number(sourceGate.runnable_count) === 0) {
+      var sourceCandidates = sourceGate.candidates || [];
+      var pendingCandidate = sourceCandidates.find(function (candidate) {
+        return candidate && candidate.actionable === true
+          && ['data_pending', 'implementation_pending'].indexOf(candidate.status) >= 0;
+      });
+      if (pendingCandidate) {
+        stage = 'source_audit';
+        state = 'blocked';
+        var blockedName = pendingCandidate.name || pendingCandidate.candidate_id || '当前候选';
+        blockers.push({
+          code: pendingCandidate.status === 'data_pending'
+            ? 'source_candidate_data_pending' : 'source_candidate_implementation_pending',
+          message: pendingCandidate.status === 'data_pending'
+            ? blockedName + ' 公式已核对；可信复权输入和月频成本评估仍待完成，因此还不能启动回测'
+            : blockedName + ' 实现证据仍待完成，因此还不能启动回测',
+          system_fault: false,
+        });
+      } else {
+        stage = 'needs_new_hypothesis';
+        state = 'pacing';
+        blockers.push({
+          code: 'source_candidates_terminal',
+          message: '来源目录有效；现有候选均已封存或关闭，等待新的独立假设；调度状态另行核验',
+          system_fault: false,
+        });
+      }
+    } else if (evaluated > 0 && candidates === 0) {
+      blockers.push({ code: 'no_candidates', message: '本轮 ' + evaluated + ' 个实评、0 候选；无可回测对象', system_fault: false });
+    }
+    return {
+      current_stage: stage,
+      stage_status: state,
+      blockers: blockers,
+      next_action: operationalText(daemon.next_plan) || '尚无已核验的后续执行计划',
+      runtime: {
+        active: supervisorOnline && progressFresh
+          && ['running', 'active'].indexOf(state) >= 0,
+        source: 'legacy_status_fallback',
+        supervisor_process_online: supervisorOnline,
+      },
+      as_of: statusAsOf(data),
+    };
+  }
+
+  function setSourceLink(id, url, label) {
+    var link = document.getElementById(id);
+    var allowed = typeof url === 'string' && /^https:\/\//.test(url);
+    link.hidden = !allowed;
+    if (!allowed) return;
+    link.href = url;
+    link.textContent = label;
+  }
+
+  function scoutEvidenceLabel(value) {
+    var labels = {
+      five_pair_same_engine_exact_reproduction_passed_full_history_not_ready:
+        '5组样本同引擎复现通过 · 完整历史尚未就绪',
+      input_feasibility_partial_not_admitted:
+        '部分输入可行 · 尚未准入',
+      manual_primary_source_review:
+        '论文原始来源已人工复核',
+      source_contract_pending:
+        '新假设已找到 · 输入合同待完成',
+      formula_pending: '待公式',
+      input_evidence_pending: '输入证据待补',
+      epu_forward_snapshot: 'EPU前向快照',
+      formula_implemented_outcome_blind_inputs_and_monthly_evaluator_pending:
+        '公式已实现 · 未读取收益',
+      blocked_by_untrusted_current_adjustment_and_missing_monthly_cost_evaluator:
+        '最新复权待核验 · 月频成本评估器待完成',
+      closed_historical_factor_rejected:
+        '扣成本/样本外失败 · 已永久关闭',
+      ok: '正常',
+    };
+    return labels[String(value || '')] || value || '尚未核验';
+  }
+
+  function candidateEvidenceLabel(value) {
+    var labels = {
+      implementation_pending: '公式实现待完成',
+      data_pending: '历史数据待补齐',
+      source_contract_pending: '输入定义待完成',
+      blind_rejected: '独立样本检验失败',
+      rejected: '已验证失败',
+      superseded: '已被新版替代',
+      invalidated: '旧证据失效',
+      runnable: '可以启动验证',
+    };
+    return labels[String(value || '')] || '证据待补';
+  }
+
+  function renderScoutQueue(scout) {
+    var allPreview = Array.isArray(scout.preview) ? scout.preview : [];
+    var preview = allPreview.filter(function (item) {
+      return ['unreviewed_research_source', 'formula_pending', 'source_contract_pending']
+        .indexOf(String(item.status || '')) >= 0;
+    });
+    var showingLatestClosed = false;
+    if (!preview.length) {
+      preview = allPreview.filter(function (item) {
+        return String(item.status || '').indexOf('closed_') === 0;
+      }).slice(0, 1);
+      showingLatestClosed = preview.length > 0;
+    }
+    var reviewQueue = scout.source_review_queue || {};
+    var reviewTasks = Array.isArray(reviewQueue.tasks) ? reviewQueue.tasks : [];
+    var externalEvidenceTasks = reviewTasks.filter(function (item) {
+      return item.status === 'resolved'
+        && item.resolution_status === 'reviewed_input_contract_external_evidence_pending';
+    });
+    if (!preview.length && reviewTasks.length) {
+      preview = reviewTasks.filter(function (item) {
+        return item.status === 'pending_source_review';
+      }).map(function (item) {
+        return {
+          title: item.title,
+          scout_id: item.source_id,
+          url: item.source_url,
+          source_provider: item.kind === 'repository_source_review' ? 'GitHub' : '论文来源',
+          status: 'pending_source_review',
+          pit_feasibility_status: '等待来源/PIT审查',
+          input_audit_status: '未触发因子计算',
+          next_action: '完成公式、许可、PIT与去重审查；禁止直接回测',
+        };
+      });
+    }
+    var rows = document.getElementById('fsScoutRows');
+    var meta = document.getElementById('fsScoutMeta');
+    var retryPending = Number(scout.retry_pending_count) || 0;
+    var nextScoutLabel = retryPending > 0 && scout.retry_due_at
+      ? '原记录重试时间 ' + shortStamp(scout.retry_due_at)
+      : '原记录计划时间 ' + (shortStamp(scout.next_due_at) || '未提供');
+    meta.textContent = '来源记录（不代表当前调度已启用） · 上次 ' + shortStamp(scout.last_success_at || scout.last_attempt_at)
+      + ' · ' + nextScoutLabel
+      + (retryPending > 0
+        ? ' · 仅重试 ' + retryPending + ' 个失败来源，成功结果不重扫' : '')
+      + ' · 扫描 ' + knownCount(scout.items_scanned)
+      + ' · 上次发现 ' + knownCount(scout.new_count)
+      + ' · 已关闭 ' + knownCount(scout.closed_count)
+      + ' · 资料缺口 ' + knownCount(scout.unresolved_total)
+      + ' · 人工待审 ' + knownCount(reviewQueue.pending_count)
+      + ' · 审核完成 ' + knownCount(reviewQueue.resolved_count)
+      + (externalEvidenceTasks.length
+        ? '（其中外部资料待补 ' + externalEvidenceTasks.length + '）' : '')
+      + (Number(reviewQueue.overdue_count) > 0
+        ? ' · 超时 ' + Number(reviewQueue.overdue_count) : '')
+      + (showingLatestClosed ? ' · 当前展示最近关闭证据' : '')
+      + ' · 不自动回测/投产';
+    if (!preview.length) {
+      rows.innerHTML = '<tr><td colspan="4">本次未返回待处理来源条目；不推断为全量空队列，也不启动后续计算。</td></tr>';
+      return;
+    }
+    rows.innerHTML = preview.map(function (item) {
+      var reviewedExternal = externalEvidenceTasks.some(function (task) {
+        return task.source_id === item.scout_id || task.identity === item.identity;
+      });
+      var title = esc(item.title || item.scout_id || '未命名机制');
+      var source = esc(scoutEvidenceLabel(
+        item.source_provider || (item.source_providers || []).join(' / ') || '来源未标注'
+      ));
+      var url = typeof item.open_access_url === 'string' && /^https:\/\//.test(item.open_access_url)
+        ? item.open_access_url : (typeof item.url === 'string' && /^https:\/\//.test(item.url) ? item.url : '');
+      var titleHtml = url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + title + '</a>' : title;
+      var statusText = reviewedExternal
+        ? '审核完成 · 外部资料待补'
+        : scoutEvidenceLabel(item.status || '研究池');
+      var closedEvidence = String(item.status || '').indexOf('closed_') === 0
+        ? (Array.isArray(item.input_contract_gaps)
+          ? item.input_contract_gaps.slice(0, 4).join('；') : '')
+        : '';
+      var inputEvidence = closedEvidence
+        ? esc(closedEvidence)
+        : esc(scoutEvidenceLabel(item.pit_feasibility_status || 'PIT未核验'))
+          + '<br>' + esc(scoutEvidenceLabel(
+            item.input_audit_status || '输入审计未完成'
+          ));
+      var nextActionText = reviewedExternal
+        ? '人工审核已经完成；只等待审计记录列出的许可与完整PIT资料。资料齐全前不计算因子、收益或回测。'
+        : (item.next_action || '等待人工来源审计；不启动因子计算');
+      return '<tr>'
+        + '<td>' + titleHtml + '<br><span class="fs-scout-tag">' + source + '</span></td>'
+        + '<td><span class="fs-scout-tag">' + esc(statusText) + '</span><br><span title="研究池（不可运行）">研究池 · 不可运行</span></td>'
+        + '<td>' + inputEvidence + '</td>'
+        + '<td>' + esc(nextActionText) + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  function renderSourceGate(data) {
+    var gate = data.source_gate || {};
+    var candidates = Array.isArray(gate.candidates) ? gate.candidates : [];
+    var candidate = candidates[0] || {};
+    var sources = Array.isArray(candidate.sources) ? candidate.sources : [];
+    var source = sources[0] || {};
+    document.getElementById('fsSourceSummary').textContent =
+      (gate.valid === true ? '来源目录有效' : gate.valid === false ? '来源目录未通过' : '来源目录未核验')
+      + ' · 公开来源 ' + knownCount(gate.source_count)
+      + ' · 候选 ' + knownCount(gate.candidate_count)
+      + ' · 可启动 ' + knownCount(gate.runnable_count)
+      + ' · 已封存污染试验 ' + knownCount(gate.contaminated_trial_count);
+    document.getElementById('fsSourceCandidate').textContent = candidate.candidate_id
+      ? (source.upstream_factor || candidate.name || candidate.candidate_id)
+        + ' · ' + candidateEvidenceLabel(candidate.status)
+      : '尚无已登记来源候选';
+    var scout = data.public_source_scout || {};
+    renderScoutQueue(scout);
+    var scoutStatus = String(scout.operational_status || scout.status || 'not_started');
+    if (scoutStatus === 'review_complete_with_source_warnings') {
+      scoutStatus = '已收口（来源限流已留痕）';
+    } else if (scoutStatus === 'review_complete') {
+      scoutStatus = '已收口';
+    } else if (scoutStatus === 'ok') {
+      scoutStatus = '正常';
+    }
+    var draftPipeline = scout.candidate_draft_pipeline || {};
+    var sourceReviewQueue = scout.source_review_queue || {};
+    document.getElementById('fsSourceScout').textContent = scoutStatus === 'not_started'
+      ? '公开来源：尚未取得扫描结果；不能据此确认定时任务已启用'
+      : ('公开来源：发现 ' + knownCount(scout.new_count)
+        + ' 条 · 待人工审核 ' + (Number(sourceReviewQueue.pending_count) || 0)
+        + ' 条 · 待输入合同 ' + (Number(scout.source_contract_pending_count) || 0)
+        + ' 条 · 当前可运行 ' + (Number(draftPipeline.runnable) || 0)
+        + ' 条；详细来源与缺口见下方侦察队列');
+    setSourceLink(
+      'fsSourceRepo', source.source_url,
+      'GitHub @ ' + String(source.commit || '').slice(0, 8),
+    );
+    setSourceLink(
+      'fsSourceLicense', source.license_url,
+      source.license ? '许可证 ' + source.license : '许可证',
+    );
+    setSourceLink('fsSourcePaper', source.paper_url, '原论文');
+    var frontier = data.source_frontier || {};
+    var priorities = Array.isArray(frontier.next_input_priority)
+      ? frontier.next_input_priority : [];
+    var nextInput = priorities[0] || {};
+    var frontierHeadline = frontier.operational_status === 'input_readiness_contract_freeze'
+      ? '官方PIT终局材料已收口：等待输入覆盖与形成期合同冻结'
+      : frontier.operational_status === 'needs_new_hypothesis'
+      ? '本候选新颖性不足已归档：下一条独立假设待研究'
+      : frontier.operational_status === 'multiyear_pit_terminal_evidence_validation'
+      ? '官方PIT终局证据身份异常：已失败关闭'
+      : frontier.operational_status === '2024_official_pit_collection_running'
+      ? '官方多年度PIT输入正在建设：2024首发年报采集中'
+      : frontier.operational_status === '2024_official_pit_collection_complete_terminal_audit_pending'
+      ? '官方多年度PIT输入采集完成：等待终局重解析审计'
+      : frontier.operational_status === 'input_epoch_building'
+      || frontier.operational_status === 'input_epoch_finalizing'
+      || frontier.operational_status === 'primary_input_epoch_complete_summary_repair_pending'
+      ? '新独立来源已发现：正在构建股东户数 PIT 输入'
+      : frontier.operational_status === 'source_hypotheses_exhausted'
+      ? '本轮来源研究已收口：等待登记新的独立经济假设'
+      : ('下一条独立输入：' + (nextInput.dataset || '等待新数据'));
+    document.getElementById('fsSourceFrontier').textContent = frontier.available === true
+      ? (frontierHeadline
+        + (frontier.next_compute_action ? ' · 下一步：' + operationalText(frontier.next_compute_action) : ''))
+      : '下一条独立输入路径暂不可读 · 当前不启动计算';
+  }
+
+  function renderRecentResearch(data) {
+    var recent = data.recent_sealed_research || {};
+    var items = Array.isArray(recent.items) ? recent.items : [];
+    var box = document.getElementById('fsRecentResearch');
+    document.getElementById('fsRecentMeta').textContent = items.length
+      ? items.length + ' 条 · 最新 ' + shortStamp(recent.latest_at) + ' · 当前未准入；文件缺失 ' + (recent.missing_count == null ? '未知' : recent.missing_count) + ' / 不可读 ' + (recent.unreadable_count == null ? '未知' : recent.unreadable_count)
+      : recent.status === 'files_missing' ? '列出的历史报告文件缺失，尚未恢复'
+      : recent.status === 'unreadable' ? '历史报告不可读取，请检查文件完整性'
+      : '封存报告状态未完整提供，不能据此判定没有研究';
+    if (!items.length) {
+      box.innerHTML = '<div class="fs-empty">尚未读取到结果完整且哈希可核对的新增研究档案。</div>';
+      return;
+    }
+    box.innerHTML = items.map(function (item) {
+      var metrics = item.metrics || {};
+      var verdict = item.historical_factor_gate_evaluated !== true ? '尚未完成历史评估'
+        : item.historical_factor_gate_passed === true ? '历史评估通过 · 当前未准入' : '历史评估未通过';
+      return '<article class="fs-recent-card">'
+        + '<h3>' + esc(item.display_name || item.candidate_id || '未命名因子') + '</h3>'
+        + '<span class="verdict">' + esc(verdict) + '</span>'
+        + '<div class="fs-recent-metrics">'
+        + '<span>终段样本<b>' + esc(metrics.sample_count == null ? '—' : metrics.sample_count + (metrics.sample_unit || '')) + '</b></span>'
+        + '<span>平均 IC<b class="' + sgn(metrics.mean_rank_ic) + '">' + fmt(metrics.mean_rank_ic, 4, false) + '</b></span>'
+        + '<span>成本后价差<b class="' + sgn(metrics.net_spread_after_full_base_cost) + '">' + fmt(metrics.net_spread_after_full_base_cost, 2, true) + '</b></span>'
+        + '<span>95% 下界<b class="' + sgn(metrics.bootstrap_95pct_lower_net_base_spread) + '">' + fmt(metrics.bootstrap_95pct_lower_net_base_spread, 2, true) + '</b></span>'
+        + '</div><div class="fs-recent-proof">' + esc(item.report_path || '') + '<br>SHA256 ' + esc(String(item.report_sha256 || '').slice(0, 16)) + '… · 失败分段 ' + esc(metrics.failed_split_count == null ? '—' : metrics.failed_split_count) + ' · 失败项 ' + esc(metrics.failed_gate_count == null ? '—' : metrics.failed_gate_count) + '</div></article>';
+    }).join('');
+  }
+
+  function renderLeaderLimitProgram(data) {
+    var program = data.leader_limit_program || {};
+    var counts = program.headline || {};
+    var countBox = document.getElementById('fsEmotionCounts');
+    var currentBox = document.getElementById('fsEmotionCurrent');
+    var factorBox = document.getElementById('fsEmotionFactor');
+    var matrixBox = document.getElementById('fsEmotionMatrix');
+    var playbookBox = document.getElementById('fsPlaybookLibrary');
+    var tacticBox = document.getElementById('fsTacticProof');
+    var alertBox = document.getElementById('fsEmotionAlert');
+    var errors = Array.isArray(program.integrity_errors) ? program.integrity_errors : [];
+    if (!program.schema || errors.length) {
+      countBox.innerHTML = '<div class="fs-empty">情绪分格证据读取失败；所有因子、战法与提醒均按不可用处理。</div>';
+      currentBox.textContent = '当前情绪路线不可核验；不启用任何入场战法。';
+      factorBox.textContent = errors.length ? '证据完整性错误：' + errors.join('；') : '尚未取得情绪分格证据。';
+      matrixBox.innerHTML = '';
+      playbookBox.innerHTML = '<div class="fs-empty">战法规则库不可核验。</div>';
+      tacticBox.innerHTML = '';
+      alertBox.textContent = '提醒权 0 · 证据不完整';
+      return;
+    }
+    countBox.innerHTML = [
+      ['历史通过情绪格', Number(counts.historically_applicable_factor_state_count || 0)],
+      ['正式辅助因子', Number(counts.production_auxiliary_factor_count || 0)],
+      ['正式入场战法', Number(counts.production_entry_tactic_count || 0)],
+      ['买卖提醒', Number(counts.buy_sell_alert_count || 0)],
+    ].map(function (row) {
+      return '<div class="fs-emotion-count"><span>' + esc(row[0]) + '</span><strong>' + esc(row[1]) + '</strong></div>';
+    }).join('');
+    alertBox.textContent = Number(counts.buy_sell_alert_count || 0)
+      ? '存在已授权提醒' : '提醒权 0 · 不伪造买卖点';
+
+    var factor = program.factor || {};
+    var historicalStates = Array.isArray(factor.historically_applicable_states)
+      ? factor.historically_applicable_states : [];
+    var stateLabels = {
+      RISK_OFF: '风险关闭', STABILIZING: '弱修复', RISK_ON: '情绪上升',
+      OVERHEATED: '高潮拥挤', TRANSITION_TO_RISK: '退潮',
+    };
+    factorBox.innerHTML = '<strong>' + esc(factor.label || factor.id || '辅助因子') + '</strong>'
+      + '只参与候选排序，不阻塞市场→板块→账户→战法主链。历史适用情绪：'
+      + esc(historicalStates.map(function (state) { return stateLabels[state] || state; }).join('、') || '无')
+      + '；同状态前向 ' + esc(factor.forward_completed_weekly_labels == null ? '0' : factor.forward_completed_weekly_labels)
+      + '/' + esc(factor.forward_required_weekly_labels_in_same_state == null ? '—' : factor.forward_required_weekly_labels_in_same_state)
+      + ' 周；当前仍非 production，不产生提醒。年份仅用于样本外分段。';
+    if (factor.historical_claim_reason) {
+      factorBox.insertAdjacentHTML('beforeend', '<p>' + esc(factor.historical_claim_reason) + '</p>');
+    }
+
+    var states = Array.isArray(program.states) ? program.states : [];
+    var decision = (latestMarketContext || {}).decision_state || {};
+    var currentRoute = String(decision.state || '');
+    var currentState = states.find(function (row) { return row.route_state === currentRoute; });
+    if (currentState) {
+      var currentPlaybooks = (currentState.playbooks || []).map(function (row) { return row.label; });
+      var releaseSnapshot = latestMarketContext.account_access === false || (decision.observation_source || {}).full_runtime_chain_present === false;
+      currentBox.innerHTML = '<strong>' + (releaseSnapshot ? '历史研究快照：' : '最近完成交易日：') + esc(currentState.label) + ' · ' + esc(decision.as_of || latestMarketContext.as_of || '时间待核验') + '</strong><br>'
+        + (releaseSnapshot ? '仅按原记录日期展示；本页未核实时新鲜度，不读取账户，不作为今日交易依据。<br>' : '')
+        + '该历史状态的研究路线：' + esc(currentState.posture || '等待核验') + '；对应中文战法：'
+        + esc(currentPlaybooks.join('、') || '无')
+        + '。这些仍是研究规则；当前正式入场战法 0 项、买卖提醒 0 条，不能据此直接下单。';
+    } else if (latestMarketContext) {
+      currentBox.innerHTML = '<strong>历史研究情绪暂不可读取或未通过路线核验</strong><br>尚不能据此判断今日市场；可重新读取研究状态。';
+    } else {
+      currentBox.textContent = '正在读取最近完成交易日的情绪与对应战法…';
+    }
+    matrixBox.innerHTML = states.map(function (row) {
+      var metrics = row.factor_metrics || {};
+      var applicable = row.factor_historical_state_applicable === true;
+      var auxiliary = row.auxiliary_signal || {};
+      var playbookNames = (row.playbooks || []).map(function (playbook) { return playbook.label; });
+      var factorEvidence = applicable
+        ? esc(auxiliary.status_label || '辅助因子历史通过') + ' · 验证 ' + esc(metrics.validation_weeks == null ? '—' : metrics.validation_weeks)
+          + ' 周 / 终段 ' + esc(metrics.sealed_weeks == null ? '—' : metrics.sealed_weeks)
+          + ' 周 · 终段成本后价差 ' + fmt(metrics.sealed_top_minus_bottom_after_20bp, 2, true)
+          + ' · 前向 ' + Number(row.factor_forward_completed || 0) + '/' + Number(row.factor_forward_required || 0)
+        : esc(auxiliary.status_label || row.factor_reason || '该情绪格不可用');
+      return '<article class="fs-emotion-cell ' + (applicable ? 'is-factor-pass ' : '') + (row.route_state === currentRoute ? 'is-current' : '') + '">'
+        + '<h3>' + esc(row.label || '未命名情绪') + (row.route_state === currentRoute ? ' · 历史快照对应状态' : '') + '</h3>'
+        + '<span class="route">应对路线 · ' + esc(row.posture || '等待核验') + '</span>'
+        + '<p><strong>战法结论</strong><br>' + esc(row.tactic_reason || '尚无战法结论') + '</p>'
+        + '<span class="playbooks"><b>本状态研究战法：</b>' + esc(playbookNames.join('、') || '无') + '</span>'
+        + '<span class="factor"><b>本状态辅助项：</b>' + esc(auxiliary.label || factor.label || '无') + '<br>'
+        + esc(auxiliary.characteristic || '') + '<br><b>证据状态：</b>' + factorEvidence + '</span></article>';
+    }).join('') || '<div class="fs-empty">没有可核验的情绪路由格。</div>';
+
+    var library = program.playbook_library || {};
+    var playbooks = Array.isArray(library.playbooks) ? library.playbooks : [];
+    playbookBox.innerHTML = playbooks.map(function (row) {
+      return '<article class="fs-playbook-card"><header><h3>' + esc(row.label || '未命名战法') + '</h3><span>研究规则 · 尚未投产</span></header>'
+        + '<dl><div><dt>特点</dt><dd>' + esc(row.characteristic || '—') + '</dd></div>'
+        + '<div><dt>什么时候才考虑</dt><dd>' + esc(row.consider_when || '—') + '</dd></div>'
+        + '<div><dt>入场 / 处置方式</dt><dd>' + esc(row.entry_method || '—') + '</dd></div>'
+        + '<div><dt>明确避开</dt><dd>' + esc(row.avoid_when || '—') + '</dd></div>'
+        + '<div><dt>失效条件</dt><dd>' + esc(row.invalidation || '—') + '</dd></div></dl></article>';
+    }).join('') || '<div class="fs-empty">当前没有可核验的中文战法规则库。</div>';
+
+    var tactics = Array.isArray(program.tactics) ? program.tactics : [];
+    tacticBox.innerHTML = tactics.map(function (row) {
+      var validation = row.validation_10bp || {};
+      var sealed = row.sealed_10bp || {};
+      return '<article><strong>' + esc(row.label || '未命名规则') + ' · 终段失败 · 禁止使用</strong>'
+        + '<span><b>特点：</b>' + esc(row.characteristic || '—') + '<br><b>曾考虑条件：</b>' + esc(row.consider_when || '—')
+        + '<br><b>当时的入场规则：</b>' + esc(row.entry_method || '—') + '<br><b>失效条件：</b>' + esc(row.invalidation || '—') + '</span>'
+        + '<span class="proof-metrics">验证段 ' + esc(validation.trades == null ? '—' : validation.trades) + ' 笔：均值 '
+        + fmt(validation.mean_net_return, 2, true) + ' / 中位数 ' + fmt(validation.median_net_return, 2, true)
+        + ' / PF ' + fmt(validation.profit_factor, 3, false) + '<br>封闭终段 '
+        + esc(sealed.trades == null ? '—' : sealed.trades) + ' 笔：均值 '
+        + fmt(sealed.mean_net_return, 2, true) + ' / 中位数 ' + fmt(sealed.median_net_return, 2, true)
+        + ' / PF ' + fmt(sealed.profit_factor, 3, false) + '；永久封存，不改名复活。</span></article>';
+    }).join('');
+  }
+
+  function renderFocus(data) {
+    var workflow = workflowState(data);
+    var lock = data.research_lock || {};
+    var runtime = workflow.runtime || {};
+    var daemon = data.daemon || {};
+    var state = String(workflow.stage_status || 'pacing').toLowerCase();
+    var recent = data.recent_sealed_research || {};
+    var onDemandResearch = Number(recent.count) > 0
+      && recent.automatic_mining_running === false;
+    var supervisorOnline = executionEvidence(data).online;
+    var runtimeActive = supervisorOnline && daemon.progress_fresh !== false
+      && (runtime.active === true || ['running', 'active'].indexOf(state) >= 0);
+    var failed = ['failed', 'error'].indexOf(state) >= 0;
+    var blockers = Array.isArray(workflow.blockers) ? workflow.blockers : [];
+    if (onDemandResearch && !supervisorOnline) {
+      blockers = blockers.filter(function (item) {
+        return String((item && item.code) || '').indexOf('daemon_') !== 0;
+      });
+    }
+    var readiness = data.forward_shadow_readiness || {};
+    if (readiness.production_catalog_error) {
+      blockers = blockers.concat([{
+        code: 'production_catalog_unavailable',
+        message: '生产消费目录复核失败：' + readiness.production_catalog_error,
+        system_fault: true,
+      }]);
+    }
+    var systemFaults = blockers.filter(function (item) {
+      return item && item.system_fault !== false;
+    });
+    var researchClosed = state === 'waiting'
+      && String(workflow.current_stage || '') === 'needs_new_hypothesis';
+    var badgeClass = failed ? 'error'
+      : (researchClosed ? (supervisorOnline ? 'online' : 'stopped')
+      : (runtimeActive ? 'running' : (supervisorOnline ? 'online' : 'stopped')));
+    var badgeText = failed ? '当前失败' : (researchClosed
+      ? (supervisorOnline ? '因子进程在线 · 后续调度待核验' : '来源侦察离线')
+      : (runtimeActive ? '真实任务执行中'
+      : (supervisorOnline ? '自动研究进程在线'
+        : (onDemandResearch ? '按需研究 · 无空转' : '自动研究进程未运行'))));
+    var badgeEl = document.getElementById('fsCommandBadge');
+    badgeEl.className = 'fs-badge ' + badgeClass;
+    badgeEl.querySelector('.label').textContent = badgeText;
+    document.getElementById('fsCommand').dataset.state = failed ? 'failed'
+      : (systemFaults.length ? 'blocked' : (supervisorOnline ? 'online' : 'blocked'));
+
+    var faultText = systemFaults.map(function (item) {
+      return typeof item === 'string' ? item : (item && item.message);
+    }).filter(Boolean).join('；');
+    var taskState = failed ? '当前失败' : (researchClosed
+      ? (supervisorOnline ? '进程在线 · 任务待核验' : '来源侦察离线')
+      : (runtimeActive ? '执行中'
+      : (supervisorOnline ? '连续调度中'
+        : (onDemandResearch ? '最新研究已封存' : '等待自动研究进程恢复'))));
+    document.getElementById('fsNow').textContent = researchClosed && !failed
+      ? (supervisorOnline
+        ? '因子进程在线 · 等待新独立假设；调度另行核验'
+        : '本轮候选已封存 · 来源侦察离线')
+      : onDemandResearch && !failed && !runtimeActive
+      ? '按需研究已封存 · ' + taskState
+      : stageLabel(workflow.current_stage) + ' · ' + taskState;
+    document.getElementById('fsNowMeta').textContent = onDemandResearch && !supervisorOnline
+      ? ('最近封存 ' + Number(recent.count) + ' 条 · 自动研究进程当前未运行')
+      : ('研究批次 ' + (data.research_epoch || '–') + ' · ' + runtimeSourceLabel(runtime.source));
+    var researchConclusion = researchClosed
+      ? ('原记录：本轮候选已检验并封存；后续来源研究及正式资格须分别核验')
+      : (faultText || (runtimeActive ? '当前研究任务按冻结规则执行' : '当前记录未报告故障'));
+    document.getElementById('fsResearchState').textContent = researchConclusion;
+    var externalResearch = data.external_research || {};
+    document.getElementById('fsResearchStateMeta').textContent = externalResearch.external_paid_api_disabled === true
+      ? '外部付费 API 已禁用；核心研究执行状态另行核验'
+      : (externalResearch.degraded === true
+        ? '外部研究状态降级；核心研究执行状态另行核验'
+        : (lock.busy
+        ? '当前写锁：PID ' + (lock.pid || '未知') + (lock.acquired_at ? ' · 自 ' + shortStamp(lock.acquired_at) : '')
+        : (lock.busy === false ? '当前写锁可用；历史错误仅在研究档案展示' : '写锁状态未提供；不能推断可用')));
+
+    var currentCounts = ((((workflow.counts || {}).current || {}).by_status) || data.registry || {});
+    var sourceGate = data.source_gate || {};
+    var sourceRunnable = Number(sourceGate.runnable_count) || 0;
+    var production = Number(readiness.verified_production_count) || 0;
+    var observedDays = Number(readiness.observed_days) || 0;
+    var requiredDays = Number(readiness.required_days) || 0;
+    var autoDeploy = readiness.auto_deploy_on_all_gates_pass === true
+      && readiness.manual_promotion_required === false;
+    document.getElementById('fsNext').textContent = production > 0
+      ? '已通过 · ' + production + ' 个因子已进入正式前向观察'
+      : sourceRunnable === 0
+        ? '当前无可启动候选 · 正式因子 0 个'
+      : '等待前向证据 · 正式因子 0 个 · 已观察 ' + observedDays + '/' + (requiredDays || '–') + ' 日';
+    var nextMeta = autoDeploy
+      ? '正式策略状态由完整证据链写入；不授权自动交易'
+      : '正式策略证据尚未完整；不授权自动交易';
+    if (workflow.next_action) nextMeta += ' · 原记录建议：' + operationalText(workflow.next_action);
+    document.getElementById('fsNextMeta').textContent = nextMeta;
+    var collection = data.active_candidate_collection || {};
+    var auditedInput = data.active_candidate_input || {};
+    var factorValues = data.active_candidate_factor_values || {};
+    var historicalValidation = data.active_candidate_historical_validation || {};
+    if (collection.operational_status === 'collecting') {
+      var completed = Number(collection.completed_symbols) || 0;
+      var total = Number(collection.target_symbols) || 0;
+      var remaining = Number(collection.remaining_symbols) || Math.max(0, total - completed);
+      badgeEl.className = 'fs-badge running';
+      badgeEl.querySelector('.label').textContent = '因子原始输入采集中';
+      document.getElementById('fsCommand').dataset.state = 'online';
+      document.getElementById('fsNow').textContent = '隔夜趋势候选 · PIT原始输入采集 ' + completed + '/' + total;
+      document.getElementById('fsNowMeta').textContent = '完成 ' + Number(collection.progress_pct || 0).toFixed(2) + '%'
+        + ' · 剩余 ' + remaining + ' 只 · 当前 ' + (collection.current_code || '等待下一只')
+        + ' · 更新 ' + shortStamp(collection.updated_at);
+      document.getElementById('fsResearchState').textContent = '数据采集正常推进；尚未读取收益或计算因子值';
+      document.getElementById('fsResearchStateMeta').textContent = '只补齐复权日线、复权因子与流通市值；不跑IC、回测或投产';
+      document.getElementById('fsNext').textContent = '采集完成后先做输入完整性审计';
+      document.getElementById('fsNextMeta').textContent = '当前不可运行因子、不生成买卖提醒、不授权自动交易';
+    } else if (historicalValidation.available === true
+        && historicalValidation.terminal === true) {
+      badgeEl.className = 'fs-badge ' + (supervisorOnline ? 'online' : 'stopped');
+      badgeEl.querySelector('.label').textContent = supervisorOnline
+        ? '因子服务在线 · 当前候选已封存'
+        : '当前候选已封存 · 因子服务离线';
+      document.getElementById('fsCommand').dataset.state = supervisorOnline ? 'online' : 'stopped';
+      document.getElementById('fsNow').textContent = '隔夜趋势候选 · 已关闭，不投产';
+      document.getElementById('fsNowMeta').textContent = '因子值保留用于审计 · 缺少退市/换股证券的官方经济结果 · 无年化、回撤或胜率可报告';
+      document.getElementById('fsResearchState').textContent = '成本后历史验证未完成；不能证明该因子有效';
+      document.getElementById('fsResearchStateMeta').textContent = '当前 runnable=0、production=0；不参与评分、买卖提醒或仓位建议';
+      document.getElementById('fsNext').textContent = '转向新的独立因子候选';
+      document.getElementById('fsNextMeta').textContent = '新候选必须先补齐退市、合并换股与继承证券的PIT经济规则；本候选不再重跑';
+    } else if (factorValues.available === true
+        && factorValues.factor_values_computed === true) {
+      badgeEl.className = 'fs-badge done';
+      badgeEl.querySelector('.label').textContent = '因子值已计算并复现';
+      document.getElementById('fsCommand').dataset.state = 'online';
+      document.getElementById('fsNow').textContent = '隔夜趋势候选 · 因子值审计完成';
+      document.getElementById('fsNowMeta').textContent = '全市场月度因子值 '
+        + (Number(factorValues.rows) || 0).toLocaleString('zh-CN') + ' 条 · '
+        + (Number(factorValues.formation_dates) || 0) + ' 个形成月 · 结果 '
+        + String(factorValues.output_sha256 || '').slice(0, 12);
+      document.getElementById('fsResearchState').textContent = '因子值字节已独立复现；尚未读取未来收益或验证预测效力';
+      document.getElementById('fsResearchStateMeta').textContent = '当前 runnable=0、production=0，不生成买卖提醒或仓位建议';
+      document.getElementById('fsNext').textContent = '下一步：冻结成本后验证准入';
+      document.getElementById('fsNextMeta').textContent = '验证前不读取结果、不调参、不投产或交易';
+    } else if (auditedInput.available === true && auditedInput.audit_passed === true) {
+      badgeEl.className = 'fs-badge done';
+      badgeEl.querySelector('.label').textContent = '因子输入审计完成';
+      document.getElementById('fsCommand').dataset.state = 'online';
+      document.getElementById('fsNow').textContent = '隔夜趋势候选 · 输入审计已完成';
+      document.getElementById('fsNowMeta').textContent = '全市场 '
+        + (Number(auditedInput.completed_symbols) || 0) + '/'
+        + (Number(auditedInput.target_symbols) || 0)
+        + ' · 清单 ' + String(auditedInput.input_manifest_sha256 || '').slice(0, 12);
+      document.getElementById('fsResearchState').textContent = '原始输入与独立重建审计已通过；尚未计算因子值或读取收益';
+      document.getElementById('fsResearchStateMeta').textContent = '输入可用于下一阶段研究；当前 runnable=0、production=0，不生成买卖提醒';
+      document.getElementById('fsNext').textContent = '下一步：冻结因子值准入并独立验证';
+      document.getElementById('fsNextMeta').textContent = '不会自动进入回测、投产或交易';
+    }
+    if ((data.registry_health || {}).available === false) {
+      badgeEl.className = 'fs-badge error';
+      badgeEl.querySelector('.label').textContent = data.registry_health.reason === 'missing' ? '旧研究库未恢复' : '研究库不可读取';
+      document.getElementById('fsCommand').dataset.state = 'blocked';
+      document.getElementById('fsResearchState').textContent = data.registry_health.message;
+      document.getElementById('fsNext').textContent = data.registry_health.reason === 'missing'
+        ? '查看上方已保存研究候选；旧库历史数量仍未知' : '因子数量未知 · 不是合格因子为 0';
+      document.getElementById('fsNextMeta').textContent = '原记录建议：' + (workflow.next_action || '未提供');
+    }
+  }
+
+  function errorIsCurrent(zone, st, data) {
+    if (!st || st.status !== 'error') return false;
+    if (data.workflow) {
+      var workflowErrors = Array.isArray(data.workflow.last_errors) ? data.workflow.last_errors : [];
+      var recorded = workflowErrors.find(function (row) {
+        return row.source === zone || row.zone === zone
+          || String(row.code || '').indexOf(zone) >= 0;
+      });
+      if (recorded) return recorded.current === true;
+      var stage = String(data.workflow.current_stage || '');
+      var failed = ['failed', 'error'].indexOf(String(data.workflow.stage_status || '').toLowerCase()) >= 0;
+      if (failed && zone === 'mining') return ['factor_discovery', 'factor_validation'].indexOf(stage) >= 0;
+      if (failed && zone === 'backtest') return stage === 'historical_confirmation';
+      return false;
+    }
+    var daemon = data.daemon || {};
+    if (daemon.current_zone === zone) return true;
+    var errorAt = Date.parse(st.last_error_at || st.updated_at || '');
+    var newerAt = Date.parse((data.research_lock || {}).acquired_at || daemon.updated_at || '');
+    return isNaN(errorAt) || isNaN(newerAt) ? true : errorAt >= newerAt;
+  }
+
+  function renderPipeline(data) {
+    var mining = data.mining || {};
+    var backtest = data.backtest || {};
+    var daemon = data.daemon || {};
+    var metrics = mining.last_metrics || {};
+    var counts = metrics.counts || {};
+    var workflow = workflowState(data);
+    var workflowCurrent = (((workflow.counts || {}).current || {}).by_status) || {};
+    var reg = Object.keys(workflowCurrent).length ? workflowCurrent : (data.registry || {});
+    var sourceGate = data.source_gate || {};
+    var readiness = data.forward_shadow_readiness || {};
+    var sourceCount = Number(sourceGate.source_count) || 0;
+    var sourceCandidates = Number(sourceGate.candidate_count) || 0;
+    var evidenceBased = Number(sourceGate.evidence_based_count) || 0;
+    var implementationPending = Number(sourceGate.implementation_pending_count) || 0;
+    var dataPending = Number(sourceGate.data_pending_count) || 0;
+    var runnable = Number(sourceGate.runnable_count) || 0;
+    var validated = Number(counts.validated) || 0;
+    var registered = (Number(reg.registered) || 0) + (Number(reg.backtesting) || 0)
+      + (Number(reg.historical_pass) || 0) + (Number(reg.production) || 0);
+    var historical = (Number(reg.historical_pass) || 0) + (Number(reg.production) || 0);
+    var production = Number(readiness.verified_production_count) || 0;
+    var observedDays = Number(readiness.observed_days) || 0;
+    var requiredDays = Number(readiness.required_days) || 0;
+    var values = {
+      source: (sourceGate.valid === true ? '目录有效' : '目录未通过') + ' · ' + sourceCount + ' 来源',
+      preregister: evidenceBased + '/' + sourceCandidates + ' 已冻结',
+      reproduce: implementationPending + ' 个待实现 · '
+        + dataPending + ' 个待补数据 · 可启动 ' + runnable,
+      multiple_test: 'L3 入库 ' + validated + ' · 当前有效 ' + registered,
+      blind_oos: '历史通过 ' + historical + ' · 前向标签 ' + observedDays + '/' + requiredDays + '日',
+      production: '正式因子 ' + production + ' · 已观察 ' + observedDays + '/' + requiredDays + '日',
+    };
+    var activeCollection = data.active_candidate_collection || {};
+    var activeInput = data.active_candidate_input || {};
+    var activeFactorValues = data.active_candidate_factor_values || {};
+    if (activeCollection.operational_status === 'collecting') {
+      values.reproduce = '原始输入采集 '
+        + (Number(activeCollection.completed_symbols) || 0) + '/'
+        + (Number(activeCollection.target_symbols) || 0) + ' · 尚未计算因子';
+    } else if (activeFactorValues.available === true
+        && activeFactorValues.factor_values_computed === true) {
+      values.reproduce = '因子值已计算并独立复现 · 等待效力验证 · 尚未投产';
+    } else if (activeInput.available === true && activeInput.audit_passed === true) {
+      values.reproduce = '输入审计完成 · 等待因子值准入 · 尚未投产';
+    }
+    var miningFailed = errorIsCurrent('mining', mining, data);
+    var backtestFailed = errorIsCurrent('backtest', backtest, data);
+    var states = {
+      source: sourceGate.valid === true && sourceCount > 0 ? 'done'
+        : (sourceGate.valid === false ? 'failed' : 'blocked'),
+      preregister: sourceGate.valid === true && sourceCandidates > 0 && evidenceBased > 0 ? 'done' : 'blocked',
+      reproduce: runnable > 0 ? 'done' : 'blocked',
+      multiple_test: runnable > 0 && validated > 0 && registered > 0 && !miningFailed ? 'done' : 'blocked',
+      blind_oos: registered > 0 && historical > 0 && production > 0 && !backtestFailed ? 'done' : 'blocked',
+      production: historical > 0 && production > 0 && !miningFailed && !backtestFailed ? 'done' : 'blocked',
+    };
+    if (activeCollection.operational_status === 'collecting') states.reproduce = 'active';
+    else if (activeFactorValues.available === true
+        && activeFactorValues.factor_values_computed === true) states.reproduce = 'done';
+    else if (activeInput.available === true && activeInput.audit_passed === true) states.reproduce = 'done';
+    var supervisorOnline = executionEvidence(data).online;
+    var progressFresh = daemon.progress_fresh !== false;
+    var daemonWorking = supervisorOnline && progressFresh && daemon.phase === 'work';
+    var inactivePhases = [
+      '', 'pacing', 'done', '\x69\x64\x6c\x65', 'completed',
+      'await_new_input', 'needs_new_hypothesis'
+    ];
+    var miningActive = supervisorOnline && progressFresh
+      && mining.status === 'running' && inactivePhases.indexOf(String(mining.phase || '')) < 0
+      || (daemonWorking && ['source_research', 'source_audit', 'gp', 'full_mining'].indexOf(daemon.current_zone) >= 0);
+    var backtestActive = supervisorOnline && progressFresh
+      && backtest.status === 'running' && inactivePhases.indexOf(String(backtest.phase || '')) < 0
+      || (daemonWorking && daemon.current_zone === 'backtest');
+    if (miningActive && !miningFailed) {
+      if (['source_research', 'source_audit'].indexOf(daemon.current_zone) >= 0) states.reproduce = 'active';
+      else states.multiple_test = 'active';
+    } else if (miningFailed) {
+      states[workflow.current_stage === 'source_research' ? 'reproduce' : 'multiple_test'] = 'failed';
+    }
+    if (backtestActive && !backtestFailed) states.blind_oos = 'active';
+    else if (backtestFailed) states.blind_oos = 'failed';
+    var workflowStage = String(workflow.current_stage || '');
+    var workflowSteps = {
+      source_research: 'reproduce', source_audit: 'reproduce',
+      source_input_epoch: 'reproduce',
+      gp: 'multiple_test', full_mining: 'multiple_test',
+      factor_discovery: 'multiple_test', factor_validation: 'multiple_test',
+      historical_confirmation: 'blind_oos', forward_revalidation: 'blind_oos',
+      forward_shadow: 'blind_oos', forward_monitoring: 'blind_oos',
+    };
+    workflowStage = workflowSteps[workflowStage] || workflowStage;
+    if (Object.prototype.hasOwnProperty.call(states, workflowStage)) {
+      var workflowStatus = String(workflow.stage_status || '').toLowerCase();
+      if (['running', 'active', 'pacing'].indexOf(workflowStatus) >= 0) states[workflowStage] = 'active';
+      else if (['failed', 'error'].indexOf(workflowStatus) >= 0) states[workflowStage] = 'failed';
+      else if (['blocked', 'waiting'].indexOf(workflowStatus) >= 0) states[workflowStage] = 'blocked';
+    }
+    var researchCycleClosed = String(workflow.current_stage || '') === 'needs_new_hypothesis'
+      && String(workflow.stage_status || '').toLowerCase() === 'waiting';
+    if (researchCycleClosed) {
+      Object.keys(states).forEach(function (key) {
+        if (states[key] === 'blocked') states[key] = 'closed';
+      });
+      values.preregister = sourceCandidates + ' 个候选已结束并封存';
+      values.reproduce = '可启动 0 · 当前没有在途实现或数据任务';
+      values.multiple_test = '本轮无通过候选 · 不重复计算';
+      values.blind_oos = '唯一盲测已结束 · 0 个历史通过';
+      values.production = '正式因子 0 · 不参与因子加权；不阻断非因子战法';
+    }
+    var stateNames = {
+      active: '运行中', done: '已通过', failed: '失败',
+      blocked: '等待证据', closed: '当前周期未进入'
+    };
+    if ((data.registry_health || {}).available === false) {
+      ['multiple_test', 'blind_oos', 'production'].forEach(function (key) {
+        values[key] = '研究库不可读取 · 数量未知';
+        states[key] = 'blocked';
+      });
+    }
+    document.querySelectorAll('#fsPipeline .fs-step').forEach(function (step) {
+      var key = step.getAttribute('data-step');
+      var state = states[key] || 'blocked';
+      var activeStep = {source_research: 'reproduce', source_audit: 'reproduce',
+        gp: 'multiple_test', full_mining: 'multiple_test', backtest: 'blind_oos', revalidate: 'blind_oos'}[daemon.current_zone];
+      if (state === 'active' && (!supervisorOnline || daemon.phase !== 'work' || key !== activeStep)) state = 'blocked';
+      if (['source', 'preregister', 'reproduce'].indexOf(key) >= 0 && !Object.keys(sourceGate).length) {
+        values[key] = '来源计数未核验';
+        state = 'blocked';
+      }
+      step.querySelector('.fs-step-v').textContent = values[key] || '–';
+      step.classList.remove('active', 'done', 'failed', 'blocked', 'closed');
+      step.classList.add(state);
+      step.dataset.state = state;
+      step.toggleAttribute('aria-current', state === 'active');
+      step.setAttribute('aria-label', step.querySelector('.fs-step-k').textContent + '：'
+        + (values[key] || '–') + '，' + stateNames[state]);
+    });
+    var note = document.getElementById('fsPipelineNote');
+    if (note) {
+      var lock = data.research_lock || {};
+      note.textContent = (supervisorOnline
+          ? '自动研究进程在线 · 当前任务：' : '当前任务：')
+        + stageLabel(workflow.current_stage)
+        + (workflow.version ? ' · v ' + workflow.version : '')
+        + (workflow.as_of ? ' · 截至 ' + shortStamp(workflow.as_of) : '');
+      if (lock.busy) {
+        note.textContent += ' · 写锁 PID ' + (lock.pid || '未知');
+      }
+    }
+  }
+
+  function renderZone(el, zone, data) {
+    var st = data[zone] || {};
+    var status = statusName(st);
+    var currentError = errorIsCurrent(zone, st, data);
+    var daemon = data.daemon || {};
+    var supervisorOnline = executionEvidence(data).online;
+    var daemonOwnsZone = supervisorOnline && daemon.progress_fresh !== false
+      && daemon.phase === 'work'
+      && (zone === 'mining'
+        ? ['source_research', 'source_audit', 'gp', 'full_mining'].indexOf(daemon.current_zone) >= 0
+        : daemon.current_zone === 'backtest');
+    var inactivePhases = ['', 'pacing', 'done', '\x69\x64\x6c\x65', 'completed'];
+    var zoneTaskActive = status === 'running'
+      && inactivePhases.indexOf(String(st.phase || '')) < 0
+      && daemonOwnsZone;
+    var waiting = status === 'waiting'
+      || ['await_new_input', 'needs_new_hypothesis'].indexOf(String(st.phase || '')) >= 0;
+    var visualStatus = status === 'error'
+      ? (currentError ? 'error' : 'history')
+      : (waiting ? 'waiting'
+        : (zoneTaskActive || (status === 'active' && daemonOwnsZone) ? 'running'
+        : (status === 'stopped' ? 'stopped' : (supervisorOnline ? 'pacing' : 'unknown'))));
+    var badgeEl = el.querySelector('.fs-badge');
+    badgeEl.className = 'fs-badge ' + (visualStatus === 'waiting' ? 'stopped' : visualStatus);
+    badgeEl.querySelector('.label').textContent = {
+      running: '真实任务执行中',
+      pacing: '进程在线 · 等待任务',
+      unknown: '运行状态未核验',
+      waiting: supervisorOnline && String(st.phase || '') === 'needs_new_hypothesis'
+        ? '进程在线 · 等待新假设' : '等待新假设',
+      error: '当前失败',
+      history: '最近失败',
+      stopped: '已停止',
+    }[visualStatus] || '运行状态未核验';
+    var phase = el.querySelector('.fs-phase');
+    phase.textContent = (supervisorOnline ? '' : '原记录：') + operationalText(st.phase)
+      + (st.detail ? ' · ' + operationalText(st.detail) : '');
+    var metas = el.querySelectorAll('.fs-meta');
+    var vals = ['–','–','–','–'];
+    if (st.current_batch) vals[0] = st.current_batch;
+    if (st.last_success) vals[1] = String(st.last_success).replace('T', ' ');
+    if (zone === 'mining') {
+      var metrics = st.last_metrics || {};
+      vals[2] = knownCount((metrics.search || {}).fitness_evaluated) + ' / ' + knownCount(metrics.candidates);
+      vals[3] = knownCount((metrics.counts || {}).validated) + ' / ' + knownCount(st.queue_depth);
+    } else {
+      vals[2] = knownCount(st.queue_depth);
+      vals[3] = knownCount((data.registry || {}).historical_pass);
+    }
+    metas.forEach(function (m, i) { m.querySelector('.v').textContent = vals[i]; });
+    var resEl = el.querySelector('.fs-zone-res');
+    if (!supervisorOnline) {
+      resEl.textContent = '当前运行与资源未核验；上方计数为既有记录，缺失值以 — 表示。';
+    } else if (waiting) {
+      resEl.textContent = '无计算任务 · 上次任务资源样本已隐藏，避免误作当前负载';
+    } else if (st.resources && st.resources.mem_pct !== undefined) {
+      resEl.textContent = '机器资源快照：CPU '
+        + (st.resources.cpu_pct !== undefined ? st.resources.cpu_pct + '%' : '–') +
+        ' · 内存 ' + st.resources.mem_pct + '% (' + (st.resources.mem_used_gb || 0) + 'G/' + (st.resources.mem_total_gb || 0) + 'G)';
+    } else {
+      resEl.textContent = st.resources && st.resources.mem_note ? st.resources.mem_note : '资源监控不可用';
+    }
+    var errEl = el.querySelector('.fs-zone-err');
+    if (currentError && st.last_error) {
+      errEl.textContent = '当前失败 [' + (st.last_error_at || '') + ']\n' + st.last_error;
+      errEl.classList.add('show');
+    } else {
+      errEl.classList.remove('show');
+    }
+  }
+
+  function zoneLabel(z) {
+    if (!z) return '–';
+    var m = { source_research: '公开来源复现', source_audit: '来源审计',
+              gp: '有来源候选检验', backtest: '历史确认', revalidate: '新数据再验证',
+              full_mining: '全量批', memory_recovery: '资源恢复',
+              pacing: '连续发现调度', guard: '资源守卫', exit: '退出' };
+    return m[z] || operationalText(z);
+  }
+  function renderDaemon(el, data) {
+    var d = data.daemon || {};
+    var st = d.daemon || 'unknown';
+    var evidence = executionEvidence(data);
+    var live = evidence.online;
+    var workflow = data.workflow || {};
+    var runtime = workflow.runtime || {};
+    var intentionalWaiting = !live
+      && ['await_new_input', 'needs_new_hypothesis'].indexOf(String(workflow.current_stage || '')) >= 0
+      && runtime.supervisor_required === false;
+    var stalled = live && d.progress_fresh === false;
+    var cls = d.operational_state === 'error' || st === 'error' || stalled
+      ? 'error' : (live ? 'online' : (intentionalWaiting ? 'waiting' : 'stopped'));
+    var badgeEl = el.querySelector('.fs-badge');
+    badgeEl.className = 'fs-badge ' + (cls === 'waiting' ? 'stopped' : cls);
+    var lbl = {
+      online: '自动研究进程在线',
+      waiting: '按需待机',
+      stopped: evidence.known ? '未核实有在线因子进程' : '因子进程状态未核验',
+      error: '当前异常',
+    }[cls];
+    badgeEl.querySelector('.label').textContent = lbl;
+    if (cls === 'online') badgeEl.querySelector('.dot').style.animation = '';
+    el.querySelector('.fs-phase').textContent = (live ? '' : '原记录：') + zoneLabel(d.current_zone)
+      + (d.next_plan ? ' · ' + operationalText(d.next_plan) : '');
+    var vals = [zoneLabel(d.current_zone), '–', '–',
+      d.next_plan ? '原记录：' + operationalText(d.next_plan) : '尚无已核验计划'];
+    if (d.rounds !== undefined) vals[1] = String(d.rounds) + (d.errors ? ' / ' + d.errors : '');
+    if (d.updated_at) vals[2] = String(d.updated_at).slice(11, 19);
+    el.querySelectorAll('.fs-meta').forEach(function (m, i) { m.querySelector('.v').textContent = vals[i]; });
+    var res = d.resources || {};
+    var base = live ? '研究进程内存 ' + knownCount(d.mem_gb) + 'G' : '当前进程负载未核验（以下为原记录）';
+    if (res.mem_pct !== undefined) {
+      base += ' · 机器 CPU ' + (res.cpu_pct !== undefined ? res.cpu_pct + '%' : '–') + ' · 内存 ' + res.mem_pct + '% (' + (res.mem_used_gb || 0) + 'G/' + (res.mem_total_gb || 0) + 'G)';
+    } else if (res.mem_note) {
+      base += ' · ' + res.mem_note;
+    }
+    if (d.next_run_at) base += ' · 原计划时间 ' + shortStamp(d.next_run_at);
+    if (intentionalWaiting) base += ' · 无任务时不常驻';
+    else if (!live && d.status_reason === 'process_unavailable') base += ' · 进程不存在';
+    if (!live && d.status_reason === 'heartbeat_stale') base += ' · 心跳已过期';
+    var lock = data.research_lock || {};
+    if (lock.busy) {
+      base += ' · 研究写锁忙' + (lock.pid ? ' PID ' + lock.pid : '')
+        + (lock.acquired_at ? '（自 ' + shortStamp(lock.acquired_at) + '）' : '');
+    } else if (Object.prototype.hasOwnProperty.call(lock, 'busy')) {
+      base += ' · 研究写锁可用';
+    }
+    el.querySelector('.fs-zone-res').textContent = base;
+    var errEl = el.querySelector('.fs-zone-err');
+    if (st === 'error' && d.last_error) {
+      errEl.textContent = '当前自动研究进程错误 [' + (d.last_error_at || '') + ']\n' + d.last_error;
+      errEl.classList.add('show');
+    } else {
+      errEl.classList.remove('show');
+    }
+  }
+
+  function renderDiagnostics(data) {
+    var workflow = data.workflow || {};
+    var rows = Array.isArray(workflow.last_errors) ? workflow.last_errors.slice() : [];
+    if (!rows.length) {
+      ['mining', 'backtest', 'daemon'].forEach(function (source) {
+        var item = data[source] || {};
+        if (item.last_error) rows.push({
+          source: source,
+          at: item.last_error_at || item.updated_at || '',
+          message: item.last_error,
+          current: source === 'daemon' ? item.daemon === 'error' : errorIsCurrent(source, item, data),
+        });
+      });
+    }
+    var lock = data.research_lock || {};
+    var lines = [lock.busy
+      ? '当前写锁：PID ' + (lock.pid || '未知') + (lock.acquired_at ? '，自 ' + shortStamp(lock.acquired_at) : '')
+      : '当前写锁：可用'];
+    if (!rows.length) lines.push('最近错误记录：无');
+    rows.forEach(function (row) {
+      lines.push((row.current ? '当前错误' : '历史错误') + ' · ' + (row.source || row.zone || row.code || 'unknown')
+        + (row.at || row.timestamp ? ' · ' + shortStamp(row.at || row.timestamp) : '')
+        + '：' + (row.message || row.error || '未提供错误详情'));
+    });
+    document.getElementById('fsRecentErrors').textContent = lines.join('\n');
+  }
+
+  function compareFactors(a, b) {
+    var rank = { production: 0, historical_pass: 1, backtesting: 2, registered: 3,
+                 validated: 4, candidate: 5, frozen: 6, rejected: 7, invalidated: 8 };
+    var aInvalid = a.status === 'invalidated' ? 1 : 0;
+    var bInvalid = b.status === 'invalidated' ? 1 : 0;
+    if (aInvalid !== bInvalid) return aInvalid - bInvalid;
+    var aCurrent = !!a.research_epoch && a.research_epoch === (a.current_research_epoch || currentResearchEpoch);
+    var bCurrent = !!b.research_epoch && b.research_epoch === (b.current_research_epoch || currentResearchEpoch);
+    if (aCurrent !== bCurrent) return aCurrent ? -1 : 1;
+    var statusDiff = (rank[a.status] === undefined ? 99 : rank[a.status])
+      - (rank[b.status] === undefined ? 99 : rank[b.status]);
+    if (statusDiff) return statusDiff;
+    var updatedDiff = String(b.updated_at || '').localeCompare(String(a.updated_at || ''));
+    return updatedDiff || String(a.factor_id || '').localeCompare(String(b.factor_id || ''));
+  }
+
+  function isCurrentEpochFactor(factor) {
+    var epoch = factor.research_epoch;
+    var expected = currentResearchEpoch || factor.current_research_epoch;
+    var builtin = factor.builtin === true || factor.source_status === 'builtin'
+      || factor.registry_source === 'builtin';
+    return !builtin && factor.status !== 'invalidated' && !!epoch && !!expected && epoch === expected
+      && WORK_STATUSES.indexOf(factor.status) >= 0;
+  }
+
+  function currentEmptyMessage() {
+    if (((latestStatus || {}).registry_health || {}).available === false) {
+      return '研究库不可读取；恢复数据前无法判断当前筛选的因子数量。';
+    }
+    var sourceGate = (latestStatus || {}).source_gate || {};
+    if (sourceGate.valid === true && Number(sourceGate.runnable_count) === 0) {
+      var sourceCandidates = sourceGate.candidates || [];
+      var candidate = sourceCandidates.find(function (row) {
+        return row && row.actionable === true
+          && ['data_pending', 'implementation_pending'].indexOf(row.status) >= 0;
+      });
+      if (!candidate) {
+        return '来源目录有效；当前 ' + (Number(sourceGate.candidate_count) || 0)
+          + ' 个候选均已封存或关闭，可启动 0；等待新的独立假设；调度状态另行核验；'
+          + (Number(sourceGate.legacy_unsourced_count) || 0)
+          + ' 条旧候选因来源无证明而不可用。';
+      }
+      var source = (candidate.sources || [])[0] || {};
+      var label = candidate.name || source.upstream_factor || '当前候选';
+      var gap = candidate.status === 'data_pending'
+        ? '公式已核对，但可信复权输入和月频成本评估仍待完成'
+        : '实现或输入证据仍待完成';
+      return '来源目录有效；' + label + ' ' + gap + '，因此还不能启动回测；'
+        + (Number(sourceGate.legacy_unsourced_count) || 0)
+        + ' 条旧候选因来源无证明而不可用。';
+    }
+    var mining = (latestStatus || {}).mining || {};
+    var metrics = mining.last_metrics || {};
+    var evaluated = Number((metrics.search || {}).fitness_evaluated) || 0;
+    var candidates = Number(metrics.candidates) || 0;
+    if (evaluated > 0 && candidates === 0) {
+      return '本轮 ' + evaluated + ' 个实评、0 候选；无可回测对象。';
+    }
+    return curFilter === 'all' ? '当前研究批次暂无在途因子。' : '当前筛选没有在途因子。';
+  }
+
+  function renderTable() {
+    var body = document.getElementById('fsBody');
+    body.innerHTML = '';
+    var list = factors.filter(function (f) {
+      return isCurrentEpochFactor(f) && statusMatches(f.status, curFilter);
+    })
+      .slice().sort(compareFactors);
+    var empty = document.getElementById('fsEmpty');
+    var emptyMessage = loadErrors.current && !list.length
+      ? '当前因子加载失败：' + loadErrors.current : currentEmptyMessage();
+    empty.style.display = list.length || pages.current.loading ? 'none' : 'block';
+    empty.textContent = emptyMessage;
+    document.getElementById('fsCurrentNote').textContent = emptyMessage;
+    var loading = document.getElementById('fsLoading');
+    loading.style.display = pages.current.loading ? 'flex' : 'none';
+    loading.lastChild.nodeValue = pages.current.loading ? ' 加载当前因子…' : '';
+    list.forEach(function (f) {
+      var tr = document.createElement('tr');
+      var ls = f.long_short_annualized, icr = f.is_ic_ir, oir = f.oos_ic_ir, rt = f.ic_retention;
+      var ev = null;
+      var evidenceParseError = '';
+      try {
+        ev = typeof f.backtest_evidence === 'string'
+          ? JSON.parse(f.backtest_evidence) : (f.backtest_evidence || null);
+      } catch (e) {
+        evidenceParseError = '回测证据 JSON 无法解析：' + (e.message || String(e));
+      }
+      // 多折通过率：优先 evidence，回退到列值
+      var fp = ev && ev.fold_pass ? ev.fold_pass : null;
+      if (!fp && Number(f.fold_count) > 0) {
+        fp = { passed: Number(f.fold_passed) || 0, n_folds: Number(f.fold_count),
+               pass_rate: (Number(f.fold_passed) || 0) / Number(f.fold_count) };
+      }
+      var foldTxt = '–';
+      if (fp && fp.n_folds) {
+        foldTxt = fp.passed + '/' + fp.n_folds + ' (' + (fp.pass_rate * 100).toFixed(0) + '%)';
+      } else if (f.backtest_fold_pass_rate !== null && f.backtest_fold_pass_rate !== undefined) {
+        foldTxt = fmt(f.backtest_fold_pass_rate, 2, true);
+      }
+      var tstat = ev && ev.full ? ev.full.t_stat : f.backtest_t_stat;
+      // C4 组合层换手 KPI：日均换手率 + >15% 净收益杀手预警（Web 研究阈值）
+      var churn = ev && ev.full ? ev.full.signal_churn : f.signal_churn;
+      var churnFlag = ev && ev.full ? !!ev.full.churn_flag : !!f.churn_flag;
+      // NO-GO 原因：优先具体失败项，再回退状态原因
+      var reason = f.audit_message || f.status_reason || evidenceParseError || '';
+      if (ev && ev.checks) {
+        var fails = Object.keys(ev.checks).filter(function (k) { return !ev.checks[k]; });
+        if (fails.length) reason = 'NO-GO: ' + fails.join(', ');
+      } else if (Array.isArray(f.failed_checks) && f.failed_checks.length) {
+        reason = 'NO-GO: ' + f.failed_checks.join(', ');
+      }
+      tr.innerHTML =
+        '<td class="fid fs-core fs-core-id" title="技术标识：' + escAttr(f.factor_id || '') + '"><strong class="fs-factor-name">' + esc(factorDisplayName(f)) + '</strong><span class="fs-factor-description">特点：' + esc(factorDescription(f)) + '</span>' + sourceBadge(f.source_gate) + '</td>' +
+        '<td class="fm fs-detail-col">' + esc(f.family || '') + '</td>' +
+        '<td class="fs-core fs-core-status">' + badge(f.status) + '</td>' +
+        '<td class="num fs-detail-col ' + sgn(f.is_ic_mean) + '">' + fmt(f.is_ic_mean, 4) + '</td>' +
+        '<td class="num fs-detail-col ' + sgn(icr) + '">' + fmt(icr) + '</td>' +
+        '<td class="num fs-detail-col ' + sgn(f.raw_ic_mean) + '">' + fmt(f.raw_ic_mean, 4) + '</td>' +
+        '<td class="fm fs-detail-col" title="' + escAttr(f.neutralize_mode || '') + '">' + esc(nmode(f.neutralize_mode)) + '</td>' +
+        '<td class="num fs-detail-col ' + monoCl(f.monotonic_aligned) + '" title="池化分层单调 soft（<0.6 警示不否决）">' + fmt(f.monotonic_aligned) + '</td>' +
+        '<td class="num fs-detail-col">' + fmt(f.ic_half_life, 0) + '</td>' +
+        '<td class="num fs-detail-col">' + fmt(f.turnover_ratio) + '</td>' +
+        '<td class="num fs-detail-col">' + fmt(f.capacity_estimate, 0) + '</td>' +
+        '<td class="num fs-detail-col ' + sgn(f.incremental_ic) + '">' + fmt(f.incremental_ic, 4) + '</td>' +
+        '<td class="num fs-detail-col ' + sgn(oir) + '">' + fmt(oir) + '</td>' +
+        '<td class="num fs-core fs-core-metric ' + icTcl(ev, f) + '" data-label="历史确认 IC t">' + fmt(icT(ev, f)) + '</td>' +
+        '<td class="num fs-detail-col">' + fmt(rt) + '</td>' +
+        '<td class="num fs-detail-col ' + sgn(ls) + '">' + fmt(ls, 3) + '</td>' +
+        '<td class="num fs-core fs-core-metric ' + sgn(f.backtest_annual_return) + '" data-label="成本后年化">' + fmt(f.backtest_annual_return, 2, true) + '</td>' +
+        '<td class="num fs-core fs-core-metric ' + sgn(f.backtest_excess_annual) + '" data-label="超额">' + fmt(f.backtest_excess_annual, 2, true) + '</td>' +
+        '<td class="num fs-detail-col">' + fmt(f.backtest_sharpe) + '</td>' +
+        '<td class="num fs-detail-col ' + sgn(f.backtest_max_drawdown) + '">' + fmt(f.backtest_max_drawdown, 2, true) + '</td>' +
+        '<td class="num fs-core fs-core-metric ' + sgn(fp ? fp.pass_rate - 0.6 : f.backtest_fold_pass_rate - 0.6) + '" data-label="多折通过">' + foldTxt + '</td>' +
+        '<td class="num fs-detail-col ' + (tstat === null || tstat === undefined ? '' : sgn(tstat - 2)) + '">' + fmt(tstat) + '</td>' +
+        '<td class="num fs-detail-col ' + (churn !== null ? (churnFlag ? 'fs-warn' : sgn(0.15 - churn)) : '') + '" title="组合层日均换手（净收益=毛利−换手×成本，>15% 预警）">' +
+          (churn === null ? '–' : (churn * 100).toFixed(1) + '%') + '</td>' +
+        '<td class="fs-detail-col">' + (churnFlag ? '<span class="fs-status rejected">高换手</span>' : (churn === null ? '–' : '<span class="fs-status production">正常</span>')) + '</td>' +
+        '<td class="fm fs-core fs-core-reason" title="' + escAttr(reason) + '">' + esc(reason.slice(0, 80) || '暂无失败项') + '</td>';
+      body.appendChild(tr);
+    });
+    var shown = list.length;
+    var moreWrap = document.getElementById('fsMoreWrap');
+    var more = document.getElementById('fsMore');
+    moreWrap.style.display = pages.current.hasMore ? 'flex' : 'none';
+    more.disabled = pages.current.loading;
+    more.textContent = pages.current.loading ? '加载中…' : '加载下一页';
+    var refresh = document.getElementById('refreshAt');
+    if (refresh) refresh.dataset.rows = loadErrors.current
+      ? '当前因子读取失败 · 数量未知' : (pages.current.loadedAt
+        ? '当前因子 ' + shown + '/' + pages.current.total : '当前因子读取中');
+    renderRefreshMeta();
+  }
+
+  function renderArchiveTable() {
+    var body = document.getElementById('fsArchiveBody');
+    body.innerHTML = '';
+    var list = archiveFactors.filter(function (f) { return archiveMatches(f.status, archiveFilter); })
+      .slice().sort(compareFactors);
+    list.forEach(function (f) {
+      var tr = document.createElement('tr');
+      var evidence = f.evidence_sha256
+        ? String(f.evidence_sha256).slice(0, 12) + '…'
+        : (f.evidence_path ? '有路径' : '–');
+      tr.innerHTML = '<td class="fid" title="技术标识：' + escAttr(f.factor_id || '') + '"><strong class="fs-factor-name">' + esc(factorDisplayName(f)) + '</strong><span class="fs-factor-description">特点：' + esc(factorDescription(f)) + '</span>'
+        + sourceBadge(f.source_gate) + '</td>'
+        + '<td>' + badge(f.status) + '</td>'
+        + '<td class="fm">' + esc(f.research_epoch || '旧口径/未记录') + '</td>'
+        + '<td class="fm" title="' + escAttr(f.audit_message || f.status_reason || '') + '">'
+          + esc(String(f.audit_message || f.status_reason || '无补充说明').slice(0, 120)) + '</td>'
+        + '<td class="fm" title="' + escAttr(f.evidence_path || '') + '">' + esc(evidence) + '</td>';
+      body.appendChild(tr);
+    });
+    var archiveEmpty = document.getElementById('fsArchiveEmpty');
+    archiveEmpty.style.display = list.length || pages.archive.loading ? 'none' : 'block';
+    archiveEmpty.textContent = loadErrors.archive && !list.length
+      ? '研究档案加载失败：' + loadErrors.archive : '当前筛选没有档案记录';
+    var loading = document.getElementById('fsArchiveLoading');
+    loading.style.display = pages.archive.loading ? 'flex' : 'none';
+    loading.lastChild.nodeValue = pages.archive.loading ? ' 加载研究档案…' : '';
+    var moreWrap = document.getElementById('fsArchiveMoreWrap');
+    var more = document.getElementById('fsArchiveMore');
+    moreWrap.style.display = pages.archive.hasMore ? 'flex' : 'none';
+    more.disabled = pages.archive.loading;
+    more.textContent = pages.archive.loading ? '加载中…' : '加载下一页';
+    var refresh = document.getElementById('refreshAt');
+    if (refresh) refresh.dataset.archiveRows = loadErrors.archive
+      ? '研究档案读取失败 · 数量未知' : (pages.archive.loadedAt
+        ? '研究档案 ' + list.length + '/' + pages.archive.total : '研究档案读取中');
+    renderRefreshMeta();
+  }
+
+  function updateCounts(st) {
+    document.getElementById('fsEpoch').textContent = '研究批次 ' + (st.research_epoch || '–');
+    if ((st.registry_health || {}).available === false) {
+      ['tProd', 'tHist', 'tCand', 'tReg', 'tRej', 'tFrozen', 'tInvalid', 'tAll', 'tArchiveAll'].forEach(function (id) {
+        document.getElementById(id).textContent = '—';
+      });
+      document.getElementById('fsArchiveSummary').textContent = '研究库不可读取 · 数量未知';
+      return;
+    }
+    var publicCounts = st.registry || {};
+    var workflowCounts = ((st.workflow || {}).counts || {}).current || {};
+    var current = workflowCounts.by_status || publicCounts;
+    function count(value) { return typeof value === 'number' && Number.isFinite(value) && Number.isInteger(value) && value >= 0 ? value : null; }
+    function total(map, keys) {
+      var values = keys.map(function (key) { return count(map[key]); });
+      return values.some(function (value) { return value === null; }) ? null : values.reduce(function (a, b) { return a + b; }, 0);
+    }
+    var workTotal = total(current, WORK_STATUSES), archiveTotal = total(publicCounts, ARCHIVE_STATUSES);
+    var values = {tProd: count((st.forward_shadow_readiness || {}).verified_production_count),
+      tHist: count(current.historical_pass), tCand: count(current.candidate),
+      tReg: total(current, ['registered','backtesting','validated']), tRej: count(publicCounts.rejected),
+      tFrozen: count(publicCounts.frozen), tInvalid: count(publicCounts.invalidated), tAll: workTotal, tArchiveAll: archiveTotal};
+    Object.keys(values).forEach(function (id) { document.getElementById(id).textContent = values[id] === null ? '—' : String(values[id]); });
+    document.getElementById('fsArchiveSummary').textContent = archiveTotal === null ? '档案计数未知'
+      : archiveTotal + ' 条已结束 · 旧证据 ' + knownCount(publicCounts.invalidated) + ' 条';
+  }
+
+  function shortStamp(value) {
+    return value ? String(value).replace('T', ' ').slice(0, 19) : '';
+  }
+
+  function latestStamp(values) {
+    var best = '';
+    var bestTime = -Infinity;
+    (values || []).forEach(function (value) {
+      if (!value) return;
+      var parsed = Date.parse(value);
+      if (!isNaN(parsed) && parsed > bestTime) {
+        best = String(value);
+        bestTime = parsed;
+      }
+    });
+    return best;
+  }
+
+  function statusAsOf(st) {
+    return latestStamp([
+      (st.workflow || {}).as_of,
+      (st.mining || {}).updated_at,
+      (st.backtest || {}).updated_at,
+      (st.daemon || {}).updated_at,
+    ]);
+  }
+
+  function factorAsOf(payload) {
+    var values = [payload.updated_at, payload.as_of];
+    (payload.factors || []).forEach(function (factor) { values.push(factor.updated_at); });
+    return latestStamp(values);
+  }
+
+  function registrySignature(st) {
+    if ((st.workflow || {}).version) return JSON.stringify([st.workflow.version, st.registry_health || {}]);
+    var counts = st.registry_source_counts || st.registry || {};
+    var stableCounts = Object.keys(counts).sort().map(function (key) { return [key, counts[key]]; });
+    return JSON.stringify([
+      st.research_epoch || '', st.registry_total, stableCounts, st.registry_health || {},
+      (st.mining || {}).last_success || '',
+      (st.backtest || {}).last_success || (st.backtest || {}).finished_at || '',
+    ]);
+  }
+
+  function renderRefreshMeta() {
+    var el = document.getElementById('refreshAt');
+    if (!el) return;
+    var parts = [];
+    var health = (latestStatus || {}).registry_health || {};
+    var missing = !!loadErrors.current && (pages.current.failureReason === 'missing' || health.reason === 'missing');
+    if (missing) parts.push('旧因子研究库未恢复 · 历史数量未知');
+    else if (el.dataset.rows) parts.push(el.dataset.rows);
+    var archiveOpen = document.getElementById('fsEvidenceArchive').open;
+    if (archiveOpen && el.dataset.archiveRows) parts.push(el.dataset.archiveRows);
+    var statusStamp = latestStatus ? statusAsOf(latestStatus) : '';
+    if (statusStamp) parts.push('状态截至 ' + shortStamp(statusStamp));
+    if (pages.current.asOf) parts.push('因子截至 ' + shortStamp(pages.current.asOf));
+    if (archiveOpen && pages.archive.asOf) parts.push('档案截至 ' + shortStamp(pages.archive.asOf));
+    var errors = [];
+    if (loadErrors.status) errors.push('状态：' + loadErrors.status);
+    if (loadErrors.current) errors.push('当前因子：' + loadErrors.current);
+    if (archiveOpen && loadErrors.archive) errors.push('研究档案：' + loadErrors.archive);
+    var healthBox = document.getElementById('fsRegistryHealth');
+    var issue = health.available === false ? health.message : errors.join('；');
+    healthBox.hidden = !issue;
+    healthBox.textContent = issue
+      ? issue + '。未读取到的数据不代表合格因子为 0；不据此增加交易权限。' : '';
+    var catalogueLink = document.getElementById('fsRegistryCatalogueLink');
+    if (catalogueLink) catalogueLink.hidden = !missing;
+    var stale = pages.current.loadedAt > 0
+      && Date.now() - pages.current.loadedAt > FACTOR_REFRESH_MS * 2;
+    if (stale) parts.push('列表快照已过期');
+    else if (errors.length && (!missing || loadErrors.status || (archiveOpen && loadErrors.archive))) parts.push('数据可能过期');
+    if (!parts.length) parts.push('等待服务端快照…');
+    el.textContent = parts.join(' · ');
+    el.title = errors.join('\n');
+    el.style.color = errors.length ? '#F87171' : (stale ? '#F59E0B' : 'var(--color-text-dim)');
+  }
+
+  function updateForwardTimeline(st) {
+    var readiness = st.forward_shadow_readiness || {};
+    var windows = st.research_windows || {};
+    var forwardWindow = windows.forward_shadow || [];
+    var start = readiness.start || forwardWindow[0] || '等待服务端确认';
+    var requiredValue = Number(readiness.required_days);
+    var required = Number.isFinite(requiredValue) && requiredValue > 0 ? requiredValue : '—';
+    document.querySelectorAll('[data-forward-start]').forEach(function (el) { el.textContent = start; });
+    document.querySelectorAll('[data-forward-days]').forEach(function (el) { el.textContent = required; });
+  }
+
+  function fetchJson(url, controller, timeoutMs) {
+    var timeout, onAbort;
+    var cancelled = new Promise(function (_, reject) {
+      onAbort = function () { var error = new Error('请求已取消或超时'); error.name = 'AbortError'; reject(error); };
+      if (controller.signal.aborted) onAbort();
+      else controller.signal.addEventListener('abort', onAbort, { once: true });
+      timeout = setTimeout(function () { onAbort(); controller.abort(); }, timeoutMs);
+    });
+    var reading = new Promise(function (resolve) { resolve(fetch(url, {
+      cache: 'no-store',
+      headers: { Accept: 'application/json', 'X-Regis-Account-Access': 'false' },
+      signal: controller.signal,
+    })); }).then(function (response) {
+      return response.json().catch(function () {
+        throw new Error('HTTP ' + response.status + ' · 未收到有效数据');
+      }).then(function (payload) {
+        if (!response.ok) {
+          var error = new Error((payload || {}).error || ('HTTP ' + response.status));
+          error.registryReason = ((payload || {}).registry_health || {}).reason || '';
+          throw error;
+        }
+        return payload;
+      });
+    }).then(function (payload) {
+      if (payload && payload.ok === false) throw new Error(payload.error || ('服务端拒绝 · ' + url));
+      return payload;
+    });
+    return Promise.race([reading, cancelled]).finally(function () {
+      clearTimeout(timeout); controller.signal.removeEventListener('abort', onAbort);
+    });
+  }
+
+  function refreshMarketContext() {
+    if (marketContextController) marketContextController.abort();
+    var controller = new AbortController();
+    marketContextController = controller;
+    var requestId = ++marketContextRequestId;
+    latestMarketContext = {load_error: '正在重新核对历史研究快照'};
+    if (latestStatus) renderLeaderLimitProgram(latestStatus);
+    return fetchJson('/api/market/research-state', controller, 8000).then(function (context) {
+      if (requestId !== marketContextRequestId) return false;
+      if (!context || context.account_access !== false || context.research_only !== true
+          || context.current_market_freshness_verified !== false || context.production_eligible !== false) {
+        throw new Error('历史研究状态边界未通过核验');
+      }
+      latestMarketContext = context;
+      if (latestStatus) renderLeaderLimitProgram(latestStatus);
+      return true;
+    }).catch(function (error) {
+      if (requestId !== marketContextRequestId) return false;
+      latestMarketContext = { load_error: error.message || String(error) };
+      if (latestStatus) renderLeaderLimitProgram(latestStatus);
+      return false;
+    }).finally(function () {
+      if (requestId === marketContextRequestId) marketContextController = null;
+    });
+  }
+
+  function statusesFor(kind) {
+    if (kind === 'archive') {
+      return archiveFilter === 'closed' ? ARCHIVE_STATUSES.slice() : [archiveFilter];
+    }
+    if (curFilter === 'all') return WORK_STATUSES.slice();
+    if (curFilter === 'pending') return ['validated', 'registered', 'backtesting'];
+    return [curFilter];
+  }
+
+  function pageUrl(kind, cursor) {
+    var params = new URLSearchParams();
+    params.set('view', 'compact');
+    params.set('scope', kind === 'current' ? 'current' : 'all');
+    params.set('status', statusesFor(kind).join(','));
+    params.set('limit', String(PAGE_SIZE));
+    params.set('cursor', String(cursor || '0'));
+    return '/api/factor-system/factors?' + params.toString();
+  }
+
+  function pageMatches(kind, factor) {
+    if (kind === 'current') {
+      return isCurrentEpochFactor(factor)
+        && statusesFor(kind).indexOf(factor.status) >= 0;
+    }
+    return ARCHIVE_STATUSES.indexOf(factor.status) >= 0
+      && statusesFor(kind).indexOf(factor.status) >= 0;
+  }
+
+  function renderPage(kind) {
+    if (kind === 'current') renderTable();
+    else renderArchiveTable();
+  }
+
+  function setPageBusy(kind, busy) {
+    document.querySelectorAll(kind === 'current' ? '.fs-main-tab' : '.fs-archive-tab')
+      .forEach(function (button) { button.disabled = busy; });
+    var more = document.getElementById(kind === 'current' ? 'fsMore' : 'fsArchiveMore');
+    if (more) more.disabled = busy;
+    var region = document.getElementById(kind === 'current' ? 'fsTableWrap' : 'fsEvidenceArchive');
+    if (region) region.setAttribute('aria-busy', busy ? 'true' : 'false');
+  }
+
+  function resetPage(kind) {
+    var state = pages[kind];
+    if (state.controller) state.controller.abort();
+    state.controller = null;
+    state.requestId += 1;
+    state.cursor = '0';
+    state.nextCursor = null;
+    state.total = 0;
+    state.hasMore = false;
+    state.loading = false;
+    state.loadedAt = 0;
+    state.version = '';
+    state.asOf = '';
+    state.legacyRows = null;
+    loadErrors[kind] = '';
+    if (kind === 'current') factors = [];
+    else archiveFactors = [];
+    setPageBusy(kind, false);
+  }
+
+  function mergeRows(existing, incoming) {
+    var seen = Object.create(null);
+    return existing.concat(incoming).filter(function (factor) {
+      var key = [factor.factor_id || '', factor.research_epoch || '', factor.status || ''].join('|');
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+  }
+
+  function normalizeFactorPage(kind, payload, cursor) {
+    var raw = Array.isArray(payload.factors) ? payload.factors : [];
+    var state = pages[kind];
+    if (payload.page) {
+      var filteredTotal = Number(((payload.summary || {}).filtered_total));
+      return {
+        rows: raw.filter(function (factor) { return pageMatches(kind, factor); }),
+        total: isFinite(filteredTotal) ? filteredTotal : raw.length,
+        nextCursor: payload.page.next_cursor,
+        hasMore: !!payload.page.has_more,
+      };
+    }
+    var all = raw.filter(function (factor) { return pageMatches(kind, factor); })
+      .sort(compareFactors);
+    state.legacyRows = all;
+    var offset = Math.max(0, Number(cursor) || 0);
+    var next = offset + PAGE_SIZE < all.length ? String(offset + PAGE_SIZE) : null;
+    return {
+      rows: all.slice(offset, offset + PAGE_SIZE),
+      total: all.length,
+      nextCursor: next,
+      hasMore: next !== null,
+    };
+  }
+
+  function applyPage(kind, result, cursor, payload) {
+    var state = pages[kind];
+    var existing = kind === 'current' ? factors : archiveFactors;
+    var merged = mergeRows(existing, result.rows);
+    if (kind === 'current') factors = merged;
+    else archiveFactors = merged;
+    state.cursor = String(cursor);
+    state.nextCursor = result.nextCursor;
+    state.total = result.total;
+    state.hasMore = result.hasMore;
+    state.loadedAt = Date.now();
+    state.version = String(payload.version || latestRegistrySignature || 'legacy');
+    state.asOf = factorAsOf(payload);
+    state.failureReason = '';
+    loadErrors[kind] = '';
+  }
+
+  function loadLegacyPage(kind) {
+    var state = pages[kind];
+    if (!state.legacyRows || !state.nextCursor) return false;
+    var offset = Math.max(0, Number(state.nextCursor) || 0);
+    var rows = state.legacyRows.slice(offset, offset + PAGE_SIZE);
+    var next = offset + PAGE_SIZE < state.legacyRows.length ? String(offset + PAGE_SIZE) : null;
+    applyPage(kind, {
+      rows: rows, total: state.legacyRows.length,
+      nextCursor: next, hasMore: next !== null,
+    }, String(offset), { version: state.version, as_of: state.asOf, factors: rows });
+    renderPage(kind);
+    return true;
+  }
+
+  function loadFactorPage(kind, reset) {
+    var state = pages[kind];
+    if (document.hidden) return Promise.resolve(false);
+    if (state.loading) return Promise.resolve(false);
+    if (reset) resetPage(kind);
+    if (!reset && state.legacyRows) return Promise.resolve(loadLegacyPage(kind));
+    var cursor = reset ? '0' : state.nextCursor;
+    if (!reset && cursor === null) return Promise.resolve(false);
+    var controller = new AbortController();
+    var requestId = ++state.requestId;
+    state.controller = controller;
+    state.loading = true;
+    setPageBusy(kind, true);
+    renderPage(kind);
+    return fetchJson(pageUrl(kind, cursor), controller, 45000).then(function (payload) {
+      if (requestId !== state.requestId) return false;
+      currentResearchEpoch = payload.research_epoch || currentResearchEpoch;
+      var result = normalizeFactorPage(kind, payload, cursor);
+      applyPage(kind, result, cursor, payload);
+      if (kind === 'current' && payload.forward_shadow_readiness) {
+        updateForwardTimeline({ forward_shadow_readiness: payload.forward_shadow_readiness });
+      }
+      return true;
+    }).catch(function (error) {
+      if (requestId !== state.requestId || (controller.signal.aborted && document.hidden)) return false;
+      loadErrors[kind] = error.name === 'AbortError' ? '请求超时' : (error.message || String(error));
+      state.failureReason = error.registryReason || '';
+      return false;
+    }).finally(function () {
+      if (requestId === state.requestId) {
+        state.controller = null;
+        state.loading = false;
+        setPageBusy(kind, false);
+        renderPage(kind);
+      }
+    });
+  }
+
+  function maybeRefreshFactors(force) {
+    if (document.hidden) return Promise.resolve(false);
+    var tasks = [];
+    var version = latestRegistrySignature;
+    var currentDue = force || !pages.current.loadedAt
+      || (!!version && pages.current.version !== version)
+      || Date.now() - pages.current.loadedAt >= FACTOR_REFRESH_MS;
+    if (currentDue) tasks.push(loadFactorPage('current', true));
+    var archiveOpen = document.getElementById('fsEvidenceArchive').open;
+    var archiveDue = archiveOpen && (force || !pages.archive.loadedAt
+      || (!!version && pages.archive.version !== version)
+      || Date.now() - pages.archive.loadedAt >= FACTOR_REFRESH_MS);
+    if (archiveDue) tasks.push(loadFactorPage('archive', true));
+    return tasks.length ? Promise.all(tasks) : Promise.resolve(false);
+  }
+
+  function applyStatus(st) {
+    latestStatus = st;
+    currentResearchEpoch = st.research_epoch || currentResearchEpoch;
+    latestRegistrySignature = registrySignature(st);
+    statusRenderErrors = [];
+    renderStatusSection('登记计数', ['fsArchiveSummary'], function () { updateCounts(st); });
+    renderStatusSection('前向时间', ['fsNextMeta'], function () { updateForwardTimeline(st); });
+    renderStatusSection('来源记录', ['fsSourceSummary','fsSourceCandidate','fsSourceScout','fsSourceFrontier','fsScoutMeta','fsScoutRows'], function () { renderSourceGate(st); });
+    renderStatusSection('情绪与战法', ['fsEmotionAlert','fsEmotionCounts','fsEmotionCurrent','fsEmotionFactor','fsEmotionMatrix','fsPlaybookLibrary','fsTacticProof'], function () { renderLeaderLimitProgram(st); });
+    renderStatusSection('封存研究', ['fsRecentMeta','fsRecentResearch'], function () { renderRecentResearch(st); });
+    renderExecutionPanels();
+    renderStatusSection('诊断', ['fsRecentErrors'], function () { renderDiagnostics(st); });
+    renderStatusSection('当前因子列表', ['fsCurrentNote'], function () { renderTable(); });
+    renderStatusSection('刷新记录', ['refreshAt'], function () { renderRefreshMeta(); });
+    renderStatusNotice();
+  }
+
+  function scheduleStatusRefresh(delay) {
+    if (statusTimer) clearTimeout(statusTimer);
+    statusTimer = null;
+    if (document.hidden) return;
+    statusTimer = setTimeout(refreshStatus, delay === undefined ? STATUS_REFRESH_MS : delay);
+  }
+
+  function refreshStatus() {
+    if (document.hidden) return Promise.resolve(false);
+    if (statusController) {
+      scheduleStatusRefresh(1000);
+      return Promise.resolve(false);
+    }
+    var controller = new AbortController();
+    var requestId = ++statusRequestId;
+    statusController = controller;
+    document.getElementById('fsStatusRetry').disabled = true;
+    return fetchJson('/api/factor-system/status', controller, 12000).then(function (st) {
+      if (requestId !== statusRequestId) return false;
+      if (!st || typeof st !== 'object' || Array.isArray(st) || !['registry','registry_health','workflow','daemon','mining'].some(function (key) {
+        return st[key] && typeof st[key] === 'object' && !Array.isArray(st[key]);
+      })) throw new Error('运行状态格式无效');
+      loadErrors.status = '';
+      applyStatus(st);
+      refreshMarketContext();
+      maybeRefreshFactors(false);
+      return true;
+    }).catch(function (error) {
+      if (requestId !== statusRequestId || (controller.signal.aborted && document.hidden)) return false;
+      loadErrors.status = error.name === 'AbortError' ? '请求超时' : (error.message || String(error));
+      renderRefreshMeta();
+      renderExecutionPanels();
+      return false;
+    }).finally(function () {
+      if (requestId === statusRequestId) {
+        statusController = null;
+        document.getElementById('fsStatusRetry').disabled = false;
+        scheduleStatusRefresh(STATUS_REFRESH_MS);
+      }
+    });
+  }
+
+  function selectFilterButtons(selector, value) {
+    document.querySelectorAll(selector).forEach(function (button) {
+      var selected = button.getAttribute('data-f') === value;
+      button.type = 'button';
+      button.classList.toggle('sel', selected);
+      button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      button.tabIndex = selected ? 0 : -1;
+    });
+  }
+
+  function bindArrowKeys(selector) {
+    document.querySelectorAll(selector).forEach(function (button) {
+      button.addEventListener('keydown', function (event) {
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(event.key) < 0) return;
+        var buttons = Array.prototype.slice.call(document.querySelectorAll(selector));
+        var index = buttons.indexOf(button);
+        if (event.key === 'Home') index = 0;
+        else if (event.key === 'End') index = buttons.length - 1;
+        else index = (index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+        event.preventDefault();
+        buttons[index].focus();
+        buttons[index].click();
+      });
+    });
+  }
+
+  function readHashState() {
+    var params = new URLSearchParams(location.hash.replace(/^#/, ''));
+    var requestedCurrent = params.get('factors');
+    var requestedArchive = params.get('archive');
+    var requestedView = params.get('density');
+    var mainFilters = ['all', 'candidate', 'pending', 'historical_pass', 'production'];
+    var archiveFilters = ['closed', 'rejected', 'invalidated', 'frozen'];
+    if (mainFilters.indexOf(requestedCurrent) >= 0) curFilter = requestedCurrent;
+    if (archiveFilters.indexOf(requestedArchive) >= 0) {
+      archiveFilter = requestedArchive;
+      document.getElementById('fsEvidenceArchive').open = true;
+    }
+    selectFilterButtons('.fs-main-tab', curFilter);
+    selectFilterButtons('.fs-archive-tab', archiveFilter);
+    if (requestedView === 'full') {
+      document.getElementById('fsTableWrap').setAttribute('data-view', 'full');
+      document.querySelectorAll('.fs-view').forEach(function (button) {
+        var selected = button.getAttribute('data-view') === 'full';
+        button.classList.toggle('sel', selected);
+        button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      });
+    }
+  }
+
+  function writeHashState() {
+    var params = new URLSearchParams();
+    params.set('factors', curFilter);
+    if (document.getElementById('fsEvidenceArchive').open) params.set('archive', archiveFilter);
+    if (document.getElementById('fsTableWrap').getAttribute('data-view') === 'full') {
+      params.set('density', 'full');
+    }
+    history.replaceState(null, '', location.pathname + location.search + '#' + params.toString());
+  }
+
+  document.querySelectorAll('.fs-main-tab').forEach(function (button) {
+    button.addEventListener('click', function () {
+      curFilter = button.getAttribute('data-f');
+      selectFilterButtons('.fs-main-tab', curFilter);
+      writeHashState();
+      loadFactorPage('current', true);
+    });
+  });
+
+  document.querySelectorAll('.fs-archive-tab').forEach(function (button) {
+    button.addEventListener('click', function () {
+      archiveFilter = button.getAttribute('data-f');
+      selectFilterButtons('.fs-archive-tab', archiveFilter);
+      writeHashState();
+      loadFactorPage('archive', true);
+    });
+  });
+
+  document.getElementById('fsMore').addEventListener('click', function () {
+    loadFactorPage('current', false);
+  });
+  document.getElementById('fsStatusRetry').addEventListener('click', function () { refreshStatus(); });
+  document.getElementById('fsArchiveMore').addEventListener('click', function () {
+    loadFactorPage('archive', false);
+  });
+
+  document.getElementById('fsEvidenceArchive').addEventListener('toggle', function (event) {
+    writeHashState();
+    if (event.currentTarget.open && !pages.archive.loadedAt) loadFactorPage('archive', true);
+    renderRefreshMeta();
+  });
+
+  var views = document.querySelectorAll('.fs-view');
+  views.forEach(function (button) {
+    button.type = 'button';
+    button.tabIndex = button.classList.contains('sel') ? 0 : -1;
+    button.addEventListener('click', function () {
+      views.forEach(function (x) { x.classList.remove('sel'); x.setAttribute('aria-pressed', 'false'); x.tabIndex = -1; });
+      button.classList.add('sel');
+      button.setAttribute('aria-pressed', 'true');
+      button.tabIndex = 0;
+      document.getElementById('fsTableWrap').setAttribute('data-view', button.getAttribute('data-view'));
+      writeHashState();
+    });
+  });
+  bindArrowKeys('.fs-main-tab');
+  bindArrowKeys('.fs-archive-tab');
+  bindArrowKeys('.fs-view');
+
+  function suspendPolling() {
+    loadErrors.status = '页面离开后需重新核验运行状态';
+    marketContextRequestId += 1;
+    if (marketContextController) marketContextController.abort();
+    marketContextController = null;
+    latestMarketContext = {load_error: '页面离开后需重新核对历史快照'};
+    if (statusTimer) clearTimeout(statusTimer);
+    statusTimer = null;
+    if (statusController) {
+      var statusAbort = statusController;
+      statusController = null;
+      statusRequestId += 1;
+      statusAbort.abort();
+    }
+    document.getElementById('fsStatusRetry').disabled = false;
+    ['current', 'archive'].forEach(function (kind) {
+      var state = pages[kind];
+      if (!state.controller) return;
+      var pageAbort = state.controller;
+      state.controller = null;
+      state.requestId += 1;
+      state.loading = false;
+      setPageBusy(kind, false);
+      pageAbort.abort();
+    });
+    renderExecutionPanels();
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      suspendPolling();
+      return;
+    }
+    maybeRefreshFactors(false);
+    scheduleStatusRefresh(0);
+  });
+  window.addEventListener('pagehide', suspendPolling);
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted && !document.hidden) { maybeRefreshFactors(true); refreshStatus(); }
+  });
+
+  // 首屏仅请求轻量状态与当前工作第一页；档案展开后再取，后续无重叠地按版本或低频刷新。
+  readHashState();
+  loadFactorPage('current', true);
+  if (document.getElementById('fsEvidenceArchive').open) loadFactorPage('archive', true);
+  refreshStatus();
+})();
+</script>
+{% endblock %}

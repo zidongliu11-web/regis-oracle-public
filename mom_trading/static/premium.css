@@ -1,0 +1,267 @@
+/* ═══════════════════════════════════════════════════════════════
+   Regis Oracle — Premium Motion Layer  ·  高级感动效增强层
+   2026-08-18
+
+   约束（用户硬性要求）：
+   · 主题风格不变 —— 不改任何颜色 token、字体、文字色；辉光取自既有
+     --color-accent / --color-primary（各页覆盖后自动跟随，positions=蓝、stock=蓝、mom=蓝 —— 2026-08-18 已全站统一）。
+   · 位置与布局不变 —— 不改 width/height/grid/flex/position(top/left)/margin/padding/gap。
+   · 本层只做「叠加」：阴影 / 辉光 / 玻璃高光 / 入场编排 / 微交互 / 环境光。
+   · 价格方向红涨绿跌、资金流绿正红负 一律不碰。
+   · prefers-reduced-motion 一律降级为静态。
+
+   命名空间：所有新增动画/类名以 px 前缀（premium）区分，杜绝与既有样式冲突。
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 0. 主题色派生（纯装饰，跟随各页 accent） ─────────────── */
+:root {
+  --px-accent: var(--color-accent, var(--accent, #0A84FF));
+  --px-primary: var(--color-primary, var(--accent, #0A84FF));
+  --px-a-soft: color-mix(in srgb, var(--px-accent) 20%, transparent);
+  --px-a-mid: color-mix(in srgb, var(--px-accent) 46%, transparent);
+  --px-p-soft: color-mix(in srgb, var(--px-primary) 20%, transparent);
+  --px-p-mid: color-mix(in srgb, var(--px-primary) 46%, transparent);
+  --px-focus: #78B9FF;
+  --px-focus: color-mix(in srgb, var(--px-primary) 58%, white);
+}
+
+/* ── 1. 环境光晕（背景氛围，纯装饰、不参与布局） ─────────────── */
+body.dark { position: relative; }
+
+body.dark::before,
+body.dark::after {
+  content: '';
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  will-change: transform;
+}
+body.dark::before {
+  width: 58vw; height: 58vw; min-width: 520px; min-height: 520px;
+  top: -20vw; left: -14vw;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--px-primary) 22%, transparent) 0%,
+    color-mix(in srgb, var(--px-primary) 8%, transparent) 38%,
+    transparent 66%);
+  animation: pxDriftA 36s ease-in-out infinite alternate;
+}
+body.dark::after {
+  width: 54vw; height: 54vw; min-width: 480px; min-height: 480px;
+  bottom: -22vw; right: -12vw;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--px-accent) 20%, transparent) 0%,
+    color-mix(in srgb, var(--px-accent) 7%, transparent) 38%,
+    transparent 66%);
+  animation: pxDriftB 44s ease-in-out infinite alternate;
+}
+
+@keyframes pxDriftA {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(5vw, 4vh, 0) scale(1.08); }
+  100% { transform: translate3d(-2vw, 6vh, 0) scale(0.95); }
+}
+@keyframes pxDriftB {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-6vw, -5vh, 0) scale(1.06); }
+  100% { transform: translate3d(3vw, -2vh, 0) scale(0.97); }
+}
+
+/* 内容层抬升，压在环境光之上（position:relative 不改变布局） */
+body.dark .app-shell { position: relative; z-index: 1; }
+
+/* ── 2. 入场编排（首屏卡片错峰上浮） ───────────────────────── */
+@keyframes pxRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.px-in {
+  animation: pxRise 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--px-d, 0) * 1ms);
+}
+
+/* ── 3. 表面质感：玻璃顶高光 + 细腻层次阴影（仅叠加） ────────── */
+.widget,
+.method-card,
+.metric-item,
+.stat-card,
+.sum-item,
+.lens-card,
+.pos-item,
+.card,
+.slab-card,
+.itc-panel,
+.fs-kpi,
+.fs-zone,
+.live-card,
+.cp-gate {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+/* ── 4. 悬停：抬升 + 主题色辉光环（box-shadow 外环，无布局位移） ── */
+.widget,
+.method-card,
+.metric-item,
+.stat-card,
+.sum-item,
+.lens-card,
+.pos-item,
+.card,
+.slab-card,
+.itc-panel,
+.fs-kpi,
+.fs-zone,
+.live-card,
+.cp-gate {
+  transition:
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s ease,
+    box-shadow 0.32s ease;
+}
+
+.widget:hover,
+.method-card:hover,
+.metric-item:hover,
+.stat-card:hover,
+.sum-item:hover,
+.lens-card:hover,
+.card:hover,
+.slab-card:hover,
+.itc-panel:hover,
+.fs-kpi:hover,
+.fs-zone:hover,
+.live-card:hover,
+.cp-gate:hover {
+  transform: translateY(-3px);
+  border-color: var(--px-a-mid);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 16px 40px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px var(--px-a-soft);
+}
+.pos-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--px-p-mid);
+  box-shadow: 0 10px 26px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--px-p-soft);
+}
+.itc-quote-cell {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease;
+}
+.itc-quote-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--px-a-soft);
+}
+
+/* 信号卡保留既有 translateX 手势，仅追加辉光（不动 ::before 红/绿角标） */
+.signal-card { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, box-shadow 0.3s ease; }
+.signal-card:hover {
+  border-color: var(--px-p-mid);
+  box-shadow: 0 12px 30px -14px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--px-p-soft);
+}
+
+/* 表格行悬停：柔和高光过渡 */
+.flow-table tr, .data-table tr, .signal-table tr, .slab-table tbody tr { transition: background 0.18s ease; }
+
+/* ── 5. 按钮按压反馈 ───────────────────────────────────────── */
+.filter-btn, .search-btn, .preset-btn, .tf-tab, .btn-sm, .itc-btn, .itc-tab {
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), background 0.18s ease, border-color 0.18s ease, color 0.18s ease, opacity 0.18s ease;
+}
+.filter-btn:active, .search-btn:active, .preset-btn:active, .tf-tab:active, .itc-btn:active, .itc-tab:active {
+  transform: scale(0.96);
+}
+
+/* 点击涟漪（由 premium.js 注入 span.px-ripple） */
+.px-ripple-host { position: relative; overflow: hidden; }
+.px-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.26);
+  transform: scale(0);
+  pointer-events: none;
+  animation: pxRipple 0.6s ease-out forwards;
+}
+@keyframes pxRipple {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ── 6. 实时状态点脉冲 ─────────────────────────────────────── */
+.status-dot.live { animation: pxLivePulse 2s ease-in-out infinite; }
+@keyframes pxLivePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55); }
+  50%      { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+}
+
+/* ── 7. 骨架屏微光 ─────────────────────────────────────────── */
+.skeleton-row .sk-line {
+  background: linear-gradient(90deg, var(--color-border) 25%, #3d4a5e 50%, var(--color-border) 75%);
+  background-size: 200% 100%;
+  animation: pxShimmer 1.4s ease-in-out infinite;
+}
+@keyframes pxShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── 8. 精细滚动条 ─────────────────────────────────────────── */
+* { scrollbar-width: thin; scrollbar-color: #2A2F3A transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: #2A2F3A;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: #3A4150; background-clip: padding-box; }
+
+/* ── 9. 文本选区 ───────────────────────────────────────────── */
+::selection { background: var(--px-p-mid); color: #F1F5F9; }
+
+/* ── 10. 焦点环微光（可访问性，勿移除） ─────────────────────── */
+:focus-visible { outline: 2px solid var(--px-focus); outline-offset: 2px; box-shadow: 0 0 0 4px var(--px-p-soft); }
+
+/* ── 11. 顶栏品牌与激活态辉光 ──────────────────────────────── */
+.topnav-link { transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; }
+.topnav-link:hover { transform: translateY(-1px); }
+.topnav-link.active {
+  box-shadow: 0 4px 14px -4px var(--px-p-mid);
+  position: relative;
+}
+.topnav-link.active::after {
+  content: '';
+  position: absolute;
+  left: 20%; right: 20%; bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.7);
+  animation: pxNavGlow 2.4s ease-in-out infinite;
+}
+@keyframes pxNavGlow {
+  0%, 100% { opacity: 0.4; transform: scaleX(0.7); }
+  50%      { opacity: 1;   transform: scaleX(1); }
+}
+
+/* ── 12. 降级：用户偏好减少动效时全部静止 ───────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  body.dark::before,
+  body.dark::after,
+  .status-dot.live,
+  .skeleton-row .sk-line,
+  .topnav-link.active::after,
+  .px-in,
+  .px-ripple {
+    animation: none !important;
+  }
+  .widget, .method-card, .metric-item, .stat-card, .sum-item, .lens-card, .pos-item,
+  .card, .slab-card, .itc-panel, .itc-quote-cell, .fs-kpi, .fs-zone, .live-card,
+  .cp-gate, .signal-card {
+    transition: none !important;
+  }
+  .widget:hover, .method-card:hover, .metric-item:hover, .stat-card:hover,
+  .sum-item:hover, .lens-card:hover, .pos-item:hover, .card:hover, .slab-card:hover,
+  .itc-panel:hover, .fs-kpi:hover, .fs-zone:hover, .live-card:hover, .cp-gate:hover {
+    transform: none !important;
+  }
+}

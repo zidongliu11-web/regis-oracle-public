@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-label="Regis Oracle. Evidence-first A-share quantitative research.">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#07131f"/><stop offset="1" stop-color="#12293c"/></linearGradient><linearGradient id="line"><stop stop-color="#17c5aa"/><stop offset="1" stop-color="#72e6d2"/></linearGradient></defs>
+<rect width="1200" height="320" rx="20" fill="url(#bg)"/>
+<g stroke="#264458" stroke-width="1" opacity=".35"><path d="M700 0v320M780 0v320M860 0v320M940 0v320M1020 0v320M1100 0v320M650 80h550M650 160h550M650 240h550"/></g>
+<g fill="none" stroke="url(#line)" stroke-width="3.5" stroke-linejoin="round"><path d="M715 214l50-12 48 9 47-47 49 17 47-69 45 16 47-42 56 8"/></g>
+<g fill="#72e6d2"><circle cx="860" cy="164" r="5"/><circle cx="956" cy="112" r="5"/><circle cx="1048" cy="86" r="5"/></g>
+<rect x="54" y="44" width="174" height="27" rx="13.5" fill="#143c40"/><text x="69" y="62" fill="#72e6d2" font-size="12" font-family="Arial,sans-serif" letter-spacing="2">RESEARCH PREVIEW</text>
+<text x="54" y="153" fill="#f0f6fc" font-size="65" font-weight="700" font-family="Arial,sans-serif" letter-spacing="-2">Regis Oracle</text>
+<text x="58" y="200" fill="#afc2d3" font-size="22" font-family="Arial,sans-serif">Evidence-first A-share quantitative research</text>
+<path d="M58 240h510" stroke="#284456"/><text x="58" y="273" fill="#79caba" font-size="13" font-family="Arial,sans-serif" letter-spacing="2">FACTORS / STRATEGIES / EXECUTION / EVIDENCE</text>
+</svg>

@@ -1,0 +1,266 @@
+/* Kronos 预测区 — 叠加在 app.css 之上（Dark OLED · 数据密集 · 红绿信号） */
+.kronos-main {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 28px clamp(20px, 5vw, 72px) 60px;
+  display: grid;
+  gap: 16px;
+}
+
+/* ── Hero / 运行控制 ── */
+.kronos-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 28px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.kronos-hero h1 { margin-bottom: 8px; }
+.kronos-hero p { max-width: 760px; margin: 0; }
+.kronos-run-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.kronos-run-controls label span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.kronos-run-controls select { width: 122px; }
+.kronos-run-controls button {
+  min-width: 132px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── 汇总卡片 ── */
+.kronos-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+.kronos-summary-grid .metric strong { font-size: 20px; }
+@media (max-width: 1100px) {
+  .kronos-summary-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .kronos-summary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── 共振带 ── */
+.kronos-fusion-panel { display: grid; gap: 16px; }
+.kronos-fusion-body { display: grid; gap: 16px; }
+.kronos-fusion-quant {
+  border: 1px solid var(--line-soft);
+  background: var(--panel-2);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+.kronos-fusion-label {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+.kronos-fusion-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.kronos-fusion-metrics .metric { padding: 11px 12px; }
+.kronos-fusion-metrics .metric strong { font-size: 17px; }
+.kronos-fusion-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 980px) {
+  .kronos-fusion-cols { grid-template-columns: 1fr; }
+}
+.kronos-fusion-col {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--panel-2);
+  display: grid;
+  gap: 8px;
+}
+.kronos-reso {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.kronos-reso .kronos-chip {
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line-soft);
+  background: #0e1218;
+  color: #c9d3df;
+}
+.kronos-chip b { color: var(--text); }
+.kronos-chip .kr-pos { color: var(--green); }
+.kronos-chip .kr-neg { color: var(--red); }
+.kronos-chip .kr-hold {
+  color: var(--yellow);
+  font-weight: 700;
+}
+.kronos-reso .empty-state { margin: 0; }
+
+/* ── 排行表 ── */
+.kronos-sort-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 2px 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.kronos-sortbtn {
+  padding: 4px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.kronos-sortbtn:hover { border-color: var(--blue); color: var(--text); }
+.kronos-sortbtn.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #08111f;
+  font-weight: 700;
+}
+.table-wrap { overflow-x: auto; }
+.kronos-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.kronos-table th, .kronos-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  white-space: nowrap;
+}
+.kronos-table th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.kronos-table tbody tr:hover { background: rgba(90,157,245,.05); }
+.kronos-empty-row { text-align: center; color: var(--muted); padding: 22px 10px !important; }
+.kronos-rank-num { color: var(--muted); font-size: 11px; }
+.kronos-rank-top { color: var(--yellow); font-weight: 700; }
+.kronos-code { font-weight: 650; color: var(--text); }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.kronos-hold-badge {
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--yellow-soft);
+  color: #ffd876;
+}
+.kronos-quant-none { color: var(--muted); }
+.kronos-direction-bar {
+  display: inline-block;
+  height: 6px;
+  width: 46px;
+  border-radius: 3px;
+  background: #202733;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.kronos-direction-bar > i {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+}
+
+/* ── 方向分布 ── */
+.kronos-dist-bars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.kronos-dist-card {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+.kronos-dist-card span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.kronos-dist-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--red-soft);
+  overflow: hidden;
+  display: flex;
+}
+.kronos-dist-track > i.bull {
+  background: var(--green);
+  height: 8px;
+}
+.kronos-dist-track > i.bear { background: var(--red); }
+.kronos-dist-nums {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.kronos-dist-nums .bull { color: var(--green); }
+.kronos-dist-nums .bear { color: var(--red); }
+
+/* ── 推理日志 ── */
+.kronos-log {
+  min-height: 120px;
+  max-height: 240px;
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #0e1218;
+  font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #c9d3df;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.kronos-log .log-line { padding: 1px 0; border-bottom: 1px solid rgba(255,255,255,.03); }
+.kronos-log .log-time { color: var(--muted); margin-right: 8px; }
+.kronos-log .log-err { color: #ff9ca2; }
+.kronos-log .empty-state { margin: 0; }
+
+/* ── 边界 ── */
+.kronos-safety {
+  margin-top: 4px;
+  padding: 12px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.kronos-safety strong { color: var(--yellow); font-size: 12px; }
+
+/* ── 摘要卡微调 ── */
+#kronosModel { font-size: 19px; }
+#kronosDirection { font-size: 19px; }

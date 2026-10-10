@@ -1,0 +1,1310 @@
+{% extends "base.html" %}
+{% block title %}Regis Oracle · 实时机会观察{% endblock %}
+{% block nav_live %}active{% endblock %}
+
+{% block head %}
+<style>
+/* Desktop decision terminal. Semantic red=rise/risk, green=fall/pass; decoration never carries authority. */
+.live-page{
+  --color-text:var(--ro-text-primary);--color-text-dim:var(--ro-text-muted);
+  --color-accent:var(--ro-accent);--color-primary:var(--ro-primary);
+  --color-surface:var(--ro-panel);--color-border:var(--ro-border);
+  --color-buy:var(--ro-price-up);--color-loss:var(--ro-price-down);--color-warning:var(--ro-warning);
+  --live-bg:#07101a;--live-panel:#0c1824;--live-panel-2:var(--ro-panel-muted);--live-panel-3:var(--ro-panel-deep);
+  --live-line:#263a4d;--live-line-strong:#35516a;--live-blue:#69b7f5;
+  --live-red:#ff6877;--live-green:#45d590;--live-amber:#f0bf5b;
+  display:flex;flex-direction:column;gap:10px;width:100%;max-width:none;margin:0 auto;color:var(--ro-text-primary);
+  font-variant-numeric:tabular-nums
+}
+.live-head,.live-command,.live-action-desk,.live-context,.live-candidate-context,.live-strategy-panel,.live-card{position:relative;border:1px solid var(--live-line);background:var(--live-panel);box-shadow:inset 0 1px rgba(255,255,255,.035),0 12px 34px rgba(0,0,0,.16)}
+.live-head{display:flex;overflow:hidden;align-items:center;gap:14px;min-height:62px;padding:12px 16px;border-radius:7px;flex-wrap:wrap;animation:live-panel-in 320ms cubic-bezier(.2,.7,.2,1) both}
+.live-head::before,.live-command::before,.live-action-desk::before,.live-card::after,.live-context::before,.live-candidate-context::before,.live-strategy-panel::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;pointer-events:none;background:rgba(138,190,233,.18)}
+.live-eyebrow{margin-bottom:3px;color:var(--live-blue);font:700 12px/1.2 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}
+.live-title{font-size:19px;font-weight:720;letter-spacing:-.015em;color:var(--ro-text-primary)}
+.live-title em{color:var(--live-red);font-style:normal}
+.live-sub{margin-top:3px;font-size:12px;color:var(--ro-text-muted)}
+.live-status{margin-left:auto;font-size:12px;color:var(--ro-text-muted)}
+.live-strip{display:flex;align-items:center;gap:12px;padding:9px 13px;border:1px solid var(--live-line);border-radius:6px;background:var(--live-panel-3);color:var(--ro-text-secondary);font-size:12px;flex-wrap:wrap}
+.live-strip .dot{width:8px;height:8px;border-radius:50%;animation:lspulse 1.2s ease-in-out infinite}
+.live-strip .k{color:var(--ro-text-muted)}
+.live-strip .v{font-weight:700;color:var(--ro-text-primary)}
+.win-banner{display:flex;align-items:center;gap:12px;padding:10px 13px;border:1px solid #655025;border-radius:6px;background:#191811;font-size:13px;flex-wrap:wrap}
+.win-banner .cd{min-width:120px;color:var(--ro-warning);font:800 22px var(--font-mono)}
+.live-command{overflow:hidden;border-radius:7px;background:var(--live-panel)}
+.live-command-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:13px 16px 11px;border-bottom:1px solid var(--live-line)}
+.live-command-kicker{color:var(--live-blue);font:700 12px var(--font-mono);letter-spacing:.11em}
+.live-command-title{margin-top:3px;color:var(--ro-text-primary);font-size:17px;font-weight:720}
+.live-command-title strong{color:var(--live-red);font-weight:760}
+.live-command-note{max-width:620px;color:var(--ro-text-muted);font-size:12px;line-height:1.55;text-align:right}
+.live-command-facts{display:grid;grid-template-columns:1.1fr .9fr .8fr 1.25fr 1fr}
+.live-command-fact{min-width:0;padding:12px 15px;border-right:1px solid var(--live-line);background:var(--live-panel-2)}
+.live-command-fact:last-child{border-right:0}
+.live-command-fact small{display:flex;align-items:center;justify-content:space-between;gap:6px;color:var(--ro-text-muted);font-size:12px}
+.live-command-fact b{display:block;margin-top:5px;color:var(--ro-text-primary);font:720 16px/1.35 var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live-command-fact b.up{color:var(--live-red)}.live-command-fact b.safe{color:var(--live-green)}.live-command-fact b.warn{color:var(--live-amber)}
+.live-command-fact span{display:block;margin-top:3px;color:var(--ro-text-dim);font-size:12px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live-session{padding:11px 16px 13px;border-top:1px solid var(--live-line)}
+.live-session-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:var(--ro-text-muted);font-size:12px}
+.live-session-head strong{color:var(--ro-text-secondary);font:700 12px var(--font-mono)}
+.live-session-track{position:relative;height:42px;margin:0 8px}
+.live-session-rail{position:absolute;left:0;right:0;top:6px;height:2px;background:#203344}
+.live-session-progress{position:absolute;left:0;top:6px;width:0;height:2px;background:var(--live-blue);box-shadow:0 0 9px rgba(105,183,245,.4);transition:width .55s cubic-bezier(.2,.7,.2,1)}
+.live-session-pointer{position:absolute;top:1px;left:0;width:12px;height:12px;margin-left:-6px;border:2px solid #b9dcf9;border-radius:50%;background:var(--live-blue);box-shadow:0 0 0 4px rgba(105,183,245,.12),0 0 14px rgba(105,183,245,.34);transition:left .55s cubic-bezier(.2,.7,.2,1)}
+.live-session-node{position:absolute;top:0;transform:translateX(-50%);text-align:center}
+.live-session-node i{display:block;width:8px;height:8px;margin:3px auto 4px;border:2px solid #314a5e;border-radius:50%;background:var(--live-panel)}
+.live-session-node span{display:block;color:var(--ro-text-dim);font-size:12px;white-space:nowrap}
+.live-session-node[data-phase="premarket"]{transform:none;text-align:left}.live-session-node[data-phase="close"]{transform:translateX(-100%);text-align:right}
+.live-session-node.completed i{border-color:#426b8d;background:#18344c}.live-session-node.completed span{color:var(--ro-text-secondary)}
+.live-session-node.active i{border-color:var(--live-blue);background:var(--live-blue);box-shadow:0 0 0 3px rgba(105,183,245,.1)}.live-session-node.active span{color:var(--ro-text-primary);font-weight:700}
+.live-action-desk{overflow:hidden;border-radius:7px}
+.live-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px 12px}
+.live-decision-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;padding:10px 11px;border:1px solid var(--live-line);border-radius:5px;background:var(--live-panel-3)}
+.live-decision-item.risk{border-color:#6a3338}.live-decision-item.buy{border-color:#375d48}
+.live-decision-side{min-width:46px;padding:3px 7px;border:1px solid currentColor;border-radius:4px;font:700 12px var(--font-mono);text-align:center}.live-decision-side.sell{color:var(--live-green)}.live-decision-side.buy{color:var(--live-red)}
+.live-decision-copy{min-width:0}.live-decision-copy b{display:block;color:var(--ro-text-primary);font-size:13px}.live-decision-copy span{display:block;margin-top:3px;color:var(--ro-text-muted);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.live-decision-empty{grid-column:1/-1;padding:14px;color:var(--ro-text-muted);font-size:12px;line-height:1.6;text-align:center}
+.live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:10px}
+.live-card{display:flex;overflow:hidden;flex-direction:column;gap:9px;padding:13px 15px;border-radius:7px;transition:transform 180ms cubic-bezier(.2,.7,.2,1),border-color 160ms ease,box-shadow 180ms ease,background-color 160ms ease}
+.live-card:hover{transform:translateY(-2px);border-color:var(--live-line-strong);background:#0e1c29;box-shadow:inset 0 1px rgba(255,255,255,.045),0 18px 38px rgba(0,0,0,.22)}
+.live-card:focus-visible{outline:2px solid var(--ro-focus);outline-offset:3px}
+.live-card-actionable{border-color:#6d3b43;animation:live-panel-in 300ms cubic-bezier(.2,.7,.2,1) both}
+.live-card-actionable::before{content:"";position:absolute;top:0;bottom:0;left:0;width:3px;background:var(--ro-coral-emphasis);box-shadow:0 0 14px rgba(255,128,120,.2)}
+.live-card-rejected,.live-card-no{border-color:#2b3e4f;background:var(--live-panel-3);box-shadow:inset 0 1px rgba(255,255,255,.012)}
+.live-rank{position:absolute;top:10px;right:12px;font:800 30px var(--font-mono);opacity:.15}
+.live-card-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.live-name{font-size:17px;font-weight:700;color:var(--ro-text-primary)}
+.live-code{font:12px var(--font-mono);color:var(--ro-text-muted)}
+.live-price{margin-left:auto;font-size:15px;font-weight:700;color:var(--ro-text-primary)}
+.live-chg{font-size:12px;font-weight:600}
+.live-score-line{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.live-score-big{font:800 42px/1 var(--font-mono)}
+.live-tier{padding:3px 12px;border:1px solid;border-radius:999px;font-size:13px;font-weight:700}
+.live-subscore{margin-left:auto;color:var(--ro-text-muted);font-size:12px;line-height:1.8}
+.live-divider{height:1px;background:var(--ro-border)}
+.live-row{display:flex;align-items:baseline;gap:8px;color:var(--ro-text-muted);font-size:12px;flex-wrap:wrap}
+.live-row .k{min-width:64px}
+.live-row .v{color:var(--ro-text-primary);font-family:var(--font-mono);font-weight:600}
+.live-ai{display:flex;gap:10px;color:var(--ro-text-muted);font-size:12px}
+.live-ai b{font-family:var(--font-mono);font-weight:700}
+.live-levels{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lv-box{padding:6px 8px;border:1px solid var(--live-line);border-radius:4px;background:var(--live-panel-3);text-align:center}
+.lv-box .t{color:var(--ro-text-muted);font-size:12px}
+.lv-box .n{color:var(--ro-text-primary);font:700 13px var(--font-mono)}
+.lv-box .n.buy{color:var(--ro-price-up)}
+.lv-box .n.stop{color:var(--ro-price-down)}
+.live-veto{padding:6px 10px;border:1px solid #6a3338;border-radius:5px;background:#211419;color:var(--ro-coral-emphasis);font-size:12px;line-height:1.5}
+.live-action{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700}
+.live-review-link{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 13px;border:1px solid #2d6591;border-radius:5px;background:#102a40;color:#9fd2fa;font-size:12px;font-weight:700;text-decoration:none;transition:border-color 150ms ease,background-color 150ms ease,transform 150ms ease}
+.live-review-link:hover{transform:translateY(-1px);border-color:#4b8ab9;background:#15354e;color:#c7e6ff}
+.live-review-link[type="button"]{font-family:inherit;cursor:pointer}
+.live-review-link[disabled]{transform:none;border-color:var(--live-line);background:var(--live-panel-3);color:var(--ro-text-dim);cursor:not-allowed;opacity:.82}
+.live-review-dialog{width:min(520px,calc(100vw - 48px));padding:0;border:1px solid var(--live-line-strong);border-radius:8px;background:var(--live-panel);color:var(--ro-text-primary);box-shadow:0 30px 90px rgba(0,0,0,.58)}
+.live-review-dialog::backdrop{background:rgba(2,8,14,.76)}
+.live-review-dialog-head{padding:15px 17px 12px;border-bottom:1px solid var(--live-line)}
+.live-review-dialog-head small{display:block;color:var(--live-blue);font:700 12px var(--font-mono);letter-spacing:.11em}.live-review-dialog-head h2{margin:4px 0 0;font-size:17px}
+.live-review-dialog-body{padding:14px 17px;color:var(--ro-text-secondary);font-size:12px;line-height:1.7}.live-review-dialog-body b{color:var(--ro-text-primary);font-family:var(--font-mono)}
+.live-review-facts{display:grid;grid-template-columns:126px minmax(0,1fr);gap:6px 10px}.live-review-facts dt{color:var(--ro-text-muted)}.live-review-facts dd{margin:0;color:var(--ro-text-primary);overflow-wrap:anywhere}.live-review-notice{margin-top:11px;padding-top:10px;border-top:1px solid var(--live-line);color:var(--ro-text-muted)}
+.live-review-dialog-actions{display:flex;justify-content:flex-end;gap:8px;padding:11px 17px 15px;border-top:1px solid var(--live-line)}
+.live-review-dialog-actions button{min-height:36px;padding:0 14px;border:1px solid var(--live-line);border-radius:5px;background:var(--live-panel-3);color:var(--ro-text-secondary);font-family:inherit;cursor:pointer}
+.live-quantity{padding:7px 9px;border:1px solid var(--live-line);border-radius:4px;background:var(--live-panel-3);color:var(--ro-text-muted);font-size:12px;line-height:1.45}
+.live-quantity b{color:var(--ro-text-secondary);font-family:var(--font-mono)}
+.live-foot{margin-top:8px}
+.live-hint{margin-top:8px;color:var(--ro-text-muted);font-size:12px;line-height:1.7}
+.live-link{color:var(--ro-accent);font-size:12px;text-decoration:none}
+.live-workspace-label{display:flex;align-items:center;gap:10px;padding:6px 2px 0;color:var(--ro-text-muted);font:700 12px var(--font-mono);letter-spacing:.1em}
+.live-workspace-label::after{content:"";height:1px;flex:1;background:var(--live-line)}
+.live-context,.live-candidate-context,.live-strategy-panel{border-radius:7px;overflow:hidden}
+.live-context>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:11px 16px;border-bottom:1px solid transparent;color:var(--ro-text-primary);font-size:14px;font-weight:700;cursor:pointer;list-style:none}
+.live-context>summary::-webkit-details-marker{display:none}
+.live-context>summary::after{content:"展开";color:var(--ro-text-muted);font-size:12px;font-weight:400}
+.live-context[open]>summary{border-bottom-color:var(--ro-border)}
+.live-context[open]>summary::after{content:"收起"}
+.live-context-status{color:var(--ro-text-muted);font-size:12px;font-weight:400}
+.live-route-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--live-line)}
+.live-route-fact{min-width:0;padding:12px 16px;border-right:1px solid var(--ro-border)}
+.live-route-fact:last-child{border-right:0}
+.live-route-fact small{display:block;color:var(--ro-text-muted);font-size:12px}
+.live-route-fact b{display:block;margin-top:5px;color:var(--ro-text-primary);font:650 14px/1.4 var(--font-mono);overflow-wrap:anywhere}
+.live-route-fact span{display:block;margin-top:3px;color:var(--ro-text-muted);font-size:12px;line-height:1.45}
+.live-lens-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:11px 14px}
+.live-lens{min-width:0;padding:10px 11px;border:1px solid var(--live-line);border-radius:5px;background:var(--live-panel-3);transition:border-color 150ms ease,background-color 150ms ease,transform 150ms ease}
+.live-lens:hover{transform:translateY(-1px);border-color:var(--live-line-strong);background:#0d1a27}
+.live-lens header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.live-lens b{color:var(--ro-text-primary);font-size:13px}
+.live-lens em{color:var(--ro-warning);font-size:12px;font-style:normal;white-space:nowrap}
+.live-lens small{display:block;margin-top:2px;color:var(--ro-accent);font-size:12px}
+.live-lens p{margin-top:7px;color:var(--ro-text-secondary);font-size:12px;line-height:1.5}
+.live-context-note{padding:9px 16px;border-top:1px solid var(--ro-border);background:var(--ro-panel-deep);color:var(--ro-text-muted);font-size:12px;line-height:1.5}
+.live-playbook-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--live-line)}
+.live-playbook-fact{min-width:0;padding:12px 16px;border-right:1px solid var(--live-line);background:#0a1621}.live-playbook-fact:last-child{border-right:0}.live-playbook-fact small{display:block;color:var(--ro-text-muted);font-size:12px}.live-playbook-fact b{display:block;margin-top:5px;color:var(--ro-text-primary);font-size:13px;line-height:1.55}.live-playbook-fact span{display:block;margin-top:4px;color:var(--ro-text-muted);font-size:12px;line-height:1.45}.live-playbook-fact.allow b{color:var(--live-green)}.live-playbook-fact.forbid b{color:var(--live-red)}.live-playbook-fact.invalidate b{color:var(--live-amber)}
+.live-context-error{padding:16px;color:var(--ro-warning);font-size:12px;line-height:1.6}
+.live-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:11px 15px;border-bottom:1px solid var(--live-line)}
+.live-section-head h2{margin:0;color:var(--ro-text-primary);font-size:14px;font-weight:720}.live-section-head p{margin:2px 0 0;color:var(--ro-text-muted);font-size:12px}.live-section-status{color:var(--ro-text-muted);font:12px var(--font-mono)}
+.live-candidate-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:8px;padding:10px 12px}
+.live-candidate-lens{min-width:0;border:1px solid var(--live-line);border-radius:5px;background:var(--live-panel-3);overflow:hidden}
+.live-candidate-lens-head{display:flex;align-items:flex-start;gap:9px;padding:10px 11px;border-bottom:1px solid var(--live-line)}
+.live-candidate-lens-head a{color:var(--ro-text-primary);font-weight:720;text-decoration:none}.live-candidate-lens-head code{color:var(--ro-text-muted);font:12px var(--font-mono)}
+.live-candidate-lens-head .state-counts{margin-left:auto;color:var(--ro-text-muted);font:12px/1.5 var(--font-mono);text-align:right}
+.live-candidate-evidence{padding:8px 11px;border-bottom:1px solid var(--live-line);color:var(--ro-text-secondary);font-size:12px;line-height:1.5}.live-candidate-evidence b{color:var(--ro-text-primary)}
+.live-candidate-lens summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;color:var(--ro-text-secondary);font-size:12px;cursor:pointer;list-style:none}.live-candidate-lens summary::-webkit-details-marker{display:none}
+.live-candidate-lens summary::after{content:"查看 8 视角";color:var(--live-blue)}.live-candidate-lens details[open] summary::after{content:"收起"}
+.live-candidate-lens-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0 9px 9px}
+.live-candidate-lens-row{min-width:0;padding:8px;border:1px solid var(--live-line);border-radius:4px;background:#09131d}
+.live-candidate-lens-row header{display:flex;align-items:center;gap:6px}.live-candidate-lens-row b{font-size:12px}.live-candidate-lens-row em{margin-left:auto;font-size:12px;font-style:normal}.live-candidate-lens-row p{margin:5px 0 0;color:var(--ro-text-muted);font-size:12px;line-height:1.45}.live-candidate-lens-row .lens-grade{display:block;margin-top:4px;color:var(--ro-warning);font:12px/1.45 var(--font-mono)}.live-candidate-lens-row dl{display:grid;grid-template-columns:42px minmax(0,1fr);gap:3px 6px;margin:7px 0 0;padding-top:6px;border-top:1px solid var(--live-line);font-size:12px;line-height:1.45}.live-candidate-lens-row dt{color:var(--ro-text-dim)}.live-candidate-lens-row dd{margin:0;color:var(--ro-text-secondary);overflow-wrap:anywhere}
+.lens-state-support{color:var(--live-green)}.lens-state-counterevidence{color:var(--live-red)}.lens-state-missing{color:var(--live-amber)}.lens-state-not_applicable{color:var(--ro-text-dim)}
+.live-candidate-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-top:1px solid var(--live-line);color:var(--ro-text-dim);font-size:12px}
+.live-strategy-panel>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px;padding:10px 15px;color:var(--ro-text-primary);font-size:13px;font-weight:700;cursor:pointer;list-style:none}.live-strategy-panel>summary::-webkit-details-marker{display:none}.live-strategy-panel>summary::after{content:"展开证据与全局 8 视角";color:var(--ro-text-muted);font-size:12px;font-weight:400}.live-strategy-panel[open]>summary::after{content:"收起详情"}
+#liveBody>:nth-child(1){animation:live-panel-in 280ms cubic-bezier(.2,.7,.2,1) both}
+#liveBody>:nth-child(2){animation:live-panel-in 280ms cubic-bezier(.2,.7,.2,1) 40ms both}
+#liveBody>:nth-child(3){animation:live-panel-in 280ms cubic-bezier(.2,.7,.2,1) 80ms both}
+@keyframes lspulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes live-panel-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1220px){.live-command-facts{grid-template-columns:repeat(5,minmax(140px,1fr));overflow-x:auto}.live-route-grid,.live-lens-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.live-route-fact:nth-child(2){border-right:0}.live-session-node span{font-size:12px}}
+@media(max-width:900px){.live-grid,.live-action-grid,.live-route-grid,.live-lens-grid,.live-candidate-list,.live-playbook-grid{grid-template-columns:1fr}.live-route-fact,.live-playbook-fact{border-right:0;border-bottom:1px solid var(--ro-border)}.live-command-note{display:none}}
+@media(prefers-reduced-motion:reduce){.live-page *,.live-page *::before,.live-page *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="live-page">
+  <div class="live-head">
+    <div>
+      <div class="live-eyebrow" id="liveSystemIdentity">REGIS / MARKET COGNITION OPERATING SYSTEM</div>
+      <div class="live-title">今日决策 · <em>买卖提醒</em></div>
+      <div class="live-sub">市场情绪决定风险预算，策略与因子筛选候选；所有动作仅进入人工复核与记录，不自动交易。</div>
+    </div>
+    <div class="live-status" id="liveMeta" aria-live="polite">—</div>
+  </div>
+
+  <section class="live-command" aria-labelledby="liveCommandTitle">
+    <div class="live-command-head">
+      <div><div class="live-command-kicker">TODAY / DECISION COMMAND</div><div class="live-command-title" id="liveCommandTitle"><strong id="liveCommandConclusion">正在核验今日路由</strong></div></div>
+      <div class="live-command-note" id="liveCommandNote">仅在严格前向包、账户与同一观察时点板块证据齐备时显示可用仓位和笔数。</div>
+    </div>
+    <div class="live-command-facts" aria-label="今日五项交易事实">
+      <div class="live-command-fact"><small>市场情绪阶段 <span>规则识别＋通俗解释</span></small><b id="factMarketState">—</b><span id="factMarketStateSub">等待研究路由</span></div>
+      <div class="live-command-fact"><small>今日建议总仓位 <span>仅研究</span></small><b id="factExposure">—</b><span id="factExposureSub">未形成严格前向决策</span></div>
+      <div class="live-command-fact"><small>今日允许交易笔数 <span>新开仓</span></small><b id="factTrades">—</b><span id="factTradesSub">等待风险预算</span></div>
+      <div class="live-command-fact"><small>主线板块 <span>同一分钟盘面确认</span></small><b id="factSectors">—</b><span id="factSectorsSub">未读取板块证据</span></div>
+      <div class="live-command-fact"><small>当前持仓风险 <span>账户约束</span></small><b id="factAccountRisk">—</b><span id="factAccountRiskSub">未读取账户快照</span></div>
+    </div>
+    <div class="live-session">
+      <div class="live-session-head"><span>今日交易阶段 · 北京时间</span><strong id="liveSessionNow">—</strong><span id="liveSessionPhase">正在计算阶段</span></div>
+      <div class="live-session-track" id="liveSessionTrack" aria-label="交易日阶段时间轴">
+        <div class="live-session-rail"></div><div class="live-session-progress" id="liveSessionProgress"></div><div class="live-session-pointer" id="liveSessionPointer"></div>
+        <div class="live-session-node" data-phase="premarket" data-progress="0" style="left:0%"><i></i><span>盘前规划</span></div>
+        <div class="live-session-node" data-phase="auction" data-progress="16.6667" style="left:16.6667%"><i></i><span>集合竞价</span></div>
+        <div class="live-session-node" data-phase="first30" data-progress="33.3333" style="left:33.3333%"><i></i><span>开盘前30分钟</span></div>
+        <div class="live-session-node" data-phase="intraday" data-progress="50" style="left:50%"><i></i><span>普通盘中</span></div>
+        <div class="live-session-node" data-phase="lunch" data-progress="66.6667" style="left:66.6667%"><i></i><span>午间复核</span></div>
+        <div class="live-session-node" data-phase="tail" data-progress="83.3333" style="left:83.3333%"><i></i><span>尾盘决策</span></div>
+        <div class="live-session-node" data-phase="close" data-progress="100" style="left:100%"><i></i><span>收盘复盘</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="live-action-desk" aria-labelledby="liveDecisionActionsTitle">
+    <div class="live-section-head"><div><h2 id="liveDecisionActionsTitle">交易门禁 · 买卖提醒</h2><p>持仓硬风险优先；买入只显示同一观察时点决策授权的最多 2 项完整计划。</p></div><div class="live-section-status" id="liveDecisionActionsStatus">正在核验…</div></div>
+    <div class="live-action-grid" id="liveDecisionActions" aria-live="polite" aria-busy="true"><div class="live-decision-empty">正在读取持仓风险与人工复核计划。</div></div>
+  </section>
+
+  <div class="live-strip" id="liveStrip" role="status" aria-live="polite">
+    <span class="dot" id="stripDot" aria-hidden="true"></span>
+    <span id="stripText">正在连接…</span>
+    <span style="flex:1"></span>
+    <span class="k">监控候选</span><span class="v" id="statScanned">—</span>
+    <span class="k" id="statReadyLabel">· 当前可行动</span><span class="v" id="statReady">—</span>
+    <span class="k" id="statSecondaryLabel">· 观察/待买点</span><span class="v" id="statSecondary">—</span>
+    <span class="k" id="statPassLabel">· 机会质量通过</span><span class="v" id="statPass">—</span>
+  </div>
+
+  <div class="win-banner" id="winBanner" style="display:none" role="status">
+    <span style="font-size:13px;font-weight:700;color:#f0bf5b"><span id="winTitle">下一交易时段</span></span>
+    <span id="winLabel" style="color:var(--color-text)">—</span>
+    <span class="cd" id="winCountdown">—</span>
+  </div>
+
+  <div class="live-workspace-label">开盘专用工作区 · 市场情绪 → 策略战法 → 统一候选 → 人工复核</div>
+
+  <details class="live-strategy-panel" id="liveRouteContext">
+    <summary><span>当前策略与战法 · 市场情绪路由</span><span class="live-context-status" id="liveRouteContextStatus">正在读取研究路由…</span></summary>
+    <div id="liveRouteContextBody" aria-live="polite" aria-busy="true"><div class="live-context-error">正在读取市场状态、同一观察时点板块确认、允许/禁止战法、失效条件与全局 8 视角。</div></div>
+  </details>
+
+  <section class="live-candidate-context" aria-labelledby="candidateLensTitle">
+    <div class="live-section-head"><div><h2 id="candidateLensTitle">统一候选 · 逐股 8 视角证据解读</h2><p>先形成统一候选，再用公开游资方法论解释；不改变评分、排名、仓位或提醒权限。</p></div><div class="live-section-status" id="candidateLensStatus">正在读取…</div></div>
+    <div class="live-candidate-list" id="candidateLensBody" aria-live="polite" aria-busy="true"><div class="live-context-error">正在等待逐股证据解读。</div></div>
+  </section>
+
+  <div class="live-workspace-label">统一候选 · 实时研究状态 / 人工复核与记录</div>
+
+  <div id="liveBody" aria-busy="true">
+    <div role="status" style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:64px 0;text-align:center">
+      <div aria-hidden="true" style="width:36px;height:36px;border:3px solid rgba(10,132,255,0.2);border-top-color:var(--color-accent);border-radius:50%;animation:lspulse 1s linear infinite"></div>
+      <div style="font-size:15px;color:var(--color-text)">正在读取统一候选快照…</div>
+      <div style="font-size:12px;color:var(--color-text-dim)">全市场收盘预筛、监控候选与深度评估分层展示；完成后自动更新</div>
+    </div>
+  </div>
+
+</div>
+<dialog class="live-review-dialog" id="liveReviewDialog" aria-labelledby="liveReviewDialogTitle">
+  <div class="live-review-dialog-head"><small>HUMAN DECISION CHECK</small><h2 id="liveReviewDialogTitle">是否进入人工买入复核？</h2></div>
+  <div class="live-review-dialog-body" id="liveReviewDialogBody">正在读取候选计划。</div>
+  <div class="live-review-dialog-actions"><button type="button" id="liveReviewCancel">暂不处理</button><a class="live-review-link" id="liveReviewContinue" href="#">进入个股研究并记录</a></div>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce }}">
+const LIVE_META = {
+  tier: {
+    green:  { t: '研究评分较高', c: '#54cf89', icon: '' },
+    yellow: { t: '研究评分待观察', c: '#e8b94d', icon: '' },
+    red:    { t: '研究评分不满足', c: '#f16a76', icon: '' },
+  },
+};
+const CONF_LABEL = { high: '高', medium: '中', low: '低' };
+const LIVE_STATE_LABELS = {
+  sentiment_rising: '情绪上升', weak_repair: '情绪弱修复', crowded_climax: '情绪高潮拥挤',
+  retreat: '情绪退潮', risk_closed: '风险关闭', unknown: '当前无法判断',
+};
+const LIVE_STATE_MEANINGS = {
+  sentiment_rising: '上涨覆盖、强势延续和成交活跃度比弱市改善；机会增多但不是普涨，只筛已确认主线，板块未确认时不开新仓',
+  weak_repair: '弱势后出现修复，但扩散和持续性还不够，只做确认后的轻仓研究',
+  crowded_climax: '强势方向过度一致，追后排风险上升，等待分歧并降低风险',
+  retreat: '高位负反馈和亏钱效应扩散，停止新开短线仓位，先处理持仓风险',
+  risk_closed: '市场风险条件不支持新开仓，保持低仓位或空仓观察',
+};
+const LIVE_LENS_LABELS = {
+  emotion_cycle: '情绪周期与风险预算', sector_front_row: '板块前排与扩散',
+  ladder_extremes: '高低位梯队', weak_market_and_hot_sector: '弱市与持续热点',
+  predict_confirm_follow: '预判·确认·跟随', high_energy_and_tradability: '高能期与可成交性',
+  mode_discipline: '模式纪律', consensus_and_error_exit: '市场合力与纠错退出',
+};
+const LIVE_EVIDENCE_GRADE_LABELS = {
+  A1: '原始或官方材料', A2: '已核验原始平台内容',
+  B: '可信媒体或访谈转述', C: '二手资料，仅作研究线索',
+};
+const liveEsc = (s) => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+const liveEvidencePlain = (grades) => {
+  const values = Array.isArray(grades) ? grades : [];
+  return values.length
+    ? [...new Set(values.map(value => LIVE_EVIDENCE_GRADE_LABELS[String(value)] || '来源等级待解释'))].join(' / ')
+    : '来源等级待核验';
+};
+const LIVE_MISSING_FIELD_LABELS = {
+  'research_route.sector_confirmation.ready':'市场板块快照尚未确认',
+  'research_route.sector_confirmation.confirmed_sectors':'已确认板块清单不完整',
+  'candidate.sector_identity':'这只股票尚未绑定到已确认板块',
+  'candidate.ladder_position':'高低位梯队位置未提供',
+  'candidate.queue_evidence_status':'排队和可成交证据未提供',
+  'candidate.tradable':'真实可成交状态未提供',
+  'candidate.assessment.execution_eligible':'执行条件尚未核验',
+  'candidate.playbook_id':'候选尚未绑定固定战法',
+  'candidate.invalidation_condition':'失效条件尚未填写',
+  'candidate.exit_condition':'退出条件尚未填写',
+  'research_route.market_state':'市场阶段尚未识别',
+  'research_route.status.research_route_ready':'完整研究路由尚未形成',
+};
+const liveMissingPlain = (fields) => liveList(fields).map(value => LIVE_MISSING_FIELD_LABELS[String(value)] || '所需研究字段尚未提供').join('、');
+const liveNumber = (n) => n != null && Number.isFinite(Number(n)) ? Number(n) : null;
+const liveResearchBand = (composite) => {
+  if (composite && composite.research_band) return composite.research_band;
+  const score = liveNumber(composite && composite.composite);
+  if (score == null) return '研究分档未知';
+  return score >= 80 ? '高分研究候选' : score >= 65 ? '较高分研究候选'
+    : score >= 50 ? '中性研究候选' : score >= 35 ? '低分研究候选' : '排除级研究候选';
+};
+const liveMoney = (n) => liveNumber(n) == null ? '—' : '¥' + liveNumber(n).toFixed(2);
+const livePct = (n) => liveNumber(n) == null ? '—' : (liveNumber(n) >= 0 ? '+' : '') + liveNumber(n).toFixed(1) + '%';
+const liveFmt = (sec) => {
+  if (sec == null || sec < 0) return '—';
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+};
+const LIVE_SESSION_PHASES = {
+  premarket: '盘前规划', auction: '集合竞价', first30: '开盘前 30 分钟',
+  intraday: '普通盘中', lunch: '午间复核', tail: '尾盘决策', close: '收盘复盘',
+};
+let liveAuditedMarketStatus = null;
+let liveServerClockOffsetMs = 0;
+let liveDecisionWorkspace = null;
+let liveReviewRedirected = false;
+function liveBeijingParts(now = new Date(Date.now() + liveServerClockOffsetMs)) {
+  const parts = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai', weekday: 'short', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(now);
+  return Object.fromEntries(parts.map(part => [part.type, part.value]));
+}
+function livePhaseProgress(clockMinute, phase) {
+  const interpolate = (startMinute, endMinute, startPct, endPct) => {
+    if (endMinute <= startMinute) return startPct;
+    const ratio = Math.max(0, Math.min(1, (clockMinute - startMinute) / (endMinute - startMinute)));
+    return startPct + (endPct - startPct) * ratio;
+  };
+  if (phase === 'close') return 100;
+  if (phase === 'tail') return interpolate(14 * 60 + 30, 15 * 60, 83.3333, 100);
+  if (phase === 'lunch') return 66.6667;
+  if (phase === 'intraday' && clockMinute >= 13 * 60) {
+    return interpolate(13 * 60, 14 * 60 + 30, 66.6667, 83.3333);
+  }
+  if (phase === 'intraday') return interpolate(10 * 60, 11 * 60 + 30, 50, 66.6667);
+  if (phase === 'first30') return interpolate(9 * 60 + 30, 10 * 60, 33.3333, 50);
+  if (phase === 'auction') return interpolate(9 * 60 + 15, 9 * 60 + 30, 16.6667, 33.3333);
+  return interpolate(8 * 60 + 45, 9 * 60 + 15, 0, 16.6667);
+}
+function liveUpdateSessionTimeline() {
+  const p = liveBeijingParts();
+  const hour = Number(p.hour) % 24;
+  const minute = Number(p.minute);
+  const clockMinute = hour * 60 + minute;
+  const auditedSession = (liveAuditedMarketStatus || {}).session || {};
+  const auditedCalendar = (liveAuditedMarketStatus || {}).decision_calendar || {};
+  const calendarClosed = auditedCalendar.is_trading_day === false;
+  const sessionKnown = ['open', 'break', 'preopen', 'auction', 'closed'].includes(auditedSession.status);
+  let phase = 'premarket';
+  if (calendarClosed || auditedSession.status === 'closed') phase = 'close';
+  else if (auditedSession.status === 'break') phase = 'lunch';
+  else if (auditedSession.status === 'auction') phase = 'auction';
+  else if (auditedSession.status === 'preopen') phase = 'premarket';
+  else if (clockMinute >= 15 * 60) phase = 'close';
+  else if (clockMinute >= 14 * 60 + 30) phase = 'tail';
+  else if (clockMinute >= 13 * 60) phase = 'intraday';
+  else if (clockMinute >= 11 * 60 + 30) phase = 'lunch';
+  else if (clockMinute >= 10 * 60) phase = 'intraday';
+  else if (clockMinute >= 9 * 60 + 30) phase = 'first30';
+  else if (clockMinute >= 9 * 60 + 15) phase = 'auction';
+  const progress = calendarClosed || auditedSession.status === 'closed'
+    ? 100 : livePhaseProgress(clockMinute, phase);
+  const dateText = `${p.year}-${p.month}-${p.day} ${String(hour).padStart(2, '0')}:${p.minute}:${p.second}`;
+  document.getElementById('liveSessionNow').textContent = dateText;
+  document.getElementById('liveSessionPhase').textContent = sessionKnown
+    ? `${auditedSession.label || auditedSession.status} · ${LIVE_SESSION_PHASES[phase]}`
+    : `交易时段未核验 · ${LIVE_SESSION_PHASES[phase]}`;
+  document.getElementById('liveSessionProgress').style.width = `${progress}%`;
+  document.getElementById('liveSessionPointer').style.left = `${progress}%`;
+  document.getElementById('liveSessionTrack').setAttribute('aria-label', `当前北京时间 ${dateText}，阶段 ${LIVE_SESSION_PHASES[phase]}`);
+  document.querySelectorAll('.live-session-node').forEach(node => {
+    const nodeProgress = liveNumber(node.dataset.progress);
+    node.classList.toggle('active', node.dataset.phase === phase);
+    node.classList.toggle('completed', nodeProgress != null && nodeProgress < progress);
+  });
+}
+const liveAction = (a) => {
+  if (a === 'buy_now') return { t: '综合条件已满足，需人工复核', c: 'var(--color-buy)' };
+  if (a === 'avoid')   return { t: '当前条件提示回避', c: 'var(--color-warning)' };
+  return { t: '综合条件未满足', c: 'var(--color-text-dim)' };
+};
+
+const liveStateText = (state) => `${LIVE_STATE_LABELS[state] || '未识别状态'} · ${state || 'unknown'}`;
+const liveList = (value) => Array.isArray(value) ? value : [];
+const liveSectorLabel = (row) => {
+  if (typeof row === 'string') return row.trim();
+  if (!row || typeof row !== 'object') return '';
+  return String(row.name || row.label || row.code || '').trim();
+};
+const LIVE_CANDIDATE_AUTHORITY_KEYS = [
+  'changes_unified_score', 'changes_ranking', 'changes_position_or_quantity',
+  'changes_trade_count', 'generates_buy_or_sell_alert', 'generates_recommendation',
+  'production', 'automatic_trading',
+];
+const liveAuthorityFalse = (authority) => authority && typeof authority === 'object'
+  && LIVE_CANDIDATE_AUTHORITY_KEYS.every(key => authority[key] === false);
+
+function liveSetFact(id, value, detail, tone = '') {
+  const target = document.getElementById(id);
+  const sub = document.getElementById(`${id}Sub`);
+  target.textContent = value || '—';
+  target.className = tone;
+  sub.textContent = detail || '未提供证据说明';
+  target.title = value || '';
+  sub.title = detail || '';
+}
+
+function liveStrictForward(route) {
+  const raw = route.strict_forward_decision;
+  if (!raw || typeof raw !== 'object') return { ready: false, status: '未提供严格前向决策', decision: {} };
+  const decision = raw.latest && typeof raw.latest === 'object' ? raw.latest : raw;
+  const ready = decision.valid === true
+    && raw.status !== 'runtime_admission_invalid'
+    && decision.research_only !== false
+    && decision.execution_applied !== true;
+  return { ready, status: raw.status || decision.decision_status || '状态未提供', decision };
+}
+
+function liveRenderCommand(route) {
+  const system = route.system_identity && typeof route.system_identity === 'object'
+    ? route.system_identity : {};
+  const systemReady = system.system_id === 'regis_market_cognition_operating_system_v1'
+    && liveList(system.chain).length === 10
+    && system.broker_connected === false
+    && system.automatic_trading === false
+    && system.stable_profit_proven === false;
+  document.getElementById('liveSystemIdentity').textContent = systemReady
+    ? `${system.display_name} / INTRADAY WORKSPACE`
+    : 'REGIS / SYSTEM IDENTITY UNAVAILABLE';
+  const workspace = route.today_decision_workspace && typeof route.today_decision_workspace === 'object'
+    ? route.today_decision_workspace : {};
+  const strict = liveStrictForward(route);
+  const decision = strict.decision;
+  const routeBudget = route.research_budget_hypothesis || {};
+  const strictBudget = decision.market_budget || {};
+  const sector = route.sector_confirmation || {};
+  const completedReview = workspace.completed_market_review || route.completed_market_review || {};
+  const completedReviewReady = completedReview.valid === true
+    && completedReview.display_only === true;
+  const strictSectors = liveList(decision.confirmed_sectors);
+  const routeSectors = liveList(sector.confirmed_sectors);
+  const strictWorkspace = workspace.strict_forward_packet_valid === true;
+  const marketState = strictWorkspace || strict.ready
+    ? (workspace.market_state || decision.market_state || 'unknown')
+    : completedReviewReady
+      ? (completedReview.market_state || 'unknown')
+      : (route.market_state || route.requested_market_state || 'unknown');
+  const stateVerified = strictWorkspace || strict.ready || route.status === 'research_route_ready';
+  const stateMeaning = LIVE_STATE_MEANINGS[marketState] || '当前阶段只表示规则识别结果，仍须经过板块、战法、个股与账户约束';
+  const stateSource = strictWorkspace || strict.ready
+    ? `当前盘中严格快照 · ${workspace.strict_forward_decision_at || decision.decision_at || '时点未提供'}`
+    : completedReviewReady
+      ? `今日 ${completedReview.decision_at || '收盘前'} 已完成复盘快照 · 不能沿用为下一交易时段买入授权`
+      : `${workspace.research_hypothesis_state || '研究基线'} · ${route.market_state_as_of || decision.market_state_as_of || '时点未提供'}`;
+  liveSetFact(
+    'factMarketState',
+    LIVE_STATE_LABELS[marketState] || '未识别状态',
+    `${stateMeaning} · ${stateSource}`,
+    marketState === 'sentiment_rising' ? 'up' : ['risk_closed', 'retreat', 'unknown'].includes(marketState) ? 'warn' : '',
+  );
+
+  const workspaceExposure = liveNumber(workspace.target_exposure_pct);
+  const strictExposure = liveNumber(workspaceExposure ?? decision.target_exposure_pct ?? strictBudget.target_exposure_pct);
+  const researchExposure = liveList(routeBudget.target_exposure_range_pct).map(liveNumber);
+  if ((strictWorkspace || strict.ready) && strictExposure != null) {
+    liveSetFact('factExposure', `${strictExposure.toFixed(0)}%`, '严格前向研究仓位 · 未应用执行', strictExposure === 0 ? 'warn' : 'safe');
+  } else if (workspaceExposure != null) {
+    liveSetFact('factExposure', `${workspaceExposure.toFixed(0)}%`, `${workspace.research_hypothesis_state || '研究假设'} · 非执行仓位`, 'warn');
+  } else if (researchExposure.length === 2 && researchExposure.every(value => value != null)) {
+    liveSetFact('factExposure', `${researchExposure[0].toFixed(0)}–${researchExposure[1].toFixed(0)}%`, '研究假设 · 非严格前向执行', 'warn');
+  } else {
+    liveSetFact('factExposure', '无法计算', '严格前向包或风险预算不足', 'warn');
+  }
+
+  const workspaceTrades = liveNumber(workspace.maximum_new_trades);
+  const strictTrades = liveNumber(workspaceTrades ?? decision.maximum_new_trades ?? strictBudget.maximum_new_trades);
+  const researchTrades = liveNumber(routeBudget.maximum_new_trades);
+  const trades = strictWorkspace || strict.ready ? strictTrades : (workspaceTrades ?? researchTrades);
+  liveSetFact(
+    'factTrades', trades == null ? '无法计算' : `${Math.max(0, Math.floor(trades))} 笔`,
+    strictWorkspace || strict.ready ? '严格前向研究上限 · 不自动下单' : `${workspace.research_hypothesis_state || '研究预算'} · 未应用执行`,
+    trades === 0 ? 'warn' : trades == null ? 'warn' : 'safe',
+  );
+
+  const workspaceSectors = liveList(workspace.confirmed_sectors);
+  const reviewSectors = completedReviewReady ? liveList(completedReview.confirmed_sectors) : [];
+  const sectorRows = workspaceSectors.length ? workspaceSectors
+    : strict.ready && strictSectors.length ? strictSectors
+      : reviewSectors.length ? reviewSectors : routeSectors;
+  const sectorNames = sectorRows.map(liveSectorLabel).filter(Boolean);
+  const sectorDetail = strictWorkspace || strict.ready || sector.ready === true
+    ? `当前盘中已用同一分钟盘面核验 · ${sectorNames.length} 个`
+    : reviewSectors.length
+      ? `今日收盘前已确认 ${sectorNames.length} 个 · 仅用于复盘，下一交易时段重新确认`
+      : '等待下一盘中确认窗口；不会用盘后或过期数据补出主线';
+  liveSetFact(
+    'factSectors', sectorNames.length ? sectorNames.slice(0, 3).join(' / ') : '未确认',
+    sectorDetail,
+    sectorNames.length ? 'safe' : 'warn',
+  );
+
+  const accountEvidence = route.account_evidence || {};
+  const review = route.account_exposure_review || {};
+  const workspaceExposureNow = liveNumber(workspace.current_exposure_pct);
+  const accountReady = workspaceExposureNow != null || (strict.ready
+    && decision.account_plan_status
+    && !String(decision.account_plan_status).includes('incomplete')
+    && !String(decision.account_plan_status).includes('invalid'));
+  if (accountReady) {
+    const existing = workspaceExposureNow ?? liveNumber(decision.existing_exposure_pct);
+    const overBudget = existing != null && strictExposure != null && existing > strictExposure;
+    liveSetFact(
+      'factAccountRisk', overBudget ? '现有暴露高于研究预算' : '约束已核验',
+      existing == null ? String(decision.account_plan_status) : `现有暴露 ${existing.toFixed(1)}% · ${decision.account_plan_status || '今日工作区'}`,
+      overBudget ? 'warn' : 'safe',
+    );
+  } else {
+    const missing = [];
+    if (accountEvidence.cash_user_recorded !== true) missing.push('剩余现金');
+    if (accountEvidence.account_snapshot_bound !== true) missing.push('账户快照');
+    if (accountEvidence.valuation_complete !== true) missing.push('持仓估值');
+    liveSetFact('factAccountRisk', '无法完整评估', missing.length ? `缺 ${missing.join('、')}` : (review.status || strict.status), 'warn');
+  }
+
+  const hold = trades === 0 || !stateVerified || !sectorNames.length || !accountReady;
+  document.getElementById('liveCommandConclusion').textContent = workspace.headline || (hold
+    ? '今日不新开仓 · 等待证据补齐'
+    : '研究路由已形成 · 仅进入人工复核');
+  document.getElementById('liveCommandNote').textContent = workspace.reason || (strict.ready
+    ? `严格前向决策包已核验；${decision.execution_applied === true ? '执行权限异常，禁止操作。' : '未连接自动交易，所有数量须人工确认。'}`
+    : `当前仅为研究路由；${strict.status}。不用旧包或推断值补全。`);
+  liveRenderDecisionActions(workspace);
+}
+
+function liveAuthorizedBuyPlan(workspace, code) {
+  if (!workspace || workspace.strict_forward_packet_valid !== true) return null;
+  const match = liveList(workspace.manual_review_items).find(row => String((row || {}).code || '') === String(code));
+  const plan = match && match.manual_plan && typeof match.manual_plan === 'object' ? match.manual_plan : null;
+  const review = plan ? livePlanReadiness(match, plan, 'BUY') : null;
+  return review && review.ready ? {row: match, plan, quantity: review.quantity, review} : null;
+}
+
+function liveReviewButtonMarkup(item, plan, side, review, href, label = `人工复核${side === 'BUY' ? '买入' : '卖出'}`) {
+  if (!href) return '';
+  if (!review.ready) {
+    return `<button class="live-review-link" type="button" disabled title="${liveEsc(review.missing.join('、') || '计划字段不完整')}">复核字段不完整</button>`;
+  }
+  const name = item.name || item.code || '未标识股票';
+  const risk = liveNumber(plan.risk_line);
+  const riskText = risk == null ? review.meta.invalidation : `${plan.risk_line_kind || '风险线'} ¥${risk.toFixed(2)}`;
+  return `<button class="live-review-link" type="button" data-live-review data-plan-complete="true" data-manual-plan-status="${liveEsc(plan.status)}" data-side="${side}" data-code="${liveEsc(item.code || '')}" data-name="${liveEsc(name)}" data-shares="${liveEsc(review.quantity.value)}" data-limit="${liveEsc(plan.limit_price)}" data-risk="${liveEsc(riskText)}" data-reason="${liveEsc(plan.reason || item.reason || '')}" data-valid="${liveEsc(plan.valid_until)}" data-invalid="${liveEsc(review.meta.invalidation)}" data-cost="${liveEsc(plan.estimated_cost ?? '')}" data-weight="${liveEsc(plan.target_weight_pct ?? '')}" data-cash-after="${liveEsc(plan.cash_after_yuan ?? '')}" data-playbook="${liveEsc(review.meta.playbook)}" data-strategy-id="${liveEsc(review.meta.strategyId)}" data-strategy-version="${liveEsc(review.meta.strategyVersion)}" data-evidence-id="${liveEsc(review.meta.evidenceIdentity)}" data-evidence-grade="${liveEsc(review.meta.evidenceGrade)}" data-as-of="${liveEsc(review.meta.asOf)}" data-href="${liveEsc(href)}">${label}</button>`;
+}
+
+function liveDecisionActionMarkup(item, side, workspace) {
+  const isBuy = side === 'BUY';
+  const plan = isBuy ? (item.manual_plan || {}) : item;
+  const code = String(item.code || '').trim();
+  const name = item.name || code || '未标识股票';
+  const review = livePlanReadiness(item, plan, side);
+  const limit = liveNumber(plan.limit_price);
+  const href = /^\d{6}$/.test(code) ? `${item.stock_research_url || `/stock?code=${encodeURIComponent(code)}`}#terminalTradePlan` : '';
+  const risk = liveNumber(plan.risk_line);
+  const riskText = risk == null ? (review.meta.invalidation || '失效条件未提供') : `${plan.risk_line_kind || '风险线'} ¥${risk.toFixed(2)}`;
+  const reason = plan.reason || item.reason || '未提供原因';
+  const details = `${review.ready ? review.quantity.text : '精确股数已隐藏'} · ${limit == null ? '限价未提供' : `限价 ¥${limit.toFixed(2)}`} · ${plan.valid_until || '有效期未提供'}`;
+  const button = liveReviewButtonMarkup({...item, code, name}, plan, side, review, href, `人工复核${isBuy ? '买入' : '卖出'}`);
+  return `<article class="live-decision-item ${isBuy ? 'buy' : 'risk'}"><span class="live-decision-side ${isBuy ? 'buy' : 'sell'}">${isBuy ? '买入' : '卖出'}</span><div class="live-decision-copy"><b>${liveEsc(name)} · ${liveEsc(code)}</b><span>${liveEsc(details)}</span><span>战法 ${liveEsc(review.meta.playbook || '未获准入')} · 策略 ${liveEsc(review.meta.strategyId || '未提供')}${review.meta.strategyVersion ? ` · ${liveEsc(review.meta.strategyVersion)}` : ''}</span><span>证据 ${liveEsc(review.meta.evidenceIdentity || '未提供')} / ${liveEsc(review.meta.evidenceGrade || '等级未提供')} · as_of ${liveEsc(review.meta.asOf || '未提供')}</span><span>失效 ${liveEsc(review.meta.invalidation || '未提供')} · ${liveEsc(riskText)} · ${liveEsc(reason)}</span>${review.ready ? '' : `<span class="lens-state-missing">复核已禁用：${liveEsc(review.quantity.detail)}</span>`}</div>${button}</article>`;
+}
+
+function liveRenderDecisionActions(workspace) {
+  liveDecisionWorkspace = workspace && typeof workspace === 'object' ? workspace : {};
+  const body = document.getElementById('liveDecisionActions');
+  const status = document.getElementById('liveDecisionActionsStatus');
+  const sellItems = liveList(liveDecisionWorkspace.sell_review_items).filter(row => row && row.status === 'ready_for_manual_review');
+  const buyItems = liveDecisionWorkspace.strict_forward_packet_valid === true
+    ? liveList(liveDecisionWorkspace.manual_review_items).filter(row => row && (row.manual_plan || {}).status === 'ready_for_manual_review')
+    : [];
+  const rows = sellItems.map(row => liveDecisionActionMarkup(row, 'SELL', liveDecisionWorkspace))
+    .concat(buyItems.map(row => liveDecisionActionMarkup(row, 'BUY', liveDecisionWorkspace)))
+    .slice(0, 2);
+  body.setAttribute('aria-busy', 'false');
+  status.textContent = rows.length
+    ? `${rows.length} 项待处理 · 持仓硬风险优先${sellItems.length + buyItems.length > rows.length ? ` · 其余 ${sellItems.length + buyItems.length - rows.length} 项已收起` : ''}`
+    : '当前无可操作提醒';
+  body.innerHTML = rows.length ? rows.join('')
+    : `<div class="live-decision-empty"><b>${liveEsc(liveDecisionWorkspace.headline || '今日不交易')}</b><br>${liveEsc(liveDecisionWorkspace.reason || '没有通过同一观察时点决策与账户约束的买卖计划；观察项不会被伪装成提醒。')}</div>`;
+}
+
+function liveObservationText(observation, mode = 'entry') {
+  const row = observation && typeof observation === 'object' ? observation : {};
+  const counter = liveList(row.counterevidence).map(liveEvidenceFactText).filter(Boolean);
+  const support = liveList(row.supporting_evidence).map(liveEvidenceFactText).filter(Boolean);
+  const evidence = liveList(row.evidence).map(liveEvidenceFactText).filter(Boolean);
+  const missing = liveList(row.missing_fields).filter(Boolean);
+  if (counter.length) return `反证：${counter[0]}`;
+  if (support.length) return `支持：${support[0]}`;
+  if (evidence.length) return `支持：${evidence[0]}`;
+  if (missing.length) return `缺失：${missing.join('、')}`;
+  if (row.reason) return `不适用：${row.reason}`;
+  return `${mode === 'entry' ? '入场观察' : mode === 'invalidation' ? '失效条件' : '退出观察'}未提供`;
+}
+
+function liveTopCandidateEvidence(lenses) {
+  for (const lens of lenses) {
+    const counter = liveList(lens.counterevidence).map(liveEvidenceFactText).find(Boolean);
+    if (counter) return {label: '最重要反证', text: counter};
+  }
+  for (const lens of lenses) {
+    const support = liveList(lens.supporting_evidence).map(liveEvidenceFactText).find(Boolean);
+    if (support) return {label: '最重要支持证据', text: support};
+  }
+  for (const lens of lenses) {
+    const missing = liveList(lens.missing_fields).find(Boolean);
+    if (missing) return {label: '首要缺失', text: String(missing)};
+  }
+  return {label: '最重要证据', text: '接口未提供可展示的候选证据'};
+}
+
+function liveCandidateInterpretationCard(row, workspace) {
+  row = row && typeof row === 'object' ? row : {};
+  const interpretation = row.interpretation && typeof row.interpretation === 'object' ? row.interpretation : row;
+  const candidate = interpretation.candidate || row.candidate || {};
+  const code = String(row.code || candidate.code || '').trim();
+  const name = row.name || candidate.name || code || '候选未标识';
+  const decisionItem = liveList((workspace || {}).manual_review_items).find(item => String((item || {}).code || '') === code);
+  const decisionPlan = decisionItem && decisionItem.manual_plan && typeof decisionItem.manual_plan === 'object' ? decisionItem.manual_plan : null;
+  const review = decisionPlan && (workspace || {}).strict_forward_packet_valid === true
+    ? livePlanReadiness(decisionItem, decisionPlan, 'BUY') : null;
+  const quantity = review ? review.quantity : {ready: false, text: '精确股数已隐藏', detail: '未进入今日同一观察时点人工复核清单'};
+  const lenses = liveList(interpretation.lenses);
+  const counts = interpretation.evidence_state_counts || {};
+  const topEvidence = liveTopCandidateEvidence(lenses);
+  const authoritySafe = liveAuthorityFalse(interpretation.authority || {});
+  const rows = authoritySafe ? lenses.map(lens => {
+    const state = ['support', 'counterevidence', 'missing', 'not_applicable'].includes(lens.evidence_state)
+      ? lens.evidence_state : 'missing';
+    const explanation = lens.not_applicable_reason
+      || (liveList(lens.missing_fields).length ? liveMissingPlain(lens.missing_fields) : lens.route_plain_language?.conclusion || lens.route_view || '未提供证据解释');
+    return `<article class="live-candidate-lens-row"><header><b>${liveEsc(lens.style_name || '来源未核验')}</b><em class="lens-state-${state}">${liveEsc(lens.evidence_state_label || state)}</em></header><span class="lens-grade">来源：${liveEsc(liveEvidencePlain(lens.evidence_grades))}</span><p>${liveEsc(LIVE_LENS_LABELS[lens.lens_id] || lens.lens_label || lens.lens_id || '视角未标识')} · ${liveEsc(explanation)}</p><dl><dt>入场</dt><dd>${liveEsc(liveObservationText(lens.entry_observation, 'entry'))}</dd><dt>失效</dt><dd>${liveEsc(liveObservationText(lens.invalidation_observation, 'invalidation'))}</dd><dt>退出</dt><dd>${liveEsc(liveObservationText(lens.exit_observation, 'exit'))}</dd></dl></article>`;
+  }).join('') : '<div class="live-context-error">权限身份不安全，不展示逐股解读。</div>';
+  const href = /^\d{6}$/.test(code) ? `/stock?code=${encodeURIComponent(code)}` : '';
+  const reviewControl = href ? (decisionPlan && review
+    ? liveReviewButtonMarkup({...decisionItem, code, name}, decisionPlan, 'BUY', review, `${href}#terminalTradePlan`)
+    : `<a class="live-review-link" href="${href}#terminalTradePlan">进入个股研究 / 补齐计划</a>`) : '';
+  return `<article class="live-candidate-lens">
+    <div class="live-candidate-lens-head"><div>${href ? `<a href="${href}">${liveEsc(name)}</a>` : `<b>${liveEsc(name)}</b>`}<br><code>${liveEsc(code || '代码未提供')} · ${liveEsc(candidate.as_of || '时点未提供')}</code></div><div class="state-counts"><span class="lens-state-support">支持 ${liveEsc(counts.support ?? 0)}</span> · <span class="lens-state-counterevidence">反证 ${liveEsc(counts.counterevidence ?? 0)}</span><br><span class="lens-state-missing">缺失 ${liveEsc(counts.missing ?? 0)}</span> · 不适用 ${liveEsc(counts.not_applicable ?? 0)}</div></div>
+    <div class="live-candidate-evidence"><b>${liveEsc(topEvidence.label)}</b> · ${liveEsc(topEvidence.text)}</div>
+    <details><summary>${liveEsc(interpretation.status || '解读状态未提供')}</summary><div class="live-candidate-lens-grid">${rows || '<div class="live-context-error">未返回逐股镜头。</div>'}</div></details>
+    <div class="live-candidate-actions"><span>${liveEsc(interpretation.semantics || '支持不等于买入建议。')}<br>今日决策授权股数：${liveEsc(quantity.text)} · ${liveEsc(quantity.detail)}</span>${reviewControl}</div>
+  </article>`;
+}
+
+function liveRenderCandidateInterpretations(route) {
+  const packet = route.unified_candidate_interpretations;
+  const body = document.getElementById('candidateLensBody');
+  const status = document.getElementById('candidateLensStatus');
+  const items = packet && typeof packet === 'object'
+    ? liveList(packet.items || packet.candidates || packet.interpretations)
+    : [];
+  body.setAttribute('aria-busy', 'false');
+  if (!packet || !items.length) {
+    status.textContent = '逐股解读未就绪';
+    body.innerHTML = '<div class="live-context-error">接口尚未返回 unified_candidate_interpretations；不从全局人物镜头伪造逐股解读。</div>';
+    return;
+  }
+  status.textContent = `${packet.status || '已返回'} · ${items.length} 只`;
+  const workspace = route.today_decision_workspace || {};
+  body.innerHTML = items.map(row => liveCandidateInterpretationCard(row, workspace)).join('');
+}
+
+function liveRouteContextUnavailable(message) {
+  const detail = message || '市场情绪与游资视角接口不可用';
+  document.getElementById('liveSystemIdentity').textContent = 'REGIS / SYSTEM IDENTITY UNAVAILABLE';
+  document.getElementById('liveCommandConclusion').textContent = '今日不新开仓 · 研究路由不可用';
+  document.getElementById('liveCommandNote').textContent = `${detail}；不用旧数据或推断值补全。`;
+  liveSetFact('factMarketState', '不可用', detail, 'warn');
+  liveSetFact('factExposure', '无法计算', '市场情绪与账户约束不足', 'warn');
+  liveSetFact('factTrades', '0 笔', '路由不可用时禁止新开仓', 'warn');
+  liveSetFact('factSectors', '未确认', '同一观察时点板块证据不可用', 'warn');
+  liveSetFact('factAccountRisk', '无法完整评估', '未形成可核验账户计划', 'warn');
+  document.getElementById('liveRouteContextStatus').textContent = '研究路由不可用';
+  const body = document.getElementById('liveRouteContextBody');
+  body.setAttribute('aria-busy', 'false');
+  body.innerHTML = `<div class="live-context-error">${liveEsc(detail)}；该区域不使用旧数据或推断值替代。</div>`;
+  document.getElementById('candidateLensStatus').textContent = '逐股解读不可用';
+  const candidates = document.getElementById('candidateLensBody');
+  candidates.setAttribute('aria-busy', 'false');
+  candidates.innerHTML = '<div class="live-context-error">研究路由不可用，逐股游资视角同步禁用。</div>';
+  liveRenderDecisionActions({headline: '今日不交易', reason: `${detail}；没有授权任何买卖计划。`});
+}
+
+async function liveRenderMarketStatus(signal) {
+  const response = await fetch('/api/market/status', {
+    headers: {Accept: 'application/json'}, cache: 'no-store', signal,
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || payload.message || `交易时段请求失败（HTTP ${response.status}）`);
+  if (signal && signal.aborted) return;
+  const session = payload.session || {};
+  const calendar = payload.decision_calendar || {};
+  if (!['open', 'break', 'preopen', 'auction', 'closed'].includes(session.status)
+      || typeof calendar.is_trading_day !== 'boolean') {
+    throw new Error('交易时段或审计日历字段不完整');
+  }
+  const serverTime = Date.parse(payload.server_time || session.server_time || '');
+  if (Number.isFinite(serverTime)) liveServerClockOffsetMs = serverTime - Date.now();
+  liveAuditedMarketStatus = payload;
+  liveUpdateSessionTimeline();
+  if (!liveReviewRedirected && session.status === 'closed' && window.location.pathname === '/live-scan') {
+    liveReviewRedirected = true;
+    window.location.replace('/?workspace=review');
+  }
+}
+
+async function liveRenderRouteContext(signal) {
+  try {
+    const response = await fetch('/api/strategy-route/research', {
+      headers: {Accept: 'application/json'}, cache: 'no-store', signal,
+    });
+    const route = await response.json();
+    if (!response.ok) throw new Error(route.error || route.message || `研究路由请求失败（HTTP ${response.status}）`);
+    if (signal && signal.aborted) return;
+    const lensPacket = ((route.public_trader_style_role || {}).style_lenses) || {};
+    const system = route.system_identity || {};
+    const routeAuthority = route.authority || {};
+    const lensAuthority = lensPacket.authority || {};
+    const systemSafe = system.system_id === 'regis_market_cognition_operating_system_v1'
+      && liveList(system.chain).length === 10
+      && system.broker_connected === false
+      && system.automatic_trading === false
+      && system.stable_profit_proven === false;
+    const authoritySafe = systemSafe && routeAuthority.research_only === true
+      && ['changes_unified_score', 'changes_trade_count', 'changes_position_or_quantity', 'generates_buy_or_sell_alert']
+        .every(key => routeAuthority[key] === false)
+      && ['changes_score', 'changes_trade_count', 'changes_position_or_quantity', 'generates_alert']
+        .every(key => lensAuthority[key] === false);
+    if (!authoritySafe) throw new Error('研究路由权限身份异常');
+    liveRenderCommand(route);
+    liveRenderCandidateInterpretations(route);
+    const sector = route.sector_confirmation || {};
+    const budget = route.research_budget_hypothesis || {};
+    const workspace = route.today_decision_workspace || {};
+    const lenses = Array.isArray(lensPacket.lenses) ? lensPacket.lenses : [];
+    const requestedState = route.requested_market_state || 'unknown';
+    const routedState = route.market_state || 'unknown';
+    const routeReady = route.status === 'research_route_ready';
+    const sectors = Array.isArray(sector.confirmed_sectors) ? sector.confirmed_sectors : [];
+    const sectorNames = sectors.map(liveSectorLabel).filter(Boolean);
+    const playbooks = Array.isArray(workspace.eligible_playbooks) && workspace.eligible_playbooks.length
+      ? workspace.eligible_playbooks
+      : (Array.isArray(budget.allowed_playbooks) ? budget.allowed_playbooks : []);
+    const library = route.small_capital_playbook_library || {};
+    const knownPlaybooks = liveList(library.playbooks).filter(row => row && (row.id || row.label));
+    const knownLabels = new Map(knownPlaybooks.map(row => [String(row.id || ''), String(row.label || row.id || '')]));
+    const routedPlaybooks = routeReady && knownPlaybooks.length ? playbooks.filter(row => {
+      const id = typeof row === 'string' ? row : (row && row.id);
+      return id && knownLabels.has(String(id));
+    }) : [];
+    const allowedIds = new Set(routedPlaybooks.map(row => typeof row === 'string' ? row : (row && row.id)).filter(Boolean).map(String));
+    const allowedLabels = routedPlaybooks.map(row => {
+      if (typeof row === 'string') return knownLabels.get(row) || row;
+      return row && (row.label || knownLabels.get(String(row.id || '')) || row.id);
+    }).filter(Boolean);
+    const forbiddenLabels = knownPlaybooks.filter(row => !allowedIds.has(String(row.id || ''))).map(row => row.label || row.id).filter(Boolean);
+    const playbookText = allowedLabels.join('、') || '未获准入';
+    const invalidationReasons = [];
+    if (!routeReady) invalidationReasons.push('市场/板块路由输入未完整');
+    if (workspace.strict_forward_packet_valid !== true) invalidationReasons.push('严格前向包未形成或无效');
+    invalidationReasons.push(...liveList(route.contradictions).slice(0, 2));
+    if (!invalidationReasons.length) invalidationReasons.push(...liveList(route.missing_inputs).slice(0, 2));
+    const invalidationText = invalidationReasons.filter(Boolean).join('；') || '接口未提供结构化失效条件';
+    const exposure = Array.isArray(budget.target_exposure_range_pct) ? budget.target_exposure_range_pct : [];
+    const forecast = route.next_market_state_forecast || {};
+    const nextStates = forecast.probabilities && typeof forecast.probabilities === 'object'
+      ? Object.entries(forecast.probabilities).filter(([, value]) => liveNumber(value) != null).sort((a, b) => Number(b[1]) - Number(a[1])) : [];
+    const nextStateText = nextStates.length
+      ? `${LIVE_STATE_LABELS[nextStates[0][0]] || nextStates[0][0]} ${(Number(nextStates[0][1]) * 100).toFixed(1)}% · ${forecast.research_display_admitted === true ? '研究展示已准入' : '诊断未准入'}`
+      : '未返回下一状态诊断';
+    const lensHtml = lenses.length ? lenses.map(lens => {
+      return `<article class="live-lens"><header><b>${liveEsc(lens.provenance_subject || '来源未提供')}</b><em>来源：${liveEsc(liveEvidencePlain(lens.evidence_grades))}</em></header><small>${liveEsc(LIVE_LENS_LABELS[lens.lens_id] || lens.lens_id || '风格未标注')}</small><p>${liveEsc(lens.plain_language?.conclusion || lens.view || '当前没有可展示的研究解读。')}</p></article>`;
+    }).join('') : '<div class="live-context-error">接口未返回可展示的 style_lenses。</div>';
+    const body = document.getElementById('liveRouteContextBody');
+    body.setAttribute('aria-busy', 'false');
+    body.innerHTML = `
+      <div class="live-route-grid">
+        <div class="live-route-fact"><small>研究请求市场状态</small><b>${liveEsc(liveStateText(requestedState))}</b><span>下一状态：${liveEsc(nextStateText)}；不等于收益或交易概率。</span></div>
+        <div class="live-route-fact"><small>最终路由状态</small><b>${liveEsc(liveStateText(routedState))}</b><span>${routeReady ? 'research_route_ready' : liveEsc(route.status || '状态未提供')} · ${liveEsc(route.market_state_as_of || '时点未提供')}</span></div>
+        <div class="live-route-fact"><small>同一观察时点板块确认</small><b>${sector.ready === true ? `已确认 ${sectors.length} 个` : '未就绪'}</b><span>${liveEsc(sectorNames.join('、') || '没有同一时点确认板块')} · ${liveEsc(sector.observation_slot || sector.as_of || '观察窗口未提供')}</span></div>
+        <div class="live-route-fact"><small>战法与仓位研究假设</small><b>${liveEsc(playbookText)}</b><span>仓位 ${exposure.length === 2 ? `${liveEsc(exposure[0])}–${liveEsc(exposure[1])}%` : '未提供'} · 新交易≤${liveEsc(budget.maximum_new_trades ?? '—')}笔 · ${budget.applied_to_execution === true ? '已应用执行' : '未应用执行'}</span></div>
+      </div>
+      <div class="live-playbook-grid" aria-label="当前策略战法准入与失效条件">
+        <div class="live-playbook-fact allow"><small>允许战法 · 研究路由</small><b>${liveEsc(allowedLabels.join('、') || '未获准入')}</b><span>定量准入 ${liveEsc(library.quantitatively_admitted ?? '未提供')}；允许研究不等于可交易。</span></div>
+        <div class="live-playbook-fact forbid"><small>禁止战法</small><b>${liveEsc(forbiddenLabels.join('、') || (knownPlaybooks.length ? '无额外禁止项' : '未获准入'))}</b><span>${knownPlaybooks.length ? '以冻结三战法库与当前路由差集计算。' : '战法库身份不可用，不能推断允许项。'}</span></div>
+        <div class="live-playbook-fact invalidate"><small>路由失效条件 / 反证</small><b>${liveEsc(invalidationText)}</b><span>任一绑定时点、市场、板块或账户事实变化后必须重新核验。</span></div>
+      </div>
+      <div class="live-context-note"><b>${liveEsc(system.display_name || '统一系统身份')}</b> 情绪与时点证据 → 仓位/笔数 → 同一观察时点板块 → 固定战法 → 战法候选个股 → 可选因子补证 → 账户风控 → 人工决策 → 成本后纠错。<br><b>系统状态</b> ${liveEsc(system.status || '不可用')} · 游资镜头 ${liveEsc(system.active_public_method_lens_count ?? '—')} 个 · production 因子 ${liveEsc(system.production_factor_count ?? '—')} 个。<br><b>因子角色</b> 补充排序与交叉确认；0 个不阻断非因子战法，依赖因子的策略仍须正式准入。</div>
+      <div class="live-context-note"><b>支持证据</b> ${liveEsc(liveList(route.evidence).slice(0, 5).join(' · ') || '未提供')}<br><b>反向证据</b> ${liveEsc(liveList(route.contradictions).slice(0, 5).join(' · ') || '暂无已结构化反证')}</div>
+      <div class="live-lens-grid">${lensHtml}</div>
+      <div class="live-context-note">权限已核验：这些人物镜头只解释下方同一批统一候选，不独立选股，不改变统一评分、仓位、交易笔数或买卖提醒；人物叙事不是生产策略。</div>`;
+    document.getElementById('liveRouteContextStatus').textContent = `${routeReady ? '路由已就绪' : '路由待输入'} · 战法 ${playbookText} · 镜头 ${lenses.length}/8${lenses.length === 8 ? '' : ' · 不完整'}`;
+  } catch (error) {
+    if (signal && signal.aborted) return;
+    liveRouteContextUnavailable(error.message || '市场情绪与游资视角接口不可用');
+  }
+}
+
+function fallbackStateLabel(item) {
+  const state = ((item.assessment || {}).action_state || '').toUpperCase();
+  return {
+    READY: '可人工复核', WAIT_ENTRY: '等待入场', WATCH: '继续观察',
+    BLOCKED: '不进入候选', CLOSED: '已关闭',
+  }[state] || '继续观察';
+}
+
+function liveQuantityStatus(item) {
+  const plan = item.manual_plan || item.manual_execution_plan || item.execution_plan || item.action_plan || {};
+  const quantity = liveNumber(plan.shares ?? plan.quantity ?? plan.suggested_shares);
+  const constraintsReady = plan.status === 'ready_for_manual_review';
+  const legalLot = quantity != null && Number.isInteger(quantity) && quantity > 0 && quantity % 100 === 0;
+  const targetShares = liveNumber(plan.target_shares);
+  const complete = plan.side === 'BUY'
+    && legalLot && targetShares === quantity
+    && liveNumber(plan.limit_price) > 0
+    && liveNumber(plan.estimated_cash_required) > 0
+    && liveNumber(plan.estimated_cost) >= 0
+    && liveNumber(plan.target_weight_pct) > 0
+    && liveNumber(plan.cash_after_yuan) >= 0
+    && liveNumber(plan.liquidity_capacity_yuan) > 0
+    && plan.risk_line_kind === 'hard_stop' && liveNumber(plan.risk_line) > 0
+    && Boolean(plan.valid_until) && Boolean(plan.invalidation_condition)
+    && Number.isInteger(liveNumber(plan.alert_id)) && liveNumber(plan.alert_id) > 0
+    && plan.human_confirmation_required === true
+    && plan.broker_connected === false && plan.automatic_trading === false
+    && Boolean(plan.strict_forward_packet_id);
+  if (constraintsReady && complete) {
+    return { ready: true, value: quantity, text: `${quantity} 股`, detail: 'ready_for_manual_review · 完整账户、风险、成本与严格前向字段' };
+  }
+  return { ready: false, value: null, text: '精确股数已隐藏', detail: 'manual_plan 未达到 ready_for_manual_review 完整字段合同' };
+}
+
+function liveEvidenceFactText(fact) {
+  if (!fact || typeof fact !== 'object') return '';
+  const path = String(fact.path || fact.field || '').trim();
+  const value = fact.value;
+  if (value == null || value === '') return path;
+  const rendered = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  return `${path || '证据'}=${rendered}`;
+}
+
+function livePlanMetadata(item, plan) {
+  const interpretation = item && item.interpretation && typeof item.interpretation === 'object'
+    ? item.interpretation : {};
+  const candidate = interpretation.candidate && typeof interpretation.candidate === 'object'
+    ? interpretation.candidate : ((item && item.candidate) || {});
+  const lenses = liveList(interpretation.lenses);
+  const playbookFact = lenses.flatMap(lens => liveList(lens.supporting_evidence).concat(liveList(lens.counterevidence)))
+    .find(fact => fact && String(fact.path || '').includes('playbook'));
+  const identity = plan.evidence_identity && typeof plan.evidence_identity === 'object'
+    ? plan.evidence_identity : {};
+  const evidenceIdentity = plan.evidence_id || identity.id || identity.packet_id || identity.method
+    || plan.strict_forward_packet_id || null;
+  const explicitGrades = liveList(plan.evidence_grades).concat(liveList(identity.evidence_grades));
+  const lensGrades = lenses.flatMap(lens => liveList(lens.evidence_grades));
+  const grades = [...new Set(explicitGrades.length ? explicitGrades : lensGrades)].filter(Boolean);
+  return {
+    playbook: plan.playbook_id || (item && item.playbook_id) || (playbookFact && playbookFact.value) || null,
+    strategyId: plan.strategy_id || identity.strategy_id || null,
+    strategyVersion: plan.strategy_version || identity.strategy_version || null,
+    evidenceIdentity,
+    evidenceGrade: plan.evidence_grade || identity.evidence_grade || grades.join('/') || null,
+    asOf: plan.as_of || (item && item.as_of) || candidate.as_of || null,
+    invalidation: plan.invalidation_condition || null,
+  };
+}
+
+function livePlanReadiness(item, plan, side) {
+  const meta = livePlanMetadata(item || {}, plan || {});
+  const quantity = liveNumber(plan && plan.shares);
+  let coreReady = false;
+  let quantityStatus = {ready: false, value: null, text: '精确股数已隐藏', detail: '计划字段不完整'};
+  if (side === 'BUY') {
+    quantityStatus = liveQuantityStatus({manual_plan: plan || {}});
+    coreReady = quantityStatus.ready;
+  } else {
+    const held = liveNumber(plan && plan.held_shares);
+    const target = liveNumber(plan && plan.target_shares);
+    coreReady = Boolean(plan && plan.status === 'ready_for_manual_review'
+      && plan.side === 'SELL'
+      && Number.isInteger(quantity) && quantity > 0
+      && Number.isInteger(held) && held > 0 && quantity <= held
+      && Number.isInteger(target) && target === held - quantity
+      && liveNumber(plan.limit_price) > 0 && liveNumber(plan.estimated_cost) >= 0
+      && plan.valid_until && plan.invalidation_condition && plan.reason
+      && plan.human_confirmation_required === true
+      && plan.broker_connected === false && plan.automatic_trading === false);
+    if (coreReady) quantityStatus = {ready: true, value: quantity, text: `${quantity} 股`, detail: 'ready_for_manual_review · 完整持仓、成本与可卖数量字段'};
+  }
+  const missing = [];
+  if (!coreReady) missing.push('manual_plan完整字段');
+  if (!meta.playbook) missing.push('playbook');
+  if (!meta.strategyId) missing.push('strategy_id');
+  if (!meta.strategyVersion) missing.push('strategy_version');
+  if (!meta.evidenceIdentity) missing.push('证据身份');
+  if (!meta.evidenceGrade) missing.push('证据等级');
+  if (!meta.asOf) missing.push('as_of');
+  if (!meta.invalidation) missing.push('失效条件');
+  const ready = coreReady && missing.length === 0;
+  return {
+    ready, meta, quantity: ready ? quantityStatus : {
+      ready: false, value: null, text: '精确股数已隐藏',
+      detail: `需录入剩余现金 / 持仓，或补齐 ${missing.join('、') || '完整复核字段'}`,
+    },
+    missing,
+  };
+}
+
+function liveOpenManualReview(trigger) {
+  const dialog = document.getElementById('liveReviewDialog');
+  const href = trigger.dataset.href || '';
+  const shares = Number(trigger.dataset.shares);
+  const limit = liveNumber(trigger.dataset.limit);
+  const name = trigger.dataset.name || trigger.dataset.code || '该候选';
+  const side = trigger.dataset.side === 'SELL' ? 'SELL' : 'BUY';
+  const complete = trigger.dataset.planComplete === 'true'
+    && trigger.dataset.manualPlanStatus === 'ready_for_manual_review'
+    && Number.isInteger(shares) && shares > 0
+    && (side !== 'BUY' || shares % 100 === 0)
+    && limit != null && limit > 0
+    && Boolean(trigger.dataset.playbook)
+    && Boolean(trigger.dataset.strategyId)
+    && Boolean(trigger.dataset.strategyVersion)
+    && Boolean(trigger.dataset.evidenceId)
+    && Boolean(trigger.dataset.evidenceGrade)
+    && Boolean(trigger.dataset.asOf)
+    && Boolean(trigger.dataset.invalid)
+    && Boolean(trigger.dataset.valid);
+  if (!complete) return;
+  if (!dialog || typeof dialog.showModal !== 'function') {
+    if (href) window.location.assign(href);
+    return;
+  }
+  const sideLabel = side === 'SELL' ? '卖出' : '买入';
+  const risk = trigger.dataset.risk || trigger.dataset.invalid;
+  const validity = trigger.dataset.valid;
+  const reason = trigger.dataset.reason || '原因未提供';
+  const weight = liveNumber(trigger.dataset.weight);
+  const cost = liveNumber(trigger.dataset.cost);
+  const cashAfter = liveNumber(trigger.dataset.cashAfter);
+  const playbook = trigger.dataset.playbook;
+  const strategyId = trigger.dataset.strategyId;
+  const strategyVersion = trigger.dataset.strategyVersion;
+  const evidenceId = trigger.dataset.evidenceId;
+  const evidenceGrade = trigger.dataset.evidenceGrade;
+  const asOf = trigger.dataset.asOf;
+  const invalidation = trigger.dataset.invalid;
+  document.getElementById('liveReviewDialogTitle').textContent = `是否进入人工${sideLabel}复核？`;
+  document.getElementById('liveReviewDialogBody').innerHTML = `<dl class="live-review-facts"><dt>股票 / 动作</dt><dd>${liveEsc(name)} · ${sideLabel}</dd><dt>精确股数</dt><dd>${liveEsc(shares)} 股</dd><dt>限价参考</dt><dd>¥${liveEsc(limit.toFixed(2))}</dd><dt>战法</dt><dd>${liveEsc(playbook)}</dd><dt>策略 / 版本</dt><dd>${liveEsc(strategyId)} · ${liveEsc(strategyVersion)}</dd><dt>证据身份</dt><dd>${liveEsc(evidenceId)}</dd><dt>证据等级</dt><dd>${liveEsc(evidenceGrade)}</dd><dt>as_of</dt><dd>${liveEsc(asOf)}</dd><dt>失效条件</dt><dd>${liveEsc(invalidation)}</dd><dt>风险 / 有效期</dt><dd>${liveEsc(risk)} · ${liveEsc(validity)}</dd><dt>成本 / 仓位</dt><dd>${cost == null ? '未提供' : `¥${liveEsc(cost.toFixed(2))}`} · ${weight == null ? '未提供' : `${liveEsc(weight.toFixed(1))}%`}</dd><dt>计划后现金</dt><dd>${cashAfter == null ? '未提供' : `¥${liveEsc(cashAfter.toFixed(2))}`}</dd><dt>计划依据</dt><dd>${liveEsc(reason)}</dd></dl><div class="live-review-notice">请在个股研究中再次核对可成交性、失效条件与实际成交并亲自记录；本站不会连接券商或自动下单。</div>`;
+  document.getElementById('liveReviewContinue').href = href || '#';
+  dialog.showModal();
+}
+
+function fallbackCard(item, tone = 'observe') {
+  const assessment = item.assessment || {};
+  const quality = item.opportunity_quality || {};
+  const composite = ((assessment.gates || {}).composite) || {};
+  const researchBand = liveResearchBand(composite);
+  const compositeText = liveNumber(composite.composite) == null
+    ? '数据不足'
+    : `${liveNumber(composite.composite).toFixed(1)}/100 · ${researchBand} · 仅研究排序`;
+  const code = String(item.code || '');
+  const asOf = quality.data_as_of || assessment.as_of || '时点未提供';
+  const evidenceMode = assessment.research_only === false ? 'production' : 'research';
+  const evidenceLabel = evidenceMode === 'production' ? '正式策略信号' : '研究观察 · 非正式策略';
+  const authorized = liveAuthorizedBuyPlan(liveDecisionWorkspace, code);
+  const quantity = authorized ? authorized.quantity : {text: '未获今日决策授权', detail: '观察或评分通过不等于可买入'};
+  return `<a class="live-card live-card-${tone}" href="/stock?code=${encodeURIComponent(code)}#terminalTradePlan" style="color:inherit;text-decoration:none">
+    <div class="live-card-top"><span class="live-name">${liveEsc(item.name || code)}</span><span class="live-code">${liveEsc(code)}</span><span class="live-price">${liveMoney(item.price)}</span><span class="live-chg">${livePct(item.change_pct)}</span></div>
+    <div class="live-row"><span class="k">当前状态</span><strong>${liveEsc(fallbackStateLabel(item))}</strong></div>
+    <div class="live-row"><span class="k">统一综合评分</span><strong>${liveEsc(compositeText)}</strong><span>· 全站唯一100分制个股评分</span></div>
+    <div class="live-row"><span class="k">原因</span><span>${liveEsc(assessment.reason || (item.alert || {}).reason || '等待下一交易时段复核')}</span></div>
+    <div class="live-row"><span class="k">证据身份</span><strong>${liveEsc(evidenceMode)}</strong><span>· ${liveEsc(evidenceLabel)} · 手工复核，不自动下单</span></div>
+    <div class="live-row"><span class="k">数据时点</span><span>${liveEsc(asOf)}</span></div>
+    <div class="live-quantity">今日决策授权股数 <b>${liveEsc(quantity.text)}</b> · ${liveEsc(quantity.detail)}</div>
+    <span class="live-review-link">${authorized ? '进入已授权人工复核' : '进入个股研究 / 补齐计划'}</span>
+  </a>`;
+}
+
+async function liveRenderOpportunityFallback(signal) {
+  const response = await fetch('/api/opportunities', { headers: {Accept: 'application/json'}, cache: 'no-store', signal });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || data.message || `机会快照请求失败（HTTP ${response.status}）`);
+  if (signal && signal.aborted) return;
+  const actionable = Array.isArray(data.items) ? data.items : [];
+  const watch = Array.isArray(data.watch_items) ? data.watch_items : [];
+  const rejected = Array.isArray(data.rejected) ? data.rejected : [];
+  const waitingEntry = watch.filter(item => (item.assessment || {}).verdict === 'APPROVE');
+  const watchOnly = watch.filter(item => (item.assessment || {}).verdict !== 'APPROVE');
+  const researchApproved = Number.isFinite(Number(data.research_approved_count))
+    ? Number(data.research_approved_count)
+    : actionable.concat(watch).filter(item => (item.assessment || {}).verdict === 'APPROVE').length;
+  document.getElementById('stripDot').style.background = data.stale ? '#f59e0b' : '#22c55e';
+  document.getElementById('stripDot').style.animation = 'none';
+  document.getElementById('stripText').textContent = '统一机会快照 · 不启动重复扫描';
+  document.getElementById('statScanned').textContent = data.candidate_count ?? '—';
+  document.getElementById('statReadyLabel').textContent = '· 当前可行动';
+  document.getElementById('statReady').textContent = actionable.length;
+  document.getElementById('statSecondaryLabel').textContent = '· 观察/待买点';
+  document.getElementById('statSecondary').textContent = watch.length;
+  document.getElementById('statPassLabel').textContent = '· 机会质量通过';
+  document.getElementById('statPass').textContent = researchApproved;
+  document.getElementById('liveMeta').textContent = `快照 ${data.date || '时点未提供'} · ${((data.buy_window || {}).label || data.market_phase || '状态未提供')}`;
+  const w = data.buy_window || {};
+  const winEl = document.getElementById('winBanner');
+  if (w.countdown_seconds != null) {
+    winEl.style.display = 'flex';
+    document.getElementById('winTitle').textContent = w.phase === 'closed' ? '下一交易时段' : '当前买点窗口';
+    document.getElementById('winLabel').textContent = (w.countdown_target || w.label || '') + (w.note ? ' · ' + w.note : '');
+    liveWinCd = Number(w.countdown_seconds);
+    document.getElementById('winCountdown').textContent = liveFmt(liveWinCd);
+  } else {
+    winEl.style.display = 'none';
+    liveWinCd = null;
+  }
+  const body = document.getElementById('liveBody');
+  let html = `<div class="live-strip" style="margin-bottom:14px"><strong>可人工复核 ${actionable.length} 只</strong><span>综合评估通过·待时机/补证 ${waitingEntry.length} 只</span><span>继续观察 ${watchOnly.length} 只</span><span>明确不进入 ${rejected.length} 只</span><span style="margin-left:auto">${liveEsc((data.buy_window || {}).note || '')}</span></div>`;
+  if (actionable.length) {
+    html += `<div class="sec-title">当前可人工复核</div><div class="live-grid">${actionable.slice(0, 8).map(item => fallbackCard(item, 'actionable')).join('')}</div>`;
+  } else {
+    html += '<div class="empty-state">当前没有可人工行动标的；不会拿观察或否决股票凑候选。</div>';
+  }
+  if (waitingEntry.length) {
+    html += `<div class="sec-title">综合评估通过 · 仍待时机或补证（${waitingEntry.length} 只）</div><div class="live-grid">${waitingEntry.slice(0, 8).map(item => fallbackCard(item)).join('')}</div>`;
+  }
+  if (watchOnly.length) {
+    html += `<div class="sec-title">继续观察 · 研究条件尚未满足（${watchOnly.length} 只）</div><div class="live-grid">${watchOnly.slice(0, 6).map(item => fallbackCard(item)).join('')}</div>`;
+  }
+  if (rejected.length) {
+    html += `<details class="live-foot"><summary>明确不进入候选 ${rejected.length} 只</summary><div class="live-grid" style="margin-top:10px">${rejected.slice(0, 6).map(item => fallbackCard(item, 'rejected')).join('')}</div></details>`;
+  }
+  html += `<div class="live-hint">该页复用仪表盘同一份统一机会快照；不会因独立扫描缓存缺失而显示空白，也不会触发重复重算。数据时点：${liveEsc(data.date || '未提供')}。</div>`;
+  body.setAttribute('aria-busy', 'false');
+  body.innerHTML = html;
+}
+
+async function liveRender(d) {
+  // 状态条
+  const st = d.status;
+  const dot = document.getElementById('stripDot');
+  const txt = document.getElementById('stripText');
+  if (st === 'awaiting_snapshot') {
+    try {
+      await liveRenderOpportunityFallback();
+    } catch (error) {
+      dot.style.background = '#ef4444'; dot.style.animation = 'none';
+      txt.textContent = error.message || '统一机会快照不可用';
+      document.getElementById('liveBody').setAttribute('aria-busy', 'false');
+      document.getElementById('liveBody').innerHTML = `<div role="alert" class="empty-state">${liveEsc(txt.textContent)}；页面不会用旧候选或否决股票填充。</div>`;
+    }
+    return;
+  }
+  if (st === 'starting' || st === 'scanning') {
+    dot.style.background = '#f59e0b'; dot.style.animation = '';
+    const pg = d.progress || {};
+    const doneTxt = pg.total ? `${pg.done}/${pg.total}` : '—';
+    txt.textContent = st === 'starting' ? '正在准备候选快照…' : `正在刷新当前监控候选…（${doneTxt}）`;
+    document.getElementById('statScanned').textContent = doneTxt;
+    document.getElementById('statReady').textContent = '—';
+    document.getElementById('statSecondary').textContent = '—';
+    const pct = pg.total ? Math.round((pg.done / pg.total) * 100) : 0;
+    document.getElementById('liveBody').setAttribute('aria-busy', 'true');
+    document.getElementById('liveBody').innerHTML = `<div role="status" style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:64px 0;text-align:center">
+      <div aria-hidden="true" style="width:36px;height:36px;border:3px solid rgba(90,168,236,0.2);border-top-color:var(--color-accent);border-radius:50%;animation:lspulse 1s linear infinite"></div>
+      <div style="font-size:15px;color:var(--color-text)">正在刷新当前监控候选…</div>
+      <div style="width:min(360px,80%);height:6px;background:var(--color-border);border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--color-primary);transition:width .6s ease"></div></div>
+      <div style="font-size:12px;color:var(--color-text-dim)">已处理 ${doneTxt}（${pct}%）${pg.started ? ' · 开始于 ' + liveEsc(pg.started) : ''}；完成后自动展示结果</div></div>`;
+    document.getElementById('winBanner').style.display = 'none';
+    return;
+  }
+  if (st === 'error') {
+    dot.style.background = '#ef4444';
+    txt.textContent = d.error || '扫描失败';
+    document.getElementById('liveBody').setAttribute('aria-busy', 'false');
+    document.getElementById('liveBody').innerHTML = `<div role="alert" style="padding:32px 0;text-align:center;font-size:14px;color:#ef4444">${liveEsc(d.error || '数据不可用')}<br><button class="btn" id="liveRetry" type="button" style="margin-top:14px">手动请求重算</button></div>`;
+    document.getElementById('liveRetry').addEventListener('click', liveRequestRefresh);
+    return;
+  }
+  if (!['done', 'complete', 'ready'].includes(st)) {
+    dot.style.background = '#a4a8b3';
+    txt.textContent = '服务器未返回可识别的扫描状态';
+    document.getElementById('liveBody').setAttribute('aria-busy', 'false');
+    document.getElementById('liveBody').innerHTML = '<div class="empty-state" role="alert">当前结果状态未知，未生成候选结论。</div>';
+    return;
+  }
+  // done
+  dot.style.background = '#22c55e'; dot.style.animation = 'none';
+  txt.textContent = '扫描完成 · ' + (d.date || '');
+  document.getElementById('statScanned').textContent = d.scanned ?? '—';
+  document.getElementById('statReadyLabel').textContent = '· 档案已就绪';
+  document.getElementById('statReady').textContent = d.ready_count ?? '—';
+  document.getElementById('statSecondaryLabel').textContent = '· 档案预热中';
+  document.getElementById('statSecondary').textContent = d.preheating_count ?? 0;
+  document.getElementById('statPassLabel').textContent = '· 评分通过';
+  const validItem = item => item && item.invalidated !== true && item.status !== 'invalidated';
+  const passCount = (d.items || []).filter(i => validItem(i) && (i.composite || {}).pass_ && i.decision_eligible !== false).length;
+  document.getElementById('statPass').textContent = passCount;
+  document.getElementById('liveMeta').textContent = `更新于 ${(d.date || '').slice(11, 19)} · 市场：${d.market_phase || '—'}`;
+
+  // 黄金窗口
+  const w = d.buy_window || {};
+  const winEl = document.getElementById('winBanner');
+  const winCd = document.getElementById('winCountdown');
+  if (w.countdown_seconds != null) {
+    winEl.style.display = 'flex';
+    document.getElementById('winTitle').textContent = w.phase === 'closed' ? '下一交易时段' : '当前买点窗口';
+    document.getElementById('winLabel').textContent = (w.countdown_target || w.label || '') + (w.note ? ' · ' + w.note : '');
+    liveWinCd = w.countdown_seconds;
+    winCd.textContent = liveFmt(liveWinCd);
+  } else {
+    winEl.style.display = 'none';
+  }
+
+  const items = (d.items || []).filter(validItem);
+  const blocked = (d.blocked || []).filter(validItem);
+  const below = (d.below_bar || []).filter(validItem);
+  let html = '';
+  if (!items.length) {
+    html += '<div class="empty-state">当前没有服务端确认就绪且通过闸门的研究候选。</div>';
+  } else {
+    html += `<div class="sec-title">研究候选 ${items.length} 只 · 仍需人工复核</div>
+             <div class="live-grid">${items.map((it, i) => liveCard(it, i, '#')).join('')}</div>`;
+  }
+  if (blocked.length) {
+    html += `<div class="sec-title" style="color:#ef4444">红灯拦截（风险否决，不进入候选）</div>
+             <div class="live-grid">${blocked.map((it, i) => liveCard(it, i, '')).join('')}</div>`;
+  }
+  if (below.length) {
+    html += `<div class="sec-title">未达研究评分线（不进入候选）</div>
+             <div class="live-grid">${below.map((it, i) => liveCard(it, i, '·')).join('')}</div>`;
+  }
+  document.getElementById('liveBody').setAttribute('aria-busy', 'false');
+  document.getElementById('liveBody').innerHTML = html;
+  // 预热脚注
+  const pre = d.preheating || [];
+  const foot = document.getElementById('liveBody');
+  const hint = pre.length
+    ? `<div class="live-foot"><div class="sec-title" style="margin-top:6px">档案预热中（${pre.length} 只 · 下一轮扫描自动纳入）</div>
+       <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--color-text-dim)">${pre.map(p =>
+	         `<span style="padding:2px 10px;border-radius:999px;background:rgba(100,116,139,0.08);border:1px solid var(--color-border)">${liveEsc(p.name)} <span style="font-family:var(--font-mono)">${liveEsc(p.code)}</span> <b style="color:var(--color-text-dim)">未验证模型值已隐藏</b></span>`).join('')}</div></div>`
+    : '';
+  const asOf = d.data_as_of || d.fetched_at || d.served_at || d.date || '';
+  foot.insertAdjacentHTML('beforeend', hint + `<div class="live-hint">${asOf ? `数据时点：${liveEsc(asOf)}。` : '服务器未提供统一数据时点。'}评分、评级、模型值和参考价仅复述服务器当前结果；未验证、缺失、过期、否决或 decision_eligible=false 时不进入人工决策候选。不构成投资建议。</div>`);
+}
+
+function liveCard(it, idx, rank = '#') {
+  const c = it.composite || {};
+  const tm = LIVE_META.tier[c.tier_key] || LIVE_META.tier.red;
+  const researchBand = liveResearchBand(c);
+  const pass = !!c.pass_ && it.decision_eligible !== false && it.decision_ready !== false && !it.veto;
+  const act = pass ? liveAction(it.recommended_action) : { t: '不进入人工决策候选', c: '#ef4444' };
+  const lv = it.levels || {};
+  const chg = liveNumber(it.change_pct);
+  const veto = it.veto;
+  const gates = (it.vetoed_gates || []).map(liveEsc).join('、');
+  const scoreBig = liveNumber(c.composite) != null ? liveNumber(c.composite).toFixed(0) : '—';
+  const scoreLabel = liveNumber(c.composite) != null ? `${scoreBig}分` : '分数缺失';
+  const passBadge = `<span class="live-tier" style="background:${tm.c}22;color:${tm.c};border-color:${tm.c}55">${liveEsc(researchBand)} · ${scoreLabel} · 仅研究排序</span>`;
+  const safeCode = String(it.code || '');
+  const companyHref = /^\d{6}$/.test(safeCode) ? `/stock?code=${encodeURIComponent(safeCode)}` : '';
+  const priceFit = it.price_fit || {};
+  const fitColor = priceFit.fit === 'good' ? '#54cf89' : priceFit.fit === 'ok' ? '#e8b94d' : '#f16a76';
+  const lotCost = liveNumber(priceFit.lot_cost);
+  const authorized = liveAuthorizedBuyPlan(liveDecisionWorkspace, safeCode);
+  const quantity = authorized ? authorized.quantity : {text: '未获今日决策授权', detail: '独立扫描结果不能授权数量或买入提醒'};
+  return `
+  <div class="live-card live-card-${pass ? 'observe' : 'rejected'}${pass ? '' : ' live-card-no'}">
+    <div class="live-rank">${rank}${rank === '#' ? (idx + 1) : ''}</div>
+    <div class="live-card-top">
+      ${companyHref ? `<a class="live-name" href="${companyHref}" style="color:var(--color-text);text-decoration:none">${liveEsc(it.name)}</a>` : `<span class="live-name">${liveEsc(it.name)}</span>`}
+      <span class="live-code">${liveEsc(safeCode)}</span>
+      <span class="live-price" style="color:var(--color-text)">${liveMoney(it.price)}</span>
+      <span class="live-chg" style="color:${chg == null ? 'var(--color-text-dim)' : chg >= 0 ? 'var(--color-buy)' : 'var(--color-loss)'}">${livePct(chg)}</span>
+      ${priceFit.fit && priceFit.fit !== 'no_price'
+        ? `<span class="live-pricefit" style="background:${fitColor}22;color:${fitColor};border:1px solid ${fitColor}55;font-size:12px;padding:1px 6px;border-radius:4px;white-space:nowrap">${liveEsc(priceFit.label)}${lotCost != null ? ` · 一手≈¥${Math.round(lotCost)}` : ''}</span>`
+        : ''}
+    </div>
+    <div class="live-score-line">
+      <div class="live-score-big" style="color:${tm.c}">${scoreBig}<span style="font-size:15px;color:var(--color-text-dim);font-weight:600">/100</span></div>
+      ${passBadge}
+      <div class="live-subscore">
+        <div>研究分档 <b style="color:${tm.c}">${liveEsc(researchBand)}</b> · 不直接代表买卖建议${c.confidence ? ` · 数据置信度 ${liveEsc(CONF_LABEL[c.confidence] ?? c.confidence)}` : ''}</div>
+        <div>盘中执行条件 <b style="color:var(--color-text)">${liveEsc(it.quant_level || '—')}</b> · 仅作执行复核，不参与统一评分、排序或仓位</div>
+        ${c.data_gap === 'critical' ? '<div style="color:#ef4444;font-size:12px">基本面缺口 critical：不进入候选</div>'
+          : c.data_gap === 'moderate' ? '<div style="color:#f59e0b;font-size:12px">基本面数据不完整，结论降级</div>' : ''}
+      </div>
+    </div>
+    <div class="live-divider"></div>
+    <div class="live-row"><span class="k">模型输出</span><span style="color:var(--color-text-dim)">未通过成本后验证；数值已隐藏，且不参与候选排序</span></div>
+    <div class="live-row"><span class="k">执行状态</span><span class="live-action" style="background:${act.c}22;color:${act.c};border:1px solid ${act.c}55">${act.t}</span></div>
+    <div class="live-levels">
+      <div class="lv-box"><div class="t">服务器参考价</div><div class="n buy">${liveMoney(lv.entry)}</div></div>
+      <div class="lv-box"><div class="t">止盈 1</div><div class="n" style="color:var(--color-buy)">${liveMoney(lv.take_profit_1)}</div></div>
+      <div class="lv-box"><div class="t">止盈 2</div><div class="n" style="color:var(--color-buy)">${liveMoney(lv.take_profit_2)}</div></div>
+      <div class="lv-box"><div class="t">止损</div><div class="n stop">${liveMoney(lv.stop_loss)}</div></div>
+    </div>
+    ${veto ? `<div class="live-veto">红灯否决：${gates || '服务器未提供具体闸门'}，不进入候选</div>` : ''}
+    <div class="live-quantity">今日决策授权股数 <b>${liveEsc(quantity.text)}</b> · ${liveEsc(quantity.detail)}</div>
+    ${companyHref ? `<a class="live-review-link" href="${companyHref}#terminalTradePlan">${authorized ? '进入已授权人工复核' : '进入个股研究 / 补齐计划'}</a>` : ''}
+  </div>`;
+}
+
+let liveWinCd = null;
+const liveCountdownTimer = setInterval(() => {
+  if (liveWinCd != null) {
+    if (liveWinCd > 0) liveWinCd -= 1;
+    document.getElementById('winCountdown').textContent = liveFmt(liveWinCd);
+  }
+}, 1000);
+let liveSessionTimer = null;
+
+let livePolling = null;
+let liveController = null;
+let liveSequence = 0;
+async function liveRequestRefresh() {
+  const button = document.getElementById('liveRetry');
+  if (button) { button.disabled = true; button.setAttribute('aria-busy', 'true'); }
+  try {
+    const response = await fetch('/api/opportunities/refresh', {
+      method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json'}, body: '{}',
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `请求失败（HTTP ${response.status}）`);
+    await livePoll();
+  } catch (error) {
+    if (button) { button.disabled = false; button.removeAttribute('aria-busy'); }
+    document.getElementById('stripText').textContent = error.message || '重算请求失败';
+  }
+}
+async function livePoll() {
+  if (document.hidden) return;
+  if (liveController) liveController.abort();
+  const controller = new AbortController();
+  liveController = controller;
+  const sequence = ++liveSequence;
+  const timeout = setTimeout(() => controller.abort('timeout'), 7000);
+  try {
+    if (controller !== liveController || sequence !== liveSequence) return;
+    await Promise.all([
+      liveRenderMarketStatus(controller.signal),
+      liveRenderRouteContext(controller.signal),
+    ]);
+    if (controller !== liveController || sequence !== liveSequence || controller.signal.aborted) return;
+    await liveRenderOpportunityFallback(controller.signal);
+    if (controller !== liveController || sequence !== liveSequence || controller.signal.aborted) return;
+  } catch (e) {
+    if (e.name === 'AbortError' && controller.signal.reason !== 'timeout') return;
+    console.error('[live-scan:poll]', e);
+    const message = controller.signal.reason === 'timeout' ? '请求超时' : (e.message || '连接失败');
+    document.getElementById('stripDot').style.background = '#ef4444';
+    document.getElementById('stripText').textContent = `${message}，稍后自动重试`;
+    liveRenderDecisionActions({headline: '今日不交易', reason: `${message}；交易时段、路由或机会快照未完成联合核验。`});
+    document.getElementById('liveBody').setAttribute('aria-busy', 'false');
+    document.getElementById('liveBody').innerHTML = `<div role="alert" style="padding:32px 0;text-align:center;font-size:14px;color:#ef4444">${liveEsc(message)}<br><button class="btn" id="liveRetry" type="button" style="margin-top:14px">手动请求重算</button></div>`;
+    document.getElementById('liveRetry').addEventListener('click', liveRequestRefresh);
+  } finally {
+    clearTimeout(timeout);
+    if (controller === liveController) liveController = null;
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('click', event => {
+    const trigger = event.target.closest('[data-live-review]');
+    if (trigger) liveOpenManualReview(trigger);
+  });
+  document.getElementById('liveReviewCancel').addEventListener('click', () => {
+    document.getElementById('liveReviewDialog').close();
+  });
+  liveUpdateSessionTimeline();
+  liveSessionTimer = setInterval(liveUpdateSessionTimeline, 15000);
+  livePoll();
+  livePolling = setInterval(livePoll, 8000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) livePoll();
+  });
+  window.addEventListener('pagehide', () => {
+    clearInterval(livePolling);
+    clearInterval(liveCountdownTimer);
+    clearInterval(liveSessionTimer);
+    if (liveController) liveController.abort();
+  }, { once: true });
+});
+</script>
+{% endblock %}

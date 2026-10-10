@@ -1,0 +1,39 @@
+<section class="fs-command" id="factorResearchCatalogue" aria-labelledby="factorCatalogueTitle">
+  <div class="fs-command-head"><h2 id="factorCatalogueTitle">当前已登记因子</h2><span id="factorCatalogueStatus" role="status" aria-live="polite">正在独立读取登记…</span></div>
+  <p>此处展示已保存的可行性登记，与下方原注册库分别读取。登记不等于回测通过；所需输入不等于已经接入。回测初始资金假设为 15 万元。</p>
+  <div class="factor-catalogue-tools">
+    <label>查找因子 <input id="factorCatalogueSearch" type="search" placeholder="名称、标识或公式" autocomplete="off"></label>
+    <label>登记处置 <select id="factorCatalogueFilter"><option value="all">全部登记</option><option value="evidence_insufficient">证据不足</option><option value="excluded_pending_lineage">已排除 · 来源待补</option><option value="control_only">仅作对照</option></select></label>
+    <button id="factorCatalogueRetry" type="button">重新读取登记</button>
+    <a href="/strategy-lab#slabResearchCatalogue">查看对应战法 →</a>
+  </div>
+  <p id="factorCatalogueCount" aria-live="polite"></p>
+  <div class="factor-input-status">
+    <strong>因子输入连接</strong>
+    <p id="factorInputStatus" role="status" aria-live="polite">正在核对已保存输入…</p>
+    <button id="factorInputRetry" type="button">重新读取连接状态</button>
+    <p>展开任一因子查看所需输入。文件匹配、旧审计记录和研究资格分别展示；登记处置保持原记录。</p>
+  </div>
+  <div id="factorCatalogueRows"></div>
+  <details><summary>登记来源与限制</summary><div id="factorCatalogueSources"></div></details>
+</section>
+<style>
+#factorResearchCatalogue{margin:20px 0}
+#factorResearchCatalogue p{line-height:1.75;color:var(--text-secondary)}
+.factor-catalogue-tools{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:18px 0}
+.factor-catalogue-tools label{display:grid;gap:7px;font-size:13px}
+.factor-catalogue-tools input,.factor-catalogue-tools select,.factor-catalogue-tools button{padding:9px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text-primary);font:inherit}
+.factor-catalogue-tools button{cursor:pointer}
+#factorCatalogueRows>details{padding:16px;border:1px solid var(--border);border-radius:8px;margin:10px 0}
+#factorCatalogueRows summary{cursor:pointer;font-weight:600;line-height:1.5}
+#factorCatalogueRows summary span{float:right;color:#d2b57a;font-size:12px;margin-left:16px}
+#factorCatalogueRows p,#factorCatalogueSources p{overflow-wrap:anywhere}
+#factorResearchCatalogue :focus-visible{outline:2px solid #8cccea;outline-offset:3px}
+.factor-input-status{padding:14px 16px;background:var(--bg-card);border-left:3px solid #8cccea}
+.factor-input-status button{padding:8px 12px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;cursor:pointer}
+.factor-input-row{border-top:1px solid var(--border);padding:12px 0}
+.factor-input-row strong{font-size:14px;color:var(--text-primary)}
+.factor-input-row p{font-size:13px;margin:6px 0}
+.fs-historical-workbench{margin:18px 0;padding:16px;border:1px solid var(--border);border-radius:8px}
+.fs-historical-workbench>summary{cursor:pointer;color:var(--text-primary);font-weight:600}
+</style>

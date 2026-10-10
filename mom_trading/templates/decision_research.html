@@ -1,0 +1,28 @@
+<div class="workspace-heading">
+  <div class="heading-copy">
+    <p class="eyebrow">A-SHARE RESEARCH <span class="eyebrow-rule"></span> 研究工作台</p>
+    <h1>从已接入的数据开始研究。</h1>
+    <p>查看历史行情、市场样本与策略记录；每项数据单独核对来源和可用范围。</p>
+  </div>
+  <div class="heading-meta"><span class="edition-pill">研究模式 · 人工决策</span><span id="researchService" role="status">正在检查页面服务…</span><span id="lastRefresh">尚未完成本次检查</span></div>
+</div>
+<section class="research-boundary" aria-labelledby="researchBoundaryTitle">
+  <div><span class="section-kicker">当前使用范围</span><h2 id="researchBoundaryTitle">历史研究入口 · 今日交易条件待补齐</h2><p>可用状态见下方各项。本页不提供今日买卖提示。</p></div>
+  <div class="research-budget"><small>回测初始资金假设</small><strong>¥150,000</strong><span>无需读取个人账户</span></div>
+</section>
+{% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED', false) %}
+<div id="decisionNativeSources" data-enabled="true">
+  {% include "local_data_connections.html" %}
+  <div id="decisionMarketHistory"><p role="status">历史统计组件正在启动…</p></div>
+  {% include "local_market_history.html" %}
+</div>
+{% else %}
+<section class="research-boundary"><div><h2>本环境尚未启用历史快照读取</h2><p>这项状态只说明当前服务配置。请在数据中心核对实际连接；不代表历史文件已经丢失。</p><a href="/data-center">打开数据中心 →</a></div></section>
+{% endif %}
+<div class="research-readiness" aria-label="尚未完成的交易条件">
+  <article><span>01 / 市场</span><h3>实时市场与板块</h3><p>历史涨跌统计已接线；当下全市场、行业与概念数据尚未接通并验证。</p><a href="/market-panorama">查看市场数据 →</a></article>
+  <article><span>02 / 研究</span><h3>因子与战法</h3><p>可查看已登记规则及原处置；登记数量不代表有效因子或通过回测的策略。</p><a href="/strategy-lab#slabResearchCatalogue">查看研究登记 →</a></article>
+  <article><span>03 / 验证</span><h3>交易模型准入</h3><p>完整时点数据、成本与成交、样本外和真实前向验证仍未齐备。</p><a href="/strategy-lab#localBaselineReference">查看已有基准 →</a></article>
+</div>
+<noscript><p>浏览器未启用 JavaScript，无法动态检查数据。请启用后刷新；上面的研究限制仍然适用。</p></noscript>
+<div class="workspace-footer"><span>历史范围以各项原记录为准 · 刷新只重新读取，不启动采集</span><span>A 股 · 回测初始资金假设 15 万元 · 人工决定</span></div>

@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+{% block title %}Regis Oracle · 策略研发{% endblock %}
+{% block nav_lab %}active{% endblock %}
+{% block body_class %}strategy-lab-page{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/strategy_lab.css?v=10">
+<link rel="stylesheet" href="/static/mainline-evidence.css?v=4">
+<link rel="stylesheet" href="/static/applicability_map.css?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="slab slab-page" id="strategyResearchConsole">
+  <div class="foundation-tools"><button type="button" class="slab-btn" data-action="refresh-foundation">重新加载基础功能</button><a href="/data-center">检查数据与恢复原件</a></div>
+  {% include "research_workbench.html" %}
+  {% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %}{% include "local_baseline_reference.html" %}{% endif %}
+
+  <section class="slab-layer active-layer" id="slabStatusLayer" data-workbench-layer="status" aria-labelledby="slabStatusHeading">
+    <header class="slab-hero">
+      <div>
+        <h1>策略研发工作台</h1>
+        <div class="sub">当前状态先于历史成绩。2024-07~2025-12 只称历史确认；只有在策略规则冻结后用新增数据完成固定前向验证，才可称为正式策略，只有在配方冻结后用新增数据完成固定前向验证，才可称为正式因子。本页不连接券商、不自动下单。</div>
+      </div>
+    </header>
+    <div class="slab-layer-hd">
+      <span class="slab-layer-index" aria-hidden="true">01</span>
+      <div><h2 id="slabStatusHeading">当前策略主线与下一步</h2><p>先显示独立入场策略、联合证据和唯一下一步；因子只是下游候选排序辅助。</p></div>
+    </div>
+    <div class="slab-card">
+      <div class="slab-card-body">
+        <div class="slab-state-grid">
+          <div class="slab-state-item"><span class="k">当前入场策略候选</span><strong class="v" id="slabEpoch">读取中…</strong><span class="s" id="slabEpochState">核对公式、输入与验证状态</span></div>
+          <div class="slab-state-item"><span class="k">市场阶段路由</span><strong class="v" id="slabRouteMapCount">正在核对接入</strong><span class="s" id="slabRouteMapNote">以实际输入及证据为准；允许不交易</span></div>
+          <div class="slab-state-item"><span class="k">正式入场策略</span><strong class="v" id="slabStrictPoolCount">读取中…</strong><span class="s" id="slabStrictPoolNote">未读取有效准入记录时显示未核验；缺失不等于零项</span></div>
+          <div class="slab-state-item"><span class="k">联合前向证据</span><strong class="v" id="slabResearchGate">核对中…</strong><span class="s" id="slabManualMode">市场、板块、账户、战法与成本必须同一时点</span></div>
+        </div>
+        <div class="slab-blocker" id="slabCurrentBlocker" role="status" aria-live="polite" style="margin-top:10px">正在读取当前证据缺口…</div>
+        <div class="slab-next" style="margin-top:10px">
+          <div><span class="slab-note">唯一下一步</span><h3 id="slabNextActionTitle">等待当前状态</h3><p id="slabNextActionDetail">状态核对完成后显示可执行动作。</p></div>
+          <a class="slab-btn primary" id="slabNextAction" href="#slabStateRouteCard">查看下一步</a>
+        </div>
+        <div class="slab-note" style="margin-top:9px"><strong>边界：</strong>开启手工决策辅助不会把未完成验证的策略变成正式策略，也不会连接券商或自动交易。</div>
+        <details class="slab-inline-disclosure" id="slabGateDisclosure">
+          <summary>查看验证状态与来源详情</summary>
+          <div id="slabGate"><span class="slab-note">证据状态读取中…</span></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="slab-card slab-route-card" id="slabStateRouteCard">
+      <div class="slab-card-hd">
+        <span class="slab-card-title">情绪路由型战法研发 · 非传统量化主线</span>
+        <span class="slab-card-badge" id="slabRouteBadge">读取实时路由…</span>
+      </div>
+      <div class="slab-card-body">
+        <div class="slab-route-intro">
+          <strong>先判断市场与仓位，再决定板块、战法和股票。</strong>
+          <span>这条研发线不以正式因子为前置条件；因子只在最后增强候选排序，不能反过来替代市场状态与风险控制。</span>
+        </div>
+        <div class="slab-regime-map" id="slabRegimeMap" aria-label="五类市场阶段与战术姿态">
+          <div class="slab-empty">正在读取五类市场阶段路由…</div>
+        </div>
+        <div class="slab-evidence-heading"><strong>市场情绪 × 多策略战法</strong><span>全部使用中文名称，始终展开；逐项说明特点、考虑条件、执行方式、失效边界与证据状态。年份只做样本外切分。</span></div>
+        <div class="slab-emotion-counts" id="slabEmotionCounts"><div class="slab-empty">正在核对生产数与提醒权…</div></div>
+        <div class="slab-emotion-matrix" id="slabEmotionMatrix" aria-live="polite"><div class="slab-empty">正在读取情绪 × 战法 × 因子证据矩阵…</div></div>
+        <section class="appmap" id="slabApplicabilityMap" aria-labelledby="slabAppMapHeading">
+          <div class="appmap-title"><div><span class="appmap-kicker">全库研究索引 · 五类市场状态</span><h3 id="slabAppMapHeading">因子与战法适用状态地图</h3></div><a href="/factor-system">查看因子原始档案 →</a></div>
+          <p class="appmap-intro">逐版本查看研究声明、当前风险状态与缺失证据。绿色买入资格在证据和生产门禁完成前不会出现；已否决及失效版本仍计入研究分母。</p>
+          <div class="appmap-toolbar"><label for="slabAppMapSearch">搜索因子或战法名称、机制、ID</label><input id="slabAppMapSearch" type="search" maxlength="200" placeholder="搜索全库，含失败与归档版本"><button id="slabAppMapRefresh" type="button">重新核对</button></div>
+          <p class="appmap-summary" id="slabAppMapSummary" aria-live="polite">正在读取版本与覆盖数…</p>
+          <p class="appmap-status" id="slabAppMapStatus" role="status" aria-live="polite">正在核对研究库…</p>
+          <div class="appmap-grid" id="slabAppMapGrid"><p class="appmap-empty">正在读取适用状态…</p></div>
+          <button class="appmap-more" id="slabAppMapMore" type="button" hidden>加载更多因子与失败版本</button>
+        </section>
+        <div class="slab-route-flow" aria-label="市场状态驱动的联合研究流程">
+          <div class="slab-route-step"><span>01 市场</span><strong id="slabRouteMarket">核对中…</strong><small id="slabRouteMarketNote">等待盘中证据</small></div>
+          <div class="slab-route-step"><span>02 仓位</span><strong id="slabRouteExposure">—</strong><small>先定风险预算</small></div>
+          <div class="slab-route-step"><span>03 板块</span><strong id="slabRouteSector">核对中…</strong><small id="slabRouteSectorNote">要求同一观察时点</small></div>
+          <div class="slab-route-step"><span>04 战法</span><strong id="slabRoutePlaybook">等待路由</strong><small>无适用战法也是有效结论</small></div>
+          <div class="slab-route-step"><span>05 联合回放</span><strong id="slabRouteReplay">尚未确认启用</strong><small id="slabRouteReplayNote">须核对采集器和真实样本，休市日不计样本</small></div>
+        </div>
+        <div id="slabMainlineEvidence" aria-live="polite"></div>
+        <div id="slabRotationEvidence" class="mainline-evidence" aria-live="polite"><p>最近交易日板块轮动独立读取中；不影响当前战法研究。</p></div>
+        <div class="slab-evidence-heading"><strong>完整情绪体系 · 当前细分与研发顺序</strong><span>先完成决策逻辑，最后进行总体回测。</span></div>
+        <div id="slabEmotionSystem" aria-live="polite"><div class="slab-empty">读取已完成日线的情绪细分…</div></div>
+        <div class="slab-evidence-heading"><strong>同日情绪 × 主线 × 战法研究观察</strong><span>联合条件清单，不是已验证买点或账户指令。</span></div>
+        <div id="slabCloudJointObservation" aria-live="polite"><div class="slab-empty">等待云端联合研究快照…</div></div>
+        <div class="slab-evidence-heading"><strong>冻结战法规则详情</strong><span>内部代码只用于数据绑定，不作为页面名称；当前情绪允许研究不等于允许买入。</span></div>
+        <div class="slab-playbook-grid" id="slabPlaybookGrid"><div class="slab-empty">正在读取已冻结战法库…</div></div>
+        <div class="slab-evidence-heading"><strong>新增情绪战法与计算因子</strong><span>明确规则的开发候选，不与已验证、可提醒数量混计。</span></div>
+        <div class="slab-card" id="slabPlaybookDevelopment">
+          <h3>战法研发与当前适用性</h3>
+          <p class="slab-note">下方展示基础机制的当前适用性；已保存版本的匹配状态见版本档案。先固定价格机制、情绪、主线与因子条件，再验证收益。环境匹配仍需核查个股触发、成交与风控。</p>
+          <div id="pbCurrentRoutes" class="slab-playbook-grid"></div>
+          <details id="pbEditor"><summary>创建或修订战法研究规格</summary>
+            <div class="slab-field"><label for="pbMechanism">价格机制</label><select id="pbMechanism"></select><button type="button" class="slab-btn" id="pbLoadTemplate">载入机制模板</button></div>
+            <div id="pbMechanismDetails" class="slab-note"></div>
+            <div class="slab-field"><label for="pbTiming">证据时点与入场研究协议</label><select id="pbTiming"></select><p id="pbTimingDetails" class="slab-note"></p></div>
+            <div class="slab-field"><label for="pbName">研究名称</label><input id="pbName" maxlength="80"></div>
+            <div class="slab-field"><label for="pbHypothesis">机制假设与可证伪条件</label><textarea id="pbHypothesis" rows="3" maxlength="1200"></textarea></div>
+            <fieldset><legend>适用的细分情绪</legend><div id="pbPhases" class="slab-playbook-grid"></div></fieldset>
+            <fieldset id="pbStageField"><legend>适用的主线阶段</legend><div id="pbStages" class="slab-playbook-grid"></div></fieldset>
+            <fieldset id="pbFactorField"><legend>可选因子条件（留空作为无因子对照）</legend><div id="pbFactors"></div></fieldset>
+            <p id="pbVersion" class="slab-note"></p>
+            <div class="slab-actions"><button type="button" class="slab-btn" id="pbPreview">检查当前环境适用性</button><button type="button" class="slab-btn primary" id="pbSave">保存不可覆盖的研究版本</button></div>
+            <p id="pbFeedback" role="status" aria-live="polite"></p>
+          </details>
+          <details id="pbScan" open><summary>已保存战法 · 主线全成分扫描</summary>
+            <p class="slab-note">按版本所选主线阶段检查全部已核验成分，包括非核心股。扫描范围受主线采集覆盖限制；没有数据、条件未中和窗口过期分别展示。退出与防守继续独立复核。</p>
+            <p id="pbScanStatus" role="status" aria-live="polite">等待后台扫描快照…</p>
+            <div class="slab-field"><label for="pbScanVersion">研究版本</label><select id="pbScanVersion"><option value="">全部版本</option></select>
+              <label for="pbScanFilter">检查结果</label><select id="pbScanFilter"><option value="">全部结果</option><option value="research_conditions_met_execution_pending">研究条件匹配</option><option value="conditions_not_met">条件未命中</option><option value="input_incomplete">输入待核验</option><option value="entry_window_unavailable">窗口不可用</option><option value="not_scanned">尚未检查</option></select>
+              <button type="button" class="slab-btn" id="pbScanRefresh">读取最新扫描</button></div>
+            <div id="pbScanCoverage"></div><div id="pbScanRows"></div>
+            <div class="slab-actions"><button type="button" class="slab-btn" id="pbScanPrevious">上一页</button><span id="pbScanPage"></span><button type="button" class="slab-btn" id="pbScanNext">下一页</button></div>
+          </details>
+          <details id="pbArchive"><summary>已保存版本与旧战法状态</summary><div id="pbSaved"></div>
+            <div class="slab-field"><label for="pbStockCode">检查个股研究条件（六位股票代码）</label>
+              <input id="pbStockCode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="例如 600000">
+              <small>填写代码后，点击对应版本的“检查这只股票”。读取云端已核验日线及当时成分；日线形态与盘中主线分开标时，不读取账户或启动回测。</small>
+            </div><div id="pbStockResult" aria-live="polite"></div><div id="pbLegacy"></div></details>
+        </div>
+        <div class="slab-playbook-grid" id="slabDevelopmentPatterns"><div class="slab-empty">正在读取新增研究规则…</div></div>
+        <div class="slab-playbook-grid" id="slabDevelopmentFactors"></div>
+        <div class="slab-evidence-heading"><strong>研发留档摘要</strong><span>本区展示发布版静态记录；当前是否仍可复核，须另查原始协议、盲测结果与封存档案。</span></div>
+        <div class="slab-strategy-evidence" id="slabResearchProgram"><div class="slab-empty">正在读取策略研发留档…</div></div>
+        <div class="slab-evidence-heading"><strong>历史联合回放摘要</strong><span>本页不重算 2021–2025 年结果，也不校验原始研究文件；盘中同槽证据另按真实交易日积累。</span></div>
+        <div class="slab-strategy-evidence" id="slabStrategyEvidence"><div class="slab-empty">正在读取历史回放摘要…</div></div>
+        <div class="slab-note" id="slabRouteHelperNotice" role="status" aria-live="polite"></div>
+        <div class="slab-blocker" id="slabRouteBlocker" role="status" aria-live="polite">正在核对本次研究快照…</div>
+        <div class="slab-route-actions">
+          <a class="slab-btn primary" href="/">查看今日决策</a>
+          <span class="slab-note">研究结果只有在同槽前向、成本后和样本外证据完整后才能进入正式提醒；当前不会自动交易。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="slab-layer-nav" aria-label="策略研发工作台层级">
+    <a href="#slabStatusLayer" data-layer-link="slabStatusLayer" aria-current="step">1 · 当前状态</a>
+    <a href="#slabBuildLayer" data-layer-link="slabBuildLayer">2 · 构建实验</a>
+    <a href="#slabRunLayer" data-layer-link="slabRunLayer">3 · 运行进度</a>
+    <a href="#slabEvidenceLayer" data-layer-link="slabEvidenceLayer">4 · 证据档案</a>
+  </nav>
+
+  <section class="slab-layer" id="slabBuildLayer" data-workbench-layer="build" aria-labelledby="slabBuildHeading">
+    <div class="slab-layer-hd">
+      <span class="slab-layer-index" aria-hidden="true">02</span>
+      <div><h2 id="slabBuildHeading">构建实验</h2><p>编辑当前草稿；内置因子仍可用于手工探索，但探索结果不能代替正式验证。</p></div>
+    </div>
+
+  <!-- 策略编辑器 -->
+  <div class="slab-card">
+    <div class="slab-card-hd">
+      <span class="slab-card-title">策略编辑器</span>
+      <span class="slab-card-badge">安全 DSL 白名单 · 仅本地回测</span>
+    </div>
+    <div class="slab-card-body">
+      <div class="slab-editor">
+        <div>
+          <div class="slab-form-grid" style="margin-bottom:12px">
+            <div class="slab-field"><label for="slabName">策略名称</label><input id="slabName" maxlength="60" placeholder="我的多因子策略"></div>
+            <div class="slab-field"><label for="slabHolding">持有期（交易日）</label><select id="slabHolding"><option value="5">5</option><option value="10">10</option><option value="20">20</option></select></div>
+            <div class="slab-field"><label for="slabTopN">持仓数量 top-N</label><input id="slabTopN" type="number" min="10" max="100" step="1"></div>
+            <div class="slab-field"><label for="slabCost">单边滑点（BP）</label><input id="slabCost" type="number" min="0" max="50" step="1"><span class="c-dim" style="font-size:12px">佣金、印花税、过户费另加</span></div>
+            <div class="slab-field"><label for="slabRebalBuffer">换仓缓冲（名次）</label><input id="slabRebalBuffer" type="number" min="0" max="20" step="1"><span class="c-dim" style="font-size:12px">在仓股未跌出 top-N + 缓冲时继续持有</span></div>
+            <div class="slab-field"><label for="slabCapital">研究资金（元）</label><input id="slabCapital" type="number" min="100000" max="50000000" step="10000" placeholder="150000" aria-describedby="slabCapitalSummary"></div>
+            <div class="slab-field"><label for="slabRisk">风险开关</label><select id="slabRisk"><option value="none">无</option><option value="breadth_majority">广度多数决（停新开仓，旧仓自然到期）</option></select></div>
+            <div class="slab-field"><label for="slabEntry">买点规则</label><select id="slabEntry"><option value="none">关闭（T+1开盘原执行）</option><option value="previous_close_gap_2pct_no_chase_v1">高开超过2%不追价 v1</option></select><div class="slab-note">T日收盘信号；T+1未复权开盘超过T日未复权收盘102%才取消，不替补、不重试。</div></div>
+            <div class="slab-field"><label for="slabExposure">连续市场波动目标仓位</label><select id="slabExposure"><option value="none">关闭（原目标仓位）</option><option value="market_vol_target_18_v1">18%年化波动目标</option></select><div class="slab-note">按已实现市场波动连续调整目标仓位，不是止盈止损。</div></div>
+            <div class="slab-field"><label for="slabCompose">因子合成</label><select id="slabCompose"><option value="rank_weighted_v1">固定权重排名</option><option value="ic_weighted">发现段 IC 加权</option><option value="corr_ic_weighted">发现段 IC + 相关性惩罚</option></select><div class="slab-note">IC 权重只由发现段计算；验证与历史确认不参与调权。</div></div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:center;margin:12px 0;padding:12px;border:1px solid var(--border-subtle);border-radius:8px;background:var(--bg-elevated)">
+            <div class="slab-note" id="slabCapitalSummary" aria-live="polite" style="flex:1">项目预算15万元。旧模板和报告保留原资金，不读取账户余额。</div>
+            <button type="button" class="slab-btn" style="flex-shrink:0" data-action="project-budget-draft">复制为15万元草稿</button>
+          </div>
+          <div class="slab-field" style="margin:8px 0"><label for="slabTemplate">模板库（M3.4 方向显式，可克隆编辑后一键科学回测）</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <select id="slabTemplate" style="flex:1;min-width:220px"><option value="">— 选择模板 —</option></select>
+              <button type="button" class="slab-btn" id="slabTemplateLoad" data-action="load-template">载入模板</button>
+            </div>
+            <div id="slabTemplateNote" class="c-dim" style="font-size:12px;margin-top:5px;line-height:1.55">选择模板后点击「载入模板」填充编辑器（方向显式权重），可改权重再存/回测/统一引擎诊断。</div>
+          </div>
+          <div class="slab-factor-toolbar">
+            <div class="slab-factor-tabs" aria-label="因子目录筛选">
+              <button type="button" class="slab-factor-tab" data-factor-view="selected" aria-pressed="false">当前配方</button>
+              <button type="button" class="slab-factor-tab active" data-factor-view="focus" aria-pressed="true">可用重点</button>
+              <button type="button" class="slab-factor-tab" data-factor-view="all" aria-pressed="false">全部因子</button>
+            </div>
+            <div class="slab-selected" id="slabSelectedSummary" aria-live="polite">读取已选因子…</div>
+          </div>
+          <label for="slabFactorSearch" class="slab-note">搜索因子目录</label>
+          <input id="slabFactorSearch" class="slab-fsearch" placeholder="搜索名称 / 公式 / ID（搜索时自动跨全部状态）">
+          <div id="slabFactorRows" class="slab-factor-list" tabindex="0" aria-label="因子权重目录"><div class="slab-empty">加载因子目录…</div></div>
+        </div>
+        <details class="slab-advanced">
+          <summary>高级：JSON DSL 双向同步</summary>
+          <div class="slab-advanced-body">
+            <div class="slab-field"><label for="slabDsl">JSON DSL</label><textarea id="slabDsl" rows="16" style="font-family:var(--font-number);font-size:12px" spellcheck="false"></textarea></div>
+            <div style="margin-top:8px" class="slab-note">允许字段：name / holding_days(5/10/20) / top_n(10-100) / one_way_cost_bps(0-50) / rebal_buffer(0-20) / risk_rule / entry_rule / exposure_rule / compose_method / factors(权重 -3~3)。无任意代码执行。</div>
+            <button type="button" class="slab-btn" id="slabDslLoad" style="margin-top:9px" data-action="sync-dsl">从 DSL 载入</button>
+          </div>
+        </details>
+      </div>
+      <div class="slab-actions">
+        <button type="button" class="slab-btn primary" id="slabSave" data-action="save">保存当前草稿</button>
+        <span class="slab-note">保存后到“运行与进度”执行成本后回测；保存本身不改变研究证据状态。</span>
+      </div>
+      <details class="slab-inline-disclosure">
+        <summary>草稿工具：校验与克隆</summary>
+        <div class="slab-actions" style="margin-top:0">
+          <button type="button" class="slab-btn" id="slabValidate" data-action="validate">校验规格</button>
+          <button type="button" class="slab-btn" data-action="clone">克隆为新草稿</button>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- 单变量对照实验 -->
+  <details class="slab-card slab-disclosure">
+    <summary class="slab-card-hd">
+      <span class="slab-card-title">单变量实验</span>
+      <span class="slab-card-badge">同一输入 · 基线 / 候选 / Δ</span>
+    </summary>
+    <div class="slab-card-body">
+      <div class="slab-note" id="slabExperimentState" aria-live="polite">先保存并完成一次统一诊断，再把当前诊断设为基线。</div>
+      <div class="slab-actions">
+        <button type="button" class="slab-btn" id="slabExperimentBaseline" data-action="experiment-baseline" disabled>将当前诊断设为基线</button>
+        <button type="button" class="slab-btn primary" id="slabExperimentRun" data-action="experiment-run" disabled>保存下一版并运行候选</button>
+      </div>
+      <div id="slabExperimentResult" style="margin-top:12px"><div class="slab-empty">这里比较一次只改一个字段的结果，只展示逐项差值。</div></div>
+      <div id="slabExperimentRecent" style="margin-top:10px"></div>
+    </div>
+  </details>
+  </section>
+
+  <section class="slab-layer" id="slabRunLayer" data-workbench-layer="run" aria-labelledby="slabRunHeading">
+    <div class="slab-layer-hd">
+      <span class="slab-layer-index" aria-hidden="true">03</span>
+      <div><h2 id="slabRunHeading">运行与进度</h2><p>运行当前草稿，或在有证据完整的因子时启动批量检验。</p></div>
+    </div>
+
+    <div class="slab-card">
+      <div class="slab-card-hd"><span class="slab-card-title">当前草稿运行</span><span class="slab-card-badge">固定分段 · 本地科学回测</span></div>
+      <div class="slab-card-body">
+        <div class="slab-run-toolbar">
+          <button type="button" class="slab-btn primary" id="slabRun" data-action="run">运行科学回测</button>
+          <div class="slab-note">当前草稿提交统一引擎，输入与因子资格就绪后才能运行。旧共享面板快速诊断仅为固定20万元费用测算，未实现完整整手与现金约束，不能作为15万元回测。历史确认通过也不等于投产。</div>
+        </div>
+        <div class="slab-status c-dim" id="slabStatus" aria-live="polite">从本地面板回测，发现/验证/历史确认固定分段；历史通过也不等于投产。</div>
+        <div id="slabUnifiedDiag" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div class="slab-flow" aria-label="因子驱动策略研究流程">
+      <div class="slab-flow-step active" id="slabFlowStepFactors"><span class="slab-flow-k">01 因子</span><span class="slab-flow-v" id="slabFlowFactors">请选择因子</span><span class="slab-flow-s">内置探索 / 当前批次固定因子</span></div>
+      <div class="slab-flow-step" id="slabFlowStepSelection"><span class="slab-flow-k">02 选股</span><span class="slab-flow-v" id="slabFlowSelection">等待规格</span><span class="slab-flow-s">横截面合成与 top-N</span></div>
+      <div class="slab-flow-step" id="slabFlowStepBacktest"><span class="slab-flow-k">03 回测</span><span class="slab-flow-v">等待运行</span><span class="slab-flow-s">统一引擎与固定成本</span></div>
+      <div class="slab-flow-step" id="slabFlowStepVerdict"><span class="slab-flow-k">04 判定</span><span class="slab-flow-v" id="slabFlowVerdict">未开始</span><span class="slab-flow-s">历史确认不等于生产资格</span></div>
+    </div>
+
+  <!-- 因子驱动批量策略 -->
+  <div class="slab-card">
+    <div class="slab-card-hd">
+      <span class="slab-card-title">因子驱动批量策略</span>
+      <span class="slab-card-badge" id="slabBatchBadge">读取当前批次固定因子</span>
+    </div>
+    <div class="slab-card-body">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <button type="button" class="slab-btn primary" id="slabBatchBtn" data-action="batch-start" disabled>核对可用因子…</button>
+        <div class="c-dim" style="font-size:12px;flex:1;min-width:240px;line-height:1.55">从当前研究批次读取可重建因子配方；先按因子合成与横截面排名选股，再做历史确认。批次固定研究资金 20 万、单边滑点 10BP（佣金、印花税、过户费另加），并控制同批和跨批的多重检验误报；即使历史验证全部通过，也只表示历史确认，不代表可以用于当前交易。</div>
+      </div>
+      <div id="slabBatchProgress" style="margin-bottom:10px;display:none" role="progressbar" aria-label="因子驱动策略批量回测进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span id="slabBatchProgLabel">—</span><span class="c-dim" id="slabBatchProgPct">0%</span></div>
+        <div style="height:8px;background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:6px;overflow:hidden"><div id="slabBatchProgBar" style="height:100%;width:0%;background:var(--accent);transition:width .4s"></div></div>
+      </div>
+      <details class="slab-inline-disclosure" id="slabBatchArchive">
+        <summary>查看当前或历史批次的全部候选与证据</summary>
+        <div id="slabBatchResult"><div class="slab-empty">尚未生成。启动后会显示每条策略使用的因子与合成方法（含未通过候选，不裁剪）。</div></div>
+      </details>
+    </div>
+  </div>
+  </section>
+
+  <section class="slab-layer" id="slabEvidenceLayer" data-workbench-layer="evidence" aria-labelledby="slabEvidenceHeading">
+    <div class="slab-layer-hd">
+      <span class="slab-layer-index" aria-hidden="true">04</span>
+      <div><h2 id="slabEvidenceHeading">前向模拟与历史证据</h2><p>纸面前向服务快照与不可变历史报告明确分开；两者都不授予实盘或晋升资格。</p></div>
+    </div>
+    <div class="slab-archive-stack">
+
+  <!-- 纸面前向模拟：绑定所选 run_id，与不可变历史报告严格分离 -->
+  <section class="slab-card" id="slabForwardEvidence" aria-labelledby="slabForwardHeading">
+    <div class="slab-card-hd">
+      <span class="slab-card-title" id="slabForwardHeading">纸面前向模拟 · 自动刷新服务端快照</span>
+      <span class="slab-card-badge" id="slabForwardBadge">未选择报告</span>
+    </div>
+    <div class="slab-card-body">
+      <div class="slab-run-toolbar">
+        <div class="slab-forward-summary" id="slabForwardSummary" role="status" aria-live="polite">选择一份回测报告后，才会按 run_id 核对其纸面前向状态。</div>
+        <button class="slab-btn" id="slabForwardObserve" type="button" data-action="forward-observe" hidden disabled>开启纸面前向观察</button>
+      </div>
+      <div class="slab-metric-grid" style="margin-top:12px">
+        <div class="slab-metric"><span class="v" id="slabForwardStatus">—</span><span class="l">前向状态</span></div>
+        <div class="slab-metric"><time class="v" id="slabForwardUpdated">—</time><span class="l">状态更新时间</span></div>
+        <div class="slab-metric"><time class="v" id="slabForwardAsOf">—</time><span class="l">数据截至</span></div>
+        <div class="slab-metric"><span class="v" id="slabForwardSourceVersion">—</span><span class="l">数据源版本</span></div>
+        <div class="slab-metric"><span class="v" id="slabForwardCounts">0 / 0 / 0</span><span class="l">信号 / 待结算 / 已结算</span></div>
+      </div>
+      <div class="slab-blocker" id="slabForwardBlockers" style="margin-top:12px" hidden></div>
+      <div class="slab-note" id="slabForwardNextAction" style="margin-top:10px">下一步：先选择一份当前口径的回测报告。</div>
+      <div class="slab-forward-error" id="slabForwardError" role="alert" style="margin-top:10px" hidden></div>
+      <div id="slabForwardChartWrap" style="margin-top:12px;padding:12px;background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:10px" hidden>
+        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><strong style="font-size:var(--text-sm)">前向净值、基准与回撤 · 交互图</strong><span class="c-dim" style="font-size:12px">悬停查看 · 滚轮缩放 · 拖动时间轴</span></div>
+        <div id="slabForwardChart" class="slab-forward-chart" role="img" aria-label="纸面前向策略净值、可用基准与回撤交互图"></div>
+      </div>
+      <div class="c-dim" id="slabForwardSync" aria-live="polite" style="font-size:12px;margin-top:8px">尚未读取前向服务。</div>
+      <div class="slab-note" style="margin-top:8px">纸面模拟 · 不连接券商 · 不自动下单 · 不计入晋升。只展示冻结信号后逐步结算的新增交易日证据；休市日不计样本，不回填历史表现。</div>
+    </div>
+  </section>
+
+  {% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %}{% include "local_matched_research.html" %}{% endif %}
+
+  <!-- 回测证据报告 -->
+  <details class="slab-card slab-disclosure" id="slabCurrentEvidence">
+    <summary class="slab-card-hd"><span class="slab-card-title">历史确认报告 · 不可变证据</span><span class="slab-card-badge" id="slabEvidenceBadge">按需读取 · 历史档案</span></summary>
+    <div class="slab-card-body" id="slabResult"><div class="slab-empty">展开后按 run_id 读取完整报告；旧窗口报告只作历史证据，不代表当前 PASS。</div></div>
+  </details>
+
+  <!-- 注册表 + 历史回测 -->
+  <details class="slab-card slab-disclosure">
+    <summary class="slab-card-hd"><span class="slab-card-title">策略注册表 · 版本管理</span><span class="slab-card-badge" id="slabRegistryCount">—</span></summary>
+    <div class="slab-card-body no-pad" id="slabRegistry"><div class="slab-empty">加载策略注册表…</div></div>
+  </details>
+
+  <section class="slab-card" aria-labelledby="slabResearchCatalogueHeading">
+    <div class="slab-card-hd"><span class="slab-card-title" id="slabResearchCatalogueHeading">当前因子与战法登记</span><span class="slab-card-badge" id="slabResearchCatalogueMeta">读取中</span></div>
+    <div class="slab-card-body"><button class="slab-btn" type="button" onclick="_labCatalogueRetry()">重新读取登记</button></div>
+    <div class="slab-card-body" id="slabResearchCatalogue" aria-live="polite">读取已登记的可行性资料…</div>
+  </section>
+  <details class="slab-card slab-disclosure">
+    <summary class="slab-card-hd"><span class="slab-card-title">封存因子研究 · 文件核对</span><span class="slab-card-badge" id="slabSealedResearchMeta">读取中</span></summary>
+    <div class="slab-card-body" id="slabSealedResearch" aria-live="polite">核对历史报告文件…</div>
+  </details>
+
+  <!-- 支撑证据：默认折叠，让主任务保持在前 -->
+  <details class="slab-card slab-disclosure" id="slabSourceArchive">
+    <summary class="slab-card-hd"><span class="slab-card-title">数据底座 · 共享审计因子面板</span><span class="slab-card-badge" id="slabSourceBadge">核对中</span></summary>
+    <div class="slab-card-body" id="slabSource"><div class="slab-empty">读取面板元数据…</div></div>
+    <div class="slab-card-body" id="slabFactorSystem" style="border-top:1px solid var(--border-subtle)"><div class="slab-empty">读取因子系统状态…</div></div>
+  </details>
+
+  <details class="slab-card slab-disclosure" id="slabBaselineArchive">
+    <summary class="slab-card-hd"><span class="slab-card-title">年化目标 20% · 宽基基线（beta 腿）</span><span class="slab-card-badge" id="slabBaselineBadge">按需计算</span></summary>
+    <div class="slab-card-body" id="slabBaseline"><div class="slab-empty">展开后计算宽基基线…</div></div>
+  </details>
+
+  <!-- 历史实验库 -->
+  <details class="slab-card slab-disclosure" id="slabHistoryArchive">
+    <summary class="slab-card-hd">
+      <span class="slab-card-title">历史实验库</span>
+      <span class="slab-card-badge">R1-R5 · 冠军前视伪影 · 250 次诚实回测 · 全留痕</span>
+    </summary>
+    <div class="slab-card-body no-pad" id="slabHistory"><div class="slab-empty">展开后读取历史实验账本…</div></div>
+  </details>
+
+    <div class="slab-note">方法说明：仅对标研究纪律，不对标机构收益、算力或规模。</div>
+    </div>
+  </section>
+
+  <div class="slab-note" style="text-align:center;padding-bottom:12px">
+    安全边界：本页无任意代码执行 · 不连接券商 · 不自动下单 · 不调用外部模型（本地统计规则引擎，¥0）。
+    回测证据与历史实验留痕均来自本地账本，数字带来源与判定；不构成投资建议。
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/research_workbench.js?v=6"></script>
+<script src="/static/vendor_echarts.min.js"></script>
+  <script src="/static/mainline-evidence.js?v=6"></script>
+<script src="/static/research-plan.js?v=1"></script>
+<script src="/static/playbook_development.js?v=8"></script>
+<script src="/static/playbook_candidate_scan.js?v=2"></script>
+<script src="/static/applicability_map_model.js?v=1"></script>
+<script src="/static/applicability_map.js?v=1"></script>
+<script src="/static/strategy_lab.js?v=45"></script>
+{% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %}<script src="/static/local_baseline_reference.js?v=1"></script>{% endif %}
+{% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %}<script src="/static/local_matched_research.js?v=1"></script>{% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+<section id="researchWorkbench" class="research-workbench" aria-labelledby="researchWorkbenchTitle">
+  <h2 id="researchWorkbenchTitle">情绪战法实验 · 登记、运行与结果</h2>
+  <p>成交路径回放完成后，可分别登记情绪与当日涨跌评价、五项因子增量分析。三个研究任务共用冻结输入与同一份成交记录；保留失败家族、未成交和未知结果。</p>
+  <p>完整股票池因子输入独立构建，保留未触发战法的股票，供后续研究复用。覆盖沪深主板与创业板；先查看各情绪、当日涨跌下的输入覆盖，再登记收益验证。</p>
+  <p id="researchInputStatus" role="status">正在核对实验输入…</p>
+  <p id="researchUniverseStatus" role="status">正在核对完整股票池输入…</p>
+  <p>现金结算后评价复用原有信号：逐笔核对分红、持有数量和税费，再按情绪评价战法与因子。它是旧历史的会计修正，不是新策略、正式因子或新的盲测。</p>
+  <p id="researchCashStatus" role="status">正在核对现金结算结果与原信号身份…</p>
+  <p id="researchControlStatus" role="status">正在核对完整对照组与固定因子分组…</p>
+  <p id="researchLiquidityStatus" role="status">正在核对停牌退出输入…</p>
+  <p id="researchDistributionStatus" role="status">正在核对实施公告与股数结算输入…</p>
+  <div class="research-workbench-actions">
+    <button type="button" id="researchRegister" disabled>登记固定历史实验</button>
+    <button type="button" id="researchRegisterUniverse" disabled>构建完整股票池因子输入</button>
+    <button type="button" id="researchRegisterCash" disabled>评价现金结算后的战法与因子</button>
+    <button type="button" id="researchRegisterControl" disabled>比较情绪、形态与因子的增量</button>
+    <button type="button" id="researchRegisterDistribution" disabled>核算转增后的股数与现金</button>
+    <button type="button" id="researchRefresh">刷新实验状态</button>
+  </div>
+  <p id="researchActionStatus" role="status" aria-live="polite"></p>
+  <details><summary>查看需要的输入</summary><ul id="researchInputs"></ul></details>
+  <details><summary>查看完整股票池输入清单</summary><ul id="researchUniverseInputs"></ul></details>
+  <details><summary>查看现金结算评价输入清单</summary><ul id="researchCashInputs"></ul></details>
+  <details><summary>查看完整对照组输入清单</summary><ul id="researchControlInputs"></ul></details>
+  <details><summary>查看停牌退出输入核验清单</summary><ul id="researchLiquidityInputs"></ul></details>
+  <details><summary>查看实施公告与股数结算清单</summary><ul id="researchDistributionInputs"></ul></details>
+  <div id="researchExperiments"></div>
+</section>
+<style>
+.research-workbench{margin:18px 0;padding:20px;border:1px solid var(--border-subtle,#294153);border-radius:10px;background:var(--bg-card,#0c1a25);line-height:1.7}
+.research-workbench h2{font-size:20px;margin:0 0 10px}.research-workbench p{margin:10px 0}.research-workbench button,.research-workbench a{font:inherit}.research-workbench button{padding:8px 14px;border:1px solid var(--border-subtle,#37546b);border-radius:6px;background:var(--bg-elevated,#132b3d);color:inherit;cursor:pointer}.research-workbench button:disabled{opacity:.5;cursor:default}.research-workbench-actions{display:flex;gap:10px}.research-workbench article{border-top:1px solid var(--border-subtle,#294153);padding-top:14px;margin-top:16px}.research-workbench pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}.research-workbench table{width:100%;border-collapse:collapse;font-size:13px}.research-workbench th,.research-workbench td{text-align:left;padding:8px;border-bottom:1px solid var(--border-subtle,#294153)}.research-workbench li{overflow-wrap:anywhere}.research-workbench a{color:var(--accent,#6ab9ef)}
+</style>
+<style>
+.research-workbench select{font:inherit;color:inherit;background:var(--bg-elevated,#132b3d);padding:5px;border:1px solid var(--border-subtle,#37546b)}.research-workbench-actions{flex-wrap:wrap}.research-result-table{overflow-x:auto}
+.research-corporate-table{max-height:420px;margin:12px 0}.research-corporate-table table{min-width:720px;table-layout:fixed}.research-corporate-table td{vertical-align:top;overflow-wrap:anywhere}.research-corporate-table th{position:sticky;top:0;background:var(--bg-card,#0c1a25)}
+</style>

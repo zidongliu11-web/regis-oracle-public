@@ -1,0 +1,19 @@
+{% set history_code_value = code if primary_history|default(false) else (code or '000001') %}
+<details class="itc-panel" id="localResearchHistory" data-default-code="{{ history_code_value }}"{% if primary_history|default(false) %} data-primary-history="true" open{% endif %}>
+  <summary class="itc-panel-h">历史研究行情 <small>本机快照 · 截至 2026-09-30</small></summary>
+  <div class="itc-panel-b">
+    <form id="historyResearchForm" class="itc-search" style="flex-wrap:wrap;justify-content:flex-start;gap:10px">
+      <label>代码 <input id="historyResearchCode" aria-label="历史研究证券代码" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required value="{{ history_code_value }}" style="width:100px"></label>
+      <label>起始 <input id="historyResearchStart" aria-label="历史研究起始日期" type="date" min="2013-01-01" max="2026-09-30" value="2025-01-01" required></label>
+      <label>结束 <input id="historyResearchEnd" aria-label="历史研究结束日期" type="date" min="2013-01-01" max="2026-09-30" value="2026-09-30" required></label>
+      <label>条数 <select id="historyResearchLimit" class="itc-select" aria-label="最多显示日线条数"><option value="250">最近 250 条</option><option value="500">最近 500 条</option><option value="1000">最近 1000 条</option></select></label>
+      <button type="submit" class="itc-btn primary" id="historyResearchLoad">查看历史</button>
+      <button type="button" class="itc-btn" id="historyResearchETF">510300 ETF 基准</button>
+    </form>
+    <p id="historyResearchStatus" class="itc-note" role="status" aria-live="polite">展开后载入本机已保存的历史日线，支持沪深 A 股及 510300 ETF。行情筛选不会改变封存基准的收益区间。</p>
+    <div id="historyResearchChart" style="height:330px;min-width:300px" role="img" aria-label="历史研究日线图" aria-describedby="historyResearchStatus historyResearchSource" hidden></div>
+    <p id="historyResearchSource" class="itc-note">历史提供者快照；文档约定未复权，未逐行认证。独立供历史研究查看，不进入当前买卖提示。</p>
+    <p class="itc-note"><a href="https://www.tradingview.com/" target="_blank" rel="noopener noreferrer">TradingView Lightweight Charts™</a> · Copyright (c) 2026 TradingView, Inc.</p>
+    <details id="historyResearchTableWrap" hidden><summary>查看图中原始日线</summary><div style="overflow:auto;max-height:280px"><table style="width:100%;text-align:right;font-variant-numeric:tabular-nums"><thead><tr><th>日期</th><th>开盘</th><th>最高</th><th>最低</th><th>收盘</th><th>成交量（来源原量）</th></tr></thead><tbody id="historyResearchRows"></tbody></table></div></details>
+  </div>
+</details>

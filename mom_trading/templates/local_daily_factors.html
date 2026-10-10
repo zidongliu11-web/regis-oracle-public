@@ -1,0 +1,37 @@
+<section class="fs-command" id="dailyFactorPreview" aria-labelledby="dailyFactorTitle">
+  <div class="fs-command-head"><h2 id="dailyFactorTitle">日线因子计算预览</h2><span>已保存日线 · 本机研究</span></div>
+  <p>用已有日线计算「收盘承接」和「回踩量能」，按日期查看昨收、涨跌停价，以及身份、ST、停牌和公司行动记录。记录来自后来留存的历史快照，不能证明当时已知或完整覆盖；不生成买卖信号。</p>
+  <form id="dailyFactorForm" class="factor-catalogue-tools">
+    <label>股票代码 <input id="dailyFactorCode" value="000001" pattern="[0-9]{6}" maxlength="6" required autocomplete="off"></label>
+    <label>开始日期 <input id="dailyFactorStart" type="date" value="2025-01-01" min="2013-01-01" max="2026-09-30" required></label>
+    <label>结束日期 <input id="dailyFactorEnd" type="date" value="2026-09-30" min="2013-01-01" max="2026-09-30" required></label>
+    <label>显示条数 <select id="dailyFactorLimit"><option>30</option><option selected>100</option><option>250</option></select></label>
+    <button id="dailyFactorRun" type="submit">计算日线因子</button>
+  </form>
+  <p id="dailyFactorStatus" role="status" aria-live="polite">等待读取…</p>
+  <p id="dailyFactorSource"></p>
+  <details><summary>公式与缺值说明</summary>
+    <p>收盘承接 =（收盘 − 最低）÷（最高 − 最低）；日内价格范围为零时不计算。同一天的共同复权比例在这个比值中抵消，不代表整个复权或交易资格已验证。</p>
+    <p>回踩量能 = −前3个交易日平均成交额 ÷ 更早20个交易日平均成交额。两段不重叠且都不含当天；前23日不足、日历不连续或有非正成交额时不计算。不会补零或用未来数据补齐。</p>
+    <p>可读取开始日期之前的23条作为预热，只展示选定范围最近的记录。数值不等于资金流入、排名、收益或可交易资格；历史快照截至2026-09-30。</p>
+    <p>「未报告」仅表示提供方现有键中未命中；键缺失显示未知。公司行动列统计前23个交易日至当天的登记、除权、支付、拆并与系数变化，保留异常和未知，不重建复权，不用未来行动筛掉历史记录。上市／摘牌边界只按来源日期展示，不推定可成交。转股身份、完整行动链、真实公布时点及行业成员仍未核清。</p>
+    <p id="dailyFactorDigest"></p>
+    <p>昨收与涨跌停字段直接取自同一历史来源，不按固定比例推算、不用上一条收盘补齐。缺失、非正值和矛盾价带保留说明。这些价格不是当前行情、委托价或成交保证；历史规则、计价单位与真实执行条件仍需核实。</p>
+  </details>
+  <div class="daily-factor-table" id="dailyFactorResults" hidden><table>
+    <thead><tr><th scope="col">交易日期</th><th scope="col">收盘承接</th><th scope="col">回踩量能</th><th scope="col">缺值原因</th><th scope="col">回溯条件记录 · 未准入</th><th scope="col">昨收与涨跌停</th></tr></thead>
+    <tbody id="dailyFactorRows"></tbody>
+  </table></div>
+</section>
+<style>
+#dailyFactorPreview{margin:20px 0}#dailyFactorPreview p{color:var(--color-text-muted);line-height:1.7;overflow-wrap:anywhere}
+#dailyFactorPreview input{max-width:180px}#dailyFactorPreview summary{cursor:pointer}#dailyFactorPreview :focus-visible{outline:2px solid #8cccea;outline-offset:3px}
+#dailyFactorPreview input,#dailyFactorPreview select,#dailyFactorPreview button{background:var(--color-bg);border:1px solid var(--color-border);color:var(--color-text);color-scheme:dark}
+#dailyFactorPreview button{border-color:#4286ae;padding:9px 16px;color:#b9e3ff;cursor:pointer}
+.daily-factor-table{margin-top:16px;max-height:440px;overflow:auto;border:1px solid var(--color-border);border-radius:8px}
+.daily-factor-table table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.daily-factor-table th,.daily-factor-table td{padding:11px 16px;text-align:right;border-bottom:1px solid var(--color-border)}
+.daily-factor-table th:first-child,.daily-factor-table td:first-child,.daily-factor-table th:last-child,.daily-factor-table td:last-child{text-align:left}.daily-factor-table th{position:sticky;top:0;background:var(--color-surface)}
+.daily-factor-table th:nth-child(-n+4),.daily-factor-table td:nth-child(-n+4){white-space:nowrap}
+.daily-factor-table th:nth-child(5),.daily-factor-table td:nth-child(5){text-align:left;min-width:240px}
+.daily-factor-table td:last-child{white-space:pre-line;min-width:170px}.daily-factor-table th:last-child{min-width:170px}
+</style>

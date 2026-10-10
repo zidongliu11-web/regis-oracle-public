@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regis Oracle — A股市场认知与人工决策终端</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B0F16'/%3E%3Cpath d='M7 8v10M7 8h1.6M7 18h1.6' stroke='%23F6465D' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3Crect x='10' y='12' width='3.2' height='7' rx='0.8' fill='%232EBD85'/%3E%3Cpath d='M13.2 15.5H16v6M16 21.5h1.5M16 15.5h1.5' stroke='%23F6465D' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3Crect x='20' y='9' width='3.2' height='8' rx='0.8' fill='%23F6465D'/%3E%3Cpath d='M23.2 13v7M23.2 13h1.4M23.2 20h1.4' stroke='%232EBD85' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<!-- 2026-08-18：移除外部 Google Fonts（环境阻断 fonts.googleapis），字体回退系统栈 -->
+<script async src="/static/vendor_echarts.min.js"></script>
+  <link rel="stylesheet" href="/static/spa.css?v=21">
+<link rel="stylesheet" href="/static/workflow-pages.css?v=6">
+<link rel="stylesheet" href="/static/mainline-evidence.css?v=4">
+</head>
+<body data-density="comfortable"{% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %} data-local-research-preview="true"{% endif %}>
+<a class="skip-link" href="#mainContent">跳到主要内容</a>
+
+<div class="bg-aurora"></div>
+<div class="bg-grid"></div>
+<div class="bg-glow" id="bgGlow"></div>
+
+<div class="app-root">
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar" id="sidebar" aria-label="主导航">
+    <div class="sidebar-logo">
+      <span class="sidebar-brand-mark" aria-hidden="true">R</span>
+      <span class="sidebar-logo-text"><b>Regis Oracle</b><small>A股 · 市场认知终端</small></span>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav" aria-label="站点页面"></nav>
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="折叠侧栏" aria-expanded="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 19l-7-7 7-7"/><path d="M18 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="sidebar-footer">
+      <span class="num" id="sidebarTime">—</span>
+    </div>
+  </aside>
+
+  <button type="button" id="mobileNavScrim" class="mobile-nav-scrim" aria-label="关闭功能导航" hidden></button>
+  <!-- ═══ MAIN AREA ═══ -->
+  <div class="main-area">
+    <!-- Topbar -->
+    <header class="topbar">
+      <button type="button" id="mobileNavButton" class="mobile-nav-button" aria-controls="sidebar" aria-expanded="false">功能导航</button>
+      <h1 class="topbar-title sr-only" id="pageTitle">仪表盘</h1>
+      <div class="workspace-switch" id="workspaceSwitch" role="tablist" aria-label="决策工作区">
+        <button type="button" role="tab" data-action="home-workspace" data-workspace="premarket" aria-selected="false">盘前</button>
+        <button type="button" role="tab" data-action="home-workspace" data-workspace="intraday" aria-selected="false">盘中</button>
+        <button type="button" role="tab" data-action="home-workspace" data-workspace="review" aria-selected="true">复盘</button>
+        <a href="/factor-system">因子研究</a>
+        <a href="/decision-v2">新版决策台 · 预览</a>
+      </div>
+      <div class="topbar-center">
+        <div class="market-status closed" id="marketStatus" role="status" aria-live="polite">
+          <span class="pulse-dot"></span>
+          <span id="marketStatusText">状态未知</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="workspace-layout-button" id="layoutEditButton" type="button" data-action="home-layout-toggle" aria-pressed="false">调整首页布局</button>
+        <div class="density-switch" role="group" aria-label="信息密度">
+          <button type="button" data-action="home-density" data-density="compact" aria-pressed="false">紧凑</button>
+          <button type="button" data-action="home-density" data-density="comfortable" aria-pressed="true">舒适</button>
+        </div>
+        <button class="alert-pref-button" id="alertPrefsButton" type="button" aria-pressed="true">声音与通知 · 初始化中</button>
+        <button class="alert-pref-button" id="alertPrefsDisableButton" type="button" hidden>关闭提醒</button>
+        <div class="topbar-clock num" id="topbarClock">00:00:00</div>
+        <div class="latency-indicator" role="status" aria-live="polite" hidden>
+          <span class="latency-dot" id="latencyDot"></span>
+          <span id="latencyText">数据就绪</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Views -->
+    <main class="page-container" id="mainContent" tabindex="-1">
+      {% include "access_policy.html" %}
+      <!-- Dashboard -->
+      <div class="page-view active" data-page="dashboard"></div>
+      <!-- Signals -->
+      <div class="page-view" data-page="signals"></div>
+      <div class="page-view" data-page="plan"></div>
+      <div class="page-view" data-page="review"></div>
+      <!-- Fund Flow -->
+      <div class="page-view" data-page="fundflow"></div>
+      <!-- Scanner -->
+      <div class="page-view" data-page="scanner"></div>
+      <!-- Backtest -->
+      <!-- Risk -->
+      <div class="page-view" data-page="risk"></div>
+      <!-- Global shock radar -->
+      <div class="page-view" data-page="globalradar"></div>
+      <!-- A-share market panorama -->
+      <div class="page-view" data-page="panorama"></div>
+    </main>
+
+    <!-- Bottombar -->
+    <footer class="bottombar">
+      <span>Regis Oracle v5 · A股市场认知与人工决策终端 · 不连接券商 · 不自动交易</span>
+      <span id="footerStatus">本地服务</span>
+    </footer>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<script src="/static/spa.js?v=58"></script>
+<script src="/static/spa-review.js?v=8"></script>
+  <script src="/static/mainline-evidence.js?v=6"></script>
+<script src="/static/spa-home.js?v=78"></script>
+<script src="/static/research-plan.js?v=1"></script>
+<script src="/static/spa-plan-research.js?v=3"></script>
+<script src="/static/spa-workflow.js?v=13"></script>
+<script src="/static/spa-account.js?v=4"></script>
+<script src="/static/spa-risk.js?v=10"></script>
+<script src="/static/spa-scanner.js?v=3"></script>
+<script src="/static/spa-shell.js?v=9"></script>
+{% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %}
+{% include "local_market_history.html" %}
+<script src="/static/local_market_history.js?v=1"></script>
+{% endif %}
+<script src="/static/market_intelligence.js?v=6"></script>
+<script src="/static/position_alert.js?v=28"></script>
+
+<!-- 全屏红色倒计时遮罩（最佳买卖时刻触发） -->
+<div class="buy-alert-overlay" id="buyAlertOverlay" role="alertdialog" aria-modal="true" aria-labelledby="alertKicker" aria-describedby="alertReason" aria-hidden="true" hidden>
+  <div class="buy-alert-live" aria-hidden="true">● 实时监控中</div>
+  <div class="buy-alert" tabindex="-1">
+    <h2 class="buy-alert-kicker" id="alertKicker">买卖提醒 · 请人工复核</h2>
+    <div class="buy-alert-name" id="alertName">—</div>
+    <div class="buy-alert-code" id="alertCode">—</div>
+    <div class="buy-alert-reason" id="alertReason">—</div>
+    <div id="alertSignals"></div>
+    <div class="buy-alert-cd" id="alertCountdown">--:--</div>
+    <div class="buy-alert-sub" id="alertSub">—</div>
+    <div class="buy-alert-levels" id="alertLevels"></div>
+    <div class="buy-alert-actions">
+      <button class="buy-alert-btn primary" id="alertConfirmBtn" type="button" data-action="alert-confirm">人工复核并记录</button>
+      <button class="buy-alert-btn ghost" id="alertDismissBtn" type="button" data-action="alert-dismiss">忽略本次提醒</button>
+    </div>
+    <div class="hint" id="alertHint"></div>
+  </div>
+</div>
+</body>
+</html>

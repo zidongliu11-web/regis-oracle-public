@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}数据中心 · Regis Oracle{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/data_center.css?v=1">{% endblock %}
+{% block content %}
+<div class="data-page" id="accountIndependentDataCenter">
+  <header class="data-heading"><div><p class="data-eyebrow">网站基础 · 数据与恢复</p><h1>数据中心</h1><p>查看当前输入，检查原快照，并恢复缺失的研究记录。</p></div><button type="button" class="btn" id="dataRefresh">重新检查</button></header>
+  <div class="data-notice" id="dataSummary" role="status" aria-live="polite">正在核对网站和数据存储…</div>
+  {% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %}{% include "local_data_connections.html" %}{% endif %}
+  <section class="data-metrics" aria-label="网站运行状态">
+    <article><span>网站服务</span><strong id="dataService">核对中</strong><small>服务就绪与数据完整分开核验</small></article>
+    <article><span>研究库</span><strong id="dataRegistry">核对中</strong><small>保留原历史及失败记录</small></article>
+    <article><span>本页恢复</span><strong id="dataRecoveryMode">核对中</strong><small>只恢复缺失目标，不覆盖已有库</small></article>
+    <article><span>后台模式</span><strong id="dataRuntime">核对中</strong><small id="dataCheckedAt">检查时间待核</small></article>
+  </section>
+  <section class="card"><div class="card-header"><h2>现有功能与依赖</h2></div><div class="data-features" id="dataFeatures">正在读取功能依赖…</div></section>
+  <section class="card"><div class="card-header"><h2>实际输入清单</h2></div><div class="data-table-wrap"><table><thead><tr><th>输入</th><th>实际状态</th><th>记录数</th><th>恢复或检查方式</th></tr></thead><tbody id="dataInputs"><tr><td colspan="4">正在核对…</td></tr></tbody></table></div><p class="data-note">“已有字节”只说明文件存在。来源、时点、研究配方与成本证据必须另行核验，恢复不会自动启用策略。</p></section>
+  <section class="card" id="registryRecovery"><div class="card-header"><h2>恢复原因子研究库</h2></div><div class="data-recovery">
+    <p>使用合法保留的一致 SQLite 备份，包含历史因子记录和完整库结构。网页上限 32MiB。若原库仍在写入，请先由原存储端导出一致备份。</p>
+    <form id="registryRecoveryForm">
+      <label for="registrySnapshot">1. 选择研究库快照</label><input id="registrySnapshot" type="file" accept=".db,.sqlite,.sqlite3">
+      <div class="data-actions"><button type="button" class="btn" id="registryInspect">检查快照</button></div>
+      <div id="registryInspection" class="data-inspection" role="status" aria-live="polite">尚未选择快照。</div>
+      <label for="registryExpectedSha">2. 填入备份时记录的 SHA256</label><input id="registryExpectedSha" type="text" spellcheck="false" autocomplete="off" maxlength="64" placeholder="64位小写十六进制摘要" pattern="[0-9a-f]{64}" aria-describedby="registryHashHelp">
+      <p id="registryHashHelp" class="data-note">期望摘要应来自你保存的原备份记录。文件摘要一致只验证字节身份，不认证历史研究结论。</p>
+      <button type="submit" class="btn" id="registryRestore" disabled>恢复到缺失的研究库</button>
+      <p id="registryResult" role="status" aria-live="polite"></p>
+    </form>
+  </div></section>
+  <section class="card"><div class="card-header"><h2>其余数据如何接入</h2></div><div class="data-recovery">
+    <p>历史科学回测需要原始股票日线母体、当时可得基本面、证券元数据，以及对应审计与原子发布记录。它们不能由当前报价代替；恢复入口目前只支持因子研究库。</p>
+    <p>行情和资金流显示当前配置的来源及时点。正式数据账户、全市场覆盖和网站使用许可核验完成后，再启用相应采集。不会在这里自动购买数据或启动旧研究任务。</p>
+    <div class="data-actions"><a class="btn" href="/market-panorama">核对市场来源</a><a class="btn" href="/strategy-lab">查看回测输入要求</a></div>
+  </div></section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/data_center.js?v=2"></script>{% if config.get('LOCAL_RESEARCH_HISTORY_ENABLED') %}<script src="/static/local_data_connections.js?v=1"></script>{% endif %}{% endblock %}
